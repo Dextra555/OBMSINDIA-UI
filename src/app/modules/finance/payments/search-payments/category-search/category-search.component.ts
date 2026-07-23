@@ -34,7 +34,7 @@ export class CategorySearchComponent implements AfterViewInit {
   categoryList: any = [];
   // displayedColumns: string[] = ['voucher_no', 'payment_date', 'supplier_name', 'bank_code', 'cheque_no', 'pay_to', 'particulars', 'amount', 'category_name'];
   displayedColumns: string[] = ['voucher_no', 'payment_date', 'supplier_name', 'bank_code', 'cheque_no', 'amount', 'particulars'];
-  dataSource: any;
+  dataSource: MatTableDataSource<any> = new MatTableDataSource<any>([]);
   pageSizeOptions: number[] = [];
 
   private formatDate(date: any) {

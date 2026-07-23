@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-<<<<<<< HEAD
 import { environment } from 'src/environments/environment';
-=======
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
 
 export interface Department {
   DepartmentId: number;
@@ -22,11 +19,7 @@ export interface Department {
   providedIn: 'root'
 })
 export class DepartmentService {
-<<<<<<< HEAD
   private baseUrl = environment.baseUrl + 'Department';
-=======
-  private baseUrl = '/api/Department';
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
 
   constructor(private http: HttpClient) { }
 

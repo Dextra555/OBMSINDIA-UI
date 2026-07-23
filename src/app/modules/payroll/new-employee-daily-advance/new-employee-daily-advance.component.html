@@ -86,7 +86,6 @@
             <div class="col-12 col-sm-12 col-md-12 col-lg-4">
                 <mat-form-field appearance="outline">
                     <mat-label>Employee</mat-label>
-<<<<<<< HEAD
                     <input matInput [matAutocomplete]="auto" [formControl]="employeeSearchCtrl"
                         (input)="onEmployeeSearchInput($event)" (focus)="onEmployeeSearchFocus()"
                         placeholder="Type to search...">
@@ -102,16 +101,6 @@
                     <button matSuffix mat-icon-button *ngIf="employeeSearchCtrl.value" (click)="clearEmployeeSelection()">
                         <mat-icon>close</mat-icon>
                     </button>
-=======
-                    <mat-select formControlName="EmployeeID" (selectionChange)="employeeChange($event)"
-                    (keydown)="onKeyDropdown($event, 'employeeSearchString', 'employeeListModel', 'filteredEmployeeList', 'EMP_NAME', employeeSearchSubject)"
-                    [panelClass]="'custom-dropdown-panel'">
-                        <mat-option [value]="0" class="highlight-option"></mat-option>
-                        <mat-option *ngFor="let employee of employeeListModel" [value]="employee.EMP_ID">
-                            {{ employee.EMP_NAME }}
-                        </mat-option>
-                    </mat-select>
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
                 </mat-form-field>
             </div>
             <div class="col-12 col-sm-12 col-md-12 col-lg-12">

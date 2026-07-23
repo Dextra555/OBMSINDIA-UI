@@ -1,9 +1,0 @@
-.invoice-display * {
-  font-size: 20px !important;
-}
-
-@media print {
-  .invoice-display * {
-    font-size: 16px !important;
-  }
-}

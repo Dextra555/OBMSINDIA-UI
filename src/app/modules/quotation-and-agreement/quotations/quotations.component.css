@@ -1,13 +1,5 @@
-<<<<<<< HEAD
 /* Minimal CSS copied from agreements to keep consistent layout */
 .wlt-table td, .wlt-table th { vertical-align: middle; }
 
 .loader { width: 36px; height: 36px; border: 4px solid #f3f3f3; border-top: 4px solid #9b2036; border-radius: 50%; display: inline-block; animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
-=======
-/* Minimal CSS copied from agreements to keep consistent layout */
-.wlt-table td, .wlt-table th { vertical-align: middle; }
-
-.loader { width: 36px; height: 36px; border: 4px solid #f3f3f3; border-top: 4px solid #9b2036; border-radius: 50%; display: inline-block; animation: spin 1s linear infinite; }
-@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87

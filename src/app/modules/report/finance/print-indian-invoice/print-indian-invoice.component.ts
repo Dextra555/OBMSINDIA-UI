@@ -321,7 +321,7 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
 
     // Generate data rows HTML with complete formatting
     let dataRowsHtml = '';
-    // Format currency as Indian format (₹)
+    // Format currency as Indian format (Γé╣)
     const formatCurrency = (value: any) => {
       const num = parseFloat(value) || 0;
       return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -342,16 +342,12 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
         dataRowsHtml += `
         <tr>
             <td class="text-center">${sno}</td>
-<<<<<<< HEAD
             <td class="col-particulars">${description}</td>
-=======
-            <td>${description}</td>
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
             <td class="text-center">${hsnCode}</td>
             <td class="text-center">${duties}</td>
             <td class="text-center">${qty}</td>
-            <td class="text-right">₹ ${rateFormatted}</td>
-            <td class="text-right">₹ ${amountFormatted}</td>
+            <td class="text-right">Γé╣ ${rateFormatted}</td>
+            <td class="text-right">Γé╣ ${amountFormatted}</td>
         </tr>`;
       });
     } else {
@@ -386,16 +382,10 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
       .replace(/{{InvoiceDate}}/g, this.escapeHtml(invoice.invoiceDate || 'N/A'))
       .replace(/{{ServicePeriod}}/g, this.escapeHtml(invoice.servicePeriod || ''))
       .replace(/{{PlaceOfSupply}}/g, this.escapeHtml(invoice.placeOfSupply || client.billingState || ''))
-<<<<<<< HEAD
       // Work Order Bar - only show if work order number exists
       .replace(/{{WorkOrderBar}}/g, (invoice.workOrderNoFormatted && invoice.workOrderNoFormatted.trim() !== '')
         ? `<div class="work-order-full-bar">WORK ORDER NO: ${this.escapeHtml(invoice.workOrderNoFormatted)} &nbsp;|&nbsp; WORK ORDER DATE: ${this.escapeHtml(invoice.workOrderDate || '')}</div>`
         : '')
-=======
-      // Work Order Details
-      .replace(/{{WorkOrderNo}}/g, this.escapeHtml(invoice.workOrderNoFormatted || 'N/A'))
-      .replace(/{{WorkOrderDate}}/g, this.escapeHtml(invoice.workOrderDate || 'N/A'))
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
       .replace(/{{SACCode}}/g, this.escapeHtml(invoice.sacCode || ''))
       // Statutory Details
       .replace(/{{PAN}}/g, this.escapeHtml(statutory.pan || company.pan || 'AACCF8611P'))
@@ -428,7 +418,7 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
         .replace(/{{CGSTAmount}}/g, formatCurrency(totals.cgstAmount || 0))
         .replace(/{{SGSTAmount}}/g, formatCurrency(totals.sgstAmount || 0))
         .replace(/{{IGSTPct}}/g, '0')
-        .replace(/{{IGSTAmount}}/g, '₹ 0.00');
+        .replace(/{{IGSTAmount}}/g, 'Γé╣ 0.00');
       // Hide IGST row for intra-state using class selector
       html = html.replace(/<tr[^>]*class="igst-row"[^>]*>[\s\S]*?<\/tr>/gi, '');
     } else {
@@ -436,8 +426,8 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
       html = html
         .replace(/{{CGSTPct}}/g, '0')
         .replace(/{{SGSTPct}}/g, '0')
-        .replace(/{{CGSTAmount}}/g, '₹ 0.00')
-        .replace(/{{SGSTAmount}}/g, '₹ 0.00')
+        .replace(/{{CGSTAmount}}/g, 'Γé╣ 0.00')
+        .replace(/{{SGSTAmount}}/g, 'Γé╣ 0.00')
         .replace(/{{IGSTPct}}/g, (totals.igstPct || 18).toString())
         .replace(/{{IGSTAmount}}/g, formatCurrency(totals.igstAmount || 0));
       // Hide CGST and SGST rows for inter-state using class selectors

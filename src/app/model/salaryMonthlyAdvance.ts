@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 export class SalaryMonthlyAdvance {
   ID!: number;
   EmployeeID!: number;
@@ -32,39 +31,4 @@ export class SalaryMonthlyAdvance {
     this.LastUpdatedBy = data.LastUpdatedBy || '';
     this.Items = data.Items || [];
   }
-=======
-export class SalaryMonthlyAdvance {
-  ID!: number;
-  EmployeeID!: number;
-  AdvanceTakenDate!: Date;
-  AdvanceDate!: Date;
-  VoucherNo?: string;
-  Amount!: number;
-  NoOfInstallments?: number;
-  PaymentType?: string;
-  Particulars?: string;
-  TransType?: number;
-  IsDeleted?: boolean;
-  LastUpdate?: Date;
-  LastUpdatedBy?: string;
-  Items?: any[];
-
-  constructor(data: Partial<SalaryMonthlyAdvance> = {}) {
-    // Initialize properties with provided data or default values
-    this.ID = data.ID || 0;
-    this.EmployeeID = data.EmployeeID || 0;
-    this.AdvanceTakenDate = data.AdvanceTakenDate || new Date();
-    this.AdvanceDate = data.AdvanceDate || new Date();
-    this.VoucherNo = data.VoucherNo || '';
-    this.Amount = data.Amount || 0;
-    this.NoOfInstallments = data.NoOfInstallments || 0;
-    this.PaymentType = data.PaymentType || '';
-    this.Particulars = data.Particulars || '';
-    this.TransType = data.TransType || 1;
-    this.IsDeleted = data.IsDeleted || false;
-    this.LastUpdate = data.LastUpdate || new Date();
-    this.LastUpdatedBy = data.LastUpdatedBy || '';
-    this.Items = data.Items || [];
-  }
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
 }

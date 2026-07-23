@@ -76,11 +76,7 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
     'P': 'Present - Regular working day',
     'W/O': 'Weekly Off - Non-working day',
     'H': 'Holiday - Public holiday',
-<<<<<<< HEAD
     'L': 'Absent - No pay deduction',
-=======
-    'L': 'Leave - Any type of leave',
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
     'NH': 'National Holiday - National festival holiday'
   };
 
@@ -199,7 +195,7 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
       
       // Validate file type
       if (!file.name.endsWith('.xlsx')) {
-        this.addGeneralError('❌ File must be in Excel format (.xlsx)');
+        this.addGeneralError('Γ¥î File must be in Excel format (.xlsx)');
         this.snackBar.open('Invalid file type', 'Close', { duration: 3000 });
         return;
       }
@@ -207,20 +203,20 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
       // Validate file size (max 10MB)
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        this.addGeneralError(`❌ File size (${this.formatFileSize(file.size)}) exceeds 5MB limit`);
+        this.addGeneralError(`Γ¥î File size (${this.formatFileSize(file.size)}) exceeds 5MB limit`);
         this.snackBar.open('File too large', 'Close', { duration: 3000 });
         return;
       }
 
       this.selectedFile = file;
       this.uploadResult = null;
-      this.successMessage = `✓ File selected: ${file.name} (${this.formatFileSize(file.size)})`;
+      this.successMessage = `Γ£ô File selected: ${file.name} (${this.formatFileSize(file.size)})`;
     }
   }
 
   downloadTemplate(): void {
     if (this.uploadForm.invalid) {
-      this.addGeneralError('⚠️ Please select both period and branch before downloading template');
+      this.addGeneralError('ΓÜá∩╕Å Please select both period and branch before downloading template');
       this.snackBar.open('Please select period and branch', 'Close', { duration: 3000 });
       return;
     }
@@ -241,12 +237,12 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
         window.URL.revokeObjectURL(url);
 
         this.generalErrors = [];
-        this.successMessage = `✓ Template downloaded successfully: Attendance_Template_${formattedPeriod}.xlsx`;
+        this.successMessage = `Γ£ô Template downloaded successfully: Attendance_Template_${formattedPeriod}.xlsx`;
         this.snackBar.open('Template downloaded successfully', 'Close', { duration: 3000 });
       },
       error: (error) => {
         console.error('Error downloading template:', error);
-        this.addGeneralError(`⚠️ Failed to download template: ${this.getErrorMessage(error)}`);
+        this.addGeneralError(`ΓÜá∩╕Å Failed to download template: ${this.getErrorMessage(error)}`);
         this.snackBar.open('Error downloading template', 'Close', { duration: 3000 });
       }
     });
@@ -258,20 +254,20 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
 
     // Validation
     if (!this.selectedFile) {
-      this.addGeneralError('❌ Please select a file to upload');
+      this.addGeneralError('Γ¥î Please select a file to upload');
       this.snackBar.open('No file selected', 'Close', { duration: 3000 });
       return;
     }
 
     if (this.uploadForm.invalid) {
-      this.addGeneralError('❌ Please select both period and branch');
+      this.addGeneralError('Γ¥î Please select both period and branch');
       this.snackBar.open('Form incomplete', 'Close', { duration: 3000 });
       return;
     }
 
     // Pre-validation success
     this.generalErrors = [];
-    this.successMessage = '✓ Validation passed. Uploading file...';
+    this.successMessage = 'Γ£ô Validation passed. Uploading file...';
 
     this.isUploading = true;
     this.uploadResult = null;
@@ -284,9 +280,9 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
         this.generalErrors = [];
 
         if (normalized.success) {
-          this.successMessage = `✓ Upload completed successfully: ${normalized.successfulRecords} records processed`;
+          this.successMessage = `Γ£ô Upload completed successfully: ${normalized.successfulRecords} records processed`;
           this.snackBar.open(
-            `✓ Upload completed: ${normalized.successfulRecords} successful`,
+            `Γ£ô Upload completed: ${normalized.successfulRecords} successful`,
             'Close',
             { duration: 5000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['success-snackbar'] }
           );
@@ -294,11 +290,11 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
           this.successMessage = '';
           if (normalized.failedRecords > 0) {
             this.addGeneralError(
-              `⚠️ Upload completed with errors: ${normalized.successfulRecords} succeeded, ${normalized.failedRecords} failed`
+              `ΓÜá∩╕Å Upload completed with errors: ${normalized.successfulRecords} succeeded, ${normalized.failedRecords} failed`
             );
           }
           this.snackBar.open(
-            `⚠️ Upload completed with errors: ${normalized.failedRecords} records failed`,
+            `ΓÜá∩╕Å Upload completed with errors: ${normalized.failedRecords} records failed`,
             'View Errors',
             { duration: 5000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['warning-snackbar'] }
           );
@@ -307,7 +303,7 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
         // Show validation warnings if any
         if (normalized.validationWarnings && normalized.validationWarnings.length > 0) {
           normalized.validationWarnings.forEach((warning: string) => {
-            this.addGeneralError(`⚠️ ${warning}`);
+            this.addGeneralError(`ΓÜá∩╕Å ${warning}`);
           });
         }
       },
@@ -322,9 +318,9 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
           this.generalErrors = [];
 
           if (normalizedFromError.success) {
-            this.successMessage = `✓ Upload completed successfully: ${normalizedFromError.successfulRecords} records processed`;
+            this.successMessage = `Γ£ô Upload completed successfully: ${normalizedFromError.successfulRecords} records processed`;
             this.snackBar.open(
-              `✓ Upload completed: ${normalizedFromError.successfulRecords} successful`,
+              `Γ£ô Upload completed: ${normalizedFromError.successfulRecords} successful`,
               'Close',
               { duration: 5000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['success-snackbar'] }
             );
@@ -332,11 +328,11 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
             this.successMessage = '';
             if (normalizedFromError.failedRecords > 0) {
               this.addGeneralError(
-                `⚠️ Upload completed with errors: ${normalizedFromError.successfulRecords} succeeded, ${normalizedFromError.failedRecords} failed`
+                `ΓÜá∩╕Å Upload completed with errors: ${normalizedFromError.successfulRecords} succeeded, ${normalizedFromError.failedRecords} failed`
               );
             }
             this.snackBar.open(
-              `⚠️ Upload completed with errors: ${normalizedFromError.failedRecords} records failed`,
+              `ΓÜá∩╕Å Upload completed with errors: ${normalizedFromError.failedRecords} records failed`,
               'View Errors',
               { duration: 5000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['warning-snackbar'] }
             );
@@ -344,7 +340,7 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
 
           if (normalizedFromError.validationWarnings && normalizedFromError.validationWarnings.length > 0) {
             normalizedFromError.validationWarnings.forEach((warning: string) => {
-              this.addGeneralError(`⚠️ ${warning}`);
+              this.addGeneralError(`ΓÜá∩╕Å ${warning}`);
             });
           }
 
@@ -381,71 +377,71 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
               const errObj = error.error.errors ?? error.error.ValidationErrors;
               Object.values(errObj).forEach((errArray: any) => {
                 if (Array.isArray(errArray)) {
-                  errArray.forEach((e: any) => generalErrors.push(`❌ ${e}`));
+                  errArray.forEach((e: any) => generalErrors.push(`Γ¥î ${e}`));
                 } else {
-                  generalErrors.push(`❌ ${errArray}`);
+                  generalErrors.push(`Γ¥î ${errArray}`);
                 }
               });
             } else if (Array.isArray(error.error?.Errors)) {
               error.error.Errors.forEach((e: any) => {
                 const msg = e?.ErrorMessage ?? e?.errorMessage ?? JSON.stringify(e);
-                generalErrors.push(`❌ ${msg}`);
+                generalErrors.push(`Γ¥î ${msg}`);
               });
             } else if (error.error?.message) {
-              generalErrors.push(`❌ ${error.error.message}`);
+              generalErrors.push(`Γ¥î ${error.error.message}`);
             } else if (error.error?.Message) {
-              generalErrors.push(`❌ ${error.error.Message}`);
+              generalErrors.push(`Γ¥î ${error.error.Message}`);
             } else if (error.error) {
-              generalErrors.push(`❌ ${JSON.stringify(error.error)}`);
+              generalErrors.push(`Γ¥î ${JSON.stringify(error.error)}`);
             }
             break;
 
           case 401:
-            generalErrors.push('❌ Authentication failed. Please login again.');
+            generalErrors.push('Γ¥î Authentication failed. Please login again.');
             break;
 
           case 403:
-            generalErrors.push('❌ You do not have permission to upload attendance.');
+            generalErrors.push('Γ¥î You do not have permission to upload attendance.');
             break;
 
           case 413:
-            generalErrors.push('❌ File size too large. Maximum size is 5MB.');
+            generalErrors.push('Γ¥î File size too large. Maximum size is 5MB.');
             break;
 
           case 415:
-            generalErrors.push('❌ Unsupported file format. Please use .xlsx files only.');
+            generalErrors.push('Γ¥î Unsupported file format. Please use .xlsx files only.');
             break;
 
           case 500:
-            generalErrors.push('❌ Server error occurred. Please try again later.');
+            generalErrors.push('Γ¥î Server error occurred. Please try again later.');
             break;
 
           default:
             if (error.error?.message) {
-              generalErrors.push(`❌ Error: ${error.error.message}`);
+              generalErrors.push(`Γ¥î Error: ${error.error.message}`);
             } else {
-              generalErrors.push(`❌ HTTP Error ${error.status}: ${error.statusText}`);
+              generalErrors.push(`Γ¥î HTTP Error ${error.status}: ${error.statusText}`);
             }
         }
       }
 
       // Network error
       if (error.message === 'Unknown Error') {
-        generalErrors.push('❌ Network error. Please check your connection and try again.');
+        generalErrors.push('Γ¥î Network error. Please check your connection and try again.');
       }
 
       // No internet
       if (error.message && error.message.includes('failed')) {
-        generalErrors.push('❌ Connection failed. Please check your internet connection.');
+        generalErrors.push('Γ¥î Connection failed. Please check your internet connection.');
       }
 
     } catch (e) {
       console.error('Error parsing error response:', e);
-      generalErrors.push('❌ An unexpected error occurred.');
+      generalErrors.push('Γ¥î An unexpected error occurred.');
     }
 
     return {
-      generalErrors: generalErrors.length > 0 ? generalErrors : ['❌ Unknown error occurred']
+      generalErrors: generalErrors.length > 0 ? generalErrors : ['Γ¥î Unknown error occurred']
     };
   }
 
@@ -501,7 +497,7 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 
-    this.snackBar.open('✓ Error details exported', 'Close', { duration: 3000 });
+    this.snackBar.open('Γ£ô Error details exported', 'Close', { duration: 3000 });
   }
 
   exportSuccessDetails(): void {
@@ -535,7 +531,7 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 
-    this.snackBar.open('✓ Success details exported', 'Close', { duration: 3000 });
+    this.snackBar.open('Γ£ô Success details exported', 'Close', { duration: 3000 });
   }
 
   toggleErrorDetails(error: BulkUploadError): void {
@@ -652,11 +648,7 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
                 <tr><td><strong>P</strong></td><td>Present</td><td>8 hours</td></tr>
                 <tr><td><strong>W/O</strong></td><td>Weekly Off</td><td>0 hours</td></tr>
                 <tr><td><strong>H</strong></td><td>Holiday</td><td>0 hours</td></tr>
-<<<<<<< HEAD
                 <tr><td><strong>L</strong></td><td>Absent</td><td>0 hours (no pay)</td></tr>
-=======
-                <tr><td><strong>L</strong></td><td>Leave</td><td>8 hours</td></tr>
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
                 <tr><td><strong>NH</strong></td><td>National Holiday</td><td>0 hours</td></tr>
               </table>
 

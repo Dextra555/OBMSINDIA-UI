@@ -71,7 +71,6 @@
                             </mat-select>
                         </mat-form-field>
                     </div>
-<<<<<<< HEAD
                     <div class="col-12 col-sm-12 col-md-12 col-lg-5">
                         <mat-form-field appearance="outline">
                             <mat-label>Employee</mat-label>
@@ -92,37 +91,6 @@
                                 (click)="clearEmployeeSelection()">
                                 <mat-icon>close</mat-icon>
                             </button>
-=======
-                    <div class="col-12 col-sm-12 col-md-12 col-lg-5" *ngIf="isEdit == true">
-                        <mat-form-field appearance="outline">
-                            <mat-label>Employee</mat-label>
-                            <mat-select formControlName="EmployeeID"
-                                (keydown)="onKeyDropdown($event, 'employeeSearchString', 'employeeListModel', 'filteredEmployeeList', 'EMP_NAME', employeeSearchSubject)"
-                                [panelClass]="'custom-dropdown-panel'"
-                                (selectionChange)="onEmployeeSelectionChange($event)"
-                                [disabled]="employeeAdvanceTitleStatus == 'edit'">
-                                <mat-select-trigger>
-                                    {{ employeeNameMap[employeeLoanForm.get('EmployeeID')?.value] }}
-                                </mat-select-trigger>
-                                <mat-option *ngFor="let employee of employeeListModel" [value]="employee.ID">
-                                    {{ employee.EMP_NAME }}
-                                </mat-option>
-                            </mat-select>
-                        </mat-form-field>
-                    </div>
-                    <div class="col-12 col-sm-12 col-md-12 col-lg-5" *ngIf="isEdit == false">
-                        <mat-form-field appearance="outline">
-                            <mat-label>Employee</mat-label>
-                            <mat-select formControlName="EmployeeID"
-                                (keydown)="onKeyDropdown($event, 'employeeSearchString', 'employeeListModel', 'filteredEmployeeList', 'EMP_NAME', employeeSearchSubject)"
-                                [panelClass]="'custom-dropdown-panel'"
-                                (selectionChange)="onEmployeeSelectionChange($event)"
-                                [disabled]="employeeAdvanceTitleStatus == 'edit'">
-                                <mat-option *ngFor="let employee of employeeListModel" [value]="employee.EMP_ID">
-                                    {{ employee.EMP_NAME }}
-                                </mat-option>
-                            </mat-select>
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
                         </mat-form-field>
                     </div>
                 </div>

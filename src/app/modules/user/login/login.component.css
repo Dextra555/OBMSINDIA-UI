@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 .warning-panel {
     background-color: yellow; /* Light yellow background for warning */
     color:black; /* Dark yellow text for visibility */
@@ -21,28 +20,4 @@
   .action-button:hover {
     background-color: #0056b3;
   }
-=======
-.warning-panel {
-    background-color: yellow; /* Light yellow background for warning */
-    color:black; /* Dark yellow text for visibility */
-    border: 1px solid #ffeeba;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .action-button {
-    background-color: #007bff; /* Button color */
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    margin-left: 10px;
-    cursor: pointer;
-  }
-  
-  .action-button:hover {
-    background-color: #0056b3;
-  }
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
   

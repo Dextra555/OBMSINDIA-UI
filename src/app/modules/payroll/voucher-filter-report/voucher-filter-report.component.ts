@@ -34,11 +34,8 @@ export class VoucherFilterReportComponent implements OnInit {
   showVoucherList: boolean = false;
   showVoucherReport: boolean = false;
   voucherList: any[] = [];
-<<<<<<< HEAD
   filteredVoucherList: any[] = [];
   searchText: string = '';
-=======
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
   selectedVoucherId: number = 0;
 
   formatDate(date: any) {
@@ -189,10 +186,7 @@ export class VoucherFilterReportComponent implements OnInit {
     ).subscribe(
       (data: any) => {
         this.voucherList = data || [];
-<<<<<<< HEAD
         this.filteredVoucherList = [...this.voucherList];
-=======
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
         this.showVoucherList = true;
         this.showLoadingSpinner = false;
       },
@@ -232,7 +226,6 @@ export class VoucherFilterReportComponent implements OnInit {
     this.urlSafe = undefined;
   }
 
-<<<<<<< HEAD
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
     this.searchText = filterValue;
@@ -246,8 +239,6 @@ export class VoucherFilterReportComponent implements OnInit {
     }
   }
 
-=======
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
   backToFilter(): void {
     this.showVoucherList = false;
     this.showVoucherReport = false;

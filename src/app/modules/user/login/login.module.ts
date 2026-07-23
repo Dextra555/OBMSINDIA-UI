@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '../../shared.module';
@@ -13,19 +12,3 @@ import { SharedModule } from '../../shared.module';
   ]
 })
 export class LoginModule { }
-=======
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '../../shared.module';
-
-
-
-@NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    SharedModule
-  ]
-})
-export class LoginModule { }
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87

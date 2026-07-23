@@ -1,9 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-<<<<<<< HEAD
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-=======
-import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { MatDialog } from '@angular/material/dialog';
 import { MAT_SELECT_CONFIG, MatSelectConfig } from '@angular/material/select';
@@ -60,20 +56,11 @@ export class NewEmployeeDailyAdvanceComponent implements OnInit {
   StartPeriod!: string;
   EndPeriod!: string;
   userRole!: string;
-<<<<<<< HEAD
    	branchSearchSubject = new Subject<string>();
 	branchSearchString: string = '';
 	filteredEmployeeList: any[] = [];
 	filteredBranchList: any[] = [];
 	employeeSearchCtrl = new FormControl();
-=======
-  	employeeSearchSubject = new Subject<string>();
-	branchSearchSubject = new Subject<string>();
-	employeeSearchString: string = '';
-	branchSearchString: string = '';
-	filteredEmployeeList: any[] = [];
-	filteredBranchList: any[] = [];
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
   
   private formatDate(date: any) {
     const d = new Date(date);
@@ -134,17 +121,7 @@ export class NewEmployeeDailyAdvanceComponent implements OnInit {
   }
 
   ngOnInit(): void {
-<<<<<<< HEAD
     // Branch search debounce
-=======
-    // Employee search debounce
-	this.employeeSearchSubject.pipe(debounceTime(3000)).subscribe(() => {
-	  this.employeeSearchString = '';
-	  this.employeeListModel = [...this.filteredEmployeeList]; // reset list
-	});
-
-	// Branch search debounce
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
 	this.branchSearchSubject.pipe(debounceTime(3000)).subscribe(() => {
 	  this.branchSearchString = '';
 	  this.branchModel = [...this.filteredBranchList];
@@ -266,10 +243,7 @@ export class NewEmployeeDailyAdvanceComponent implements OnInit {
       }
     } else {
       this.employeeListModel = [];
-<<<<<<< HEAD
       this.filteredEmployeeList = [];
-=======
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
       const formArray = this.dynamicForm.get('formArray') as FormArray;
       formArray.clear();
     }
@@ -902,7 +876,6 @@ export class NewEmployeeDailyAdvanceComponent implements OnInit {
     }, 3000);
 
   }
-<<<<<<< HEAD
   onEmployeeSearchInput(event: any) {
     const value = event.target.value.trim().toLowerCase();
     if (!value) {
@@ -938,8 +911,6 @@ export class NewEmployeeDailyAdvanceComponent implements OnInit {
     this.filteredEmployeeList = [...this.employeeListModel];
   }
 
-=======
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
   searchDropdown(searchString: string, list: any[], key: string): any[] {
 	if (!searchString) return [...list]; // if empty, return full list
 	return list.filter(item => item[key].toLowerCase().includes(searchString.toLowerCase()));
@@ -947,15 +918,9 @@ export class NewEmployeeDailyAdvanceComponent implements OnInit {
 
 	onKeyDropdown(
 	event: KeyboardEvent,
-<<<<<<< HEAD
 	searchStringProp: 'branchSearchString',
 	listProp: 'branchModel',
 	filteredListProp: 'filteredBranchList',
-=======
-	searchStringProp: 'employeeSearchString' | 'branchSearchString',
-	listProp: 'employeeListModel' | 'branchModel',
-	filteredListProp: 'filteredEmployeeList' | 'filteredBranchList',
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
 	keyName: string,
 	subject: Subject<string>
 	) {

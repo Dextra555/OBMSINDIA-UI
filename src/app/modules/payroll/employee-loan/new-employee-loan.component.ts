@@ -1,9 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-<<<<<<< HEAD
 import { AbstractControl, FormBuilder, FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
-=======
-import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -52,20 +48,11 @@ export class NewEmployeeLoanComponent implements OnInit {
   StartPeriod!: string;
   EndPeriod!: string;
 
-<<<<<<< HEAD
   branchSearchSubject = new Subject<string>();
 
   branchSearchString: string = '';
 
   employeeSearchCtrl = new FormControl();
-=======
-  employeeSearchSubject = new Subject<string>();
-  branchSearchSubject = new Subject<string>();
-
-  employeeSearchString: string = '';
-  branchSearchString: string = '';
-
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
   filteredEmployeeList: any[] = [];
   filteredBranchList: any[] = [];
 
@@ -128,15 +115,6 @@ export class NewEmployeeLoanComponent implements OnInit {
   }
 
   ngOnInit(): void {
-<<<<<<< HEAD
-=======
-    // Employee search debounce
-    this.employeeSearchSubject.pipe(debounceTime(3000)).subscribe(() => {
-      this.employeeSearchString = '';
-      this.employeeListModel = [...this.filteredEmployeeList]; // reset list
-    });
-
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
     // Branch search debounce
     this.branchSearchSubject.pipe(debounceTime(3000)).subscribe(() => {
       this.branchSearchString = '';
@@ -271,7 +249,7 @@ export class NewEmployeeLoanComponent implements OnInit {
     const selectedId = event.value; // This is employee.ID (DB key)
     if (this.isEdit == true) {
       const emp = this.employeeListModel.find((x: any) => x.ID === selectedId);
-      // ✅ Map ID -> EMP_ID for API call
+      // Γ£à Map ID -> EMP_ID for API call
       this.EmployeeID = emp ? emp.EMP_ID : 0;
     } else {
       this.EmployeeID = event.value;
@@ -345,16 +323,13 @@ export class NewEmployeeLoanComponent implements OnInit {
 
           const currentEmpId = this.employeeLoanForm.value.ID;
 
-          // Re-patch EmployeeID if it's set and exists in the list → forces highlight
+          // Re-patch EmployeeID if it's set and exists in the list ΓåÆ forces highlight
           if (currentEmpId && this.employeeListModel.some(e => e.ID === currentEmpId)) {
             this.employeeLoanForm.patchValue({
               EmployeeID: currentEmpId
             });
-<<<<<<< HEAD
             const emp = this.employeeListModel.find((e: any) => e.ID === currentEmpId);
             if (emp) this.employeeSearchCtrl.setValue(emp.EMP_NAME);
-=======
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
           }
           this.employeeNameMap = Object.fromEntries(
             this.employeeListModel.map((e: any) => [e.ID, e.EMP_NAME])
@@ -445,7 +420,7 @@ export class NewEmployeeLoanComponent implements OnInit {
       this.employeeService.getEmployeeById(empId)
     ]).subscribe({
       next: ([response]) => {
-        const employee = response?.Result?.employee;   // ✅ Extract actual employee
+        const employee = response?.Result?.employee;   // Γ£à Extract actual employee
 
         // Store in array if needed
         this.employeeListModel = employee ? [employee] : [];
@@ -508,7 +483,7 @@ export class NewEmployeeLoanComponent implements OnInit {
                     )
                   }).subscribe({
                     next: ({ salaryProcessed }) => {
-                      if (salaryProcessed) {
+                      if (salaryProcessed && this.currentUser !== 'superadmin') {
                         this.showMessage(
                           `Salary already processed for this Guard/Staff. You do not have the right to update or save. Please contact HQ for more information.`,
                           'warning',
@@ -604,7 +579,7 @@ export class NewEmployeeLoanComponent implements OnInit {
               )
             }).subscribe({
               next: ({ salaryProcessed, resignDate }) => {
-                if (salaryProcessed) {
+                if (salaryProcessed && this.currentUser !== 'superadmin') {
                   this.showMessage(
                     `Salary already processed for this Guard/Staff. You do not have the right to update or save. Please contact HQ for more information.`,
                     'warning',
@@ -657,7 +632,6 @@ export class NewEmployeeLoanComponent implements OnInit {
     return list.filter(item => item[key].toLowerCase().includes(searchString.toLowerCase()));
   }
 
-<<<<<<< HEAD
   onEmployeeSearchInput(event: any) {
     const value = event.target.value.trim().toLowerCase();
     if (!value) {
@@ -698,13 +672,6 @@ export class NewEmployeeLoanComponent implements OnInit {
     searchStringProp: 'branchSearchString',
     listProp: 'branchModel',
     filteredListProp: 'filteredBranchList',
-=======
-  onKeyDropdown(
-    event: KeyboardEvent,
-    searchStringProp: 'employeeSearchString' | 'branchSearchString',
-    listProp: 'employeeListModel' | 'branchModel',
-    filteredListProp: 'filteredEmployeeList' | 'filteredBranchList',
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
     keyName: string,
     subject: Subject<string>
   ) {

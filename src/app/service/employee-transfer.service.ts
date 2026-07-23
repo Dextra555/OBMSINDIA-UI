@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Injectable } from '@angular/core';
 import { environment } from "../../environments/environment";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
@@ -52,58 +51,3 @@ export class EmployeeTransferService {
     return throwError(errorMessage);
   }
 }
-=======
-import { Injectable } from '@angular/core';
-import { environment } from "../../environments/environment";
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
-import { catchError, Observable, throwError } from "rxjs";
-
-@Injectable({
-  providedIn: 'root'
-})
-export class EmployeeTransferService {
-  apiUrl: string = environment.baseUrl;
-  constructor(private httpClient: HttpClient) { }
-
-  getEmployees() {
-    return this.httpClient.get<any>(this.apiUrl + 'Master/GetBranchMasterAll',
-    ).pipe(catchError(this.errorHandle));
-  }
-
-  // New method to get employees by branch for transfer filtering
-  getEmployeesByBranchForTransfer(branchId: string) {
-    return this.httpClient.get<any>(this.apiUrl + 'Employee/EmployeesByBranchId?branchId=' + branchId);
-  }
-
-  setEmployeeTransfer(body: any) {
-    return this.httpClient.post(this.apiUrl + 'Employee/UpdateEmployeeTransfer', body);
-  }
-
-  getEmployeeHistoryDetails(branch?: string): Observable<any[]> {
-    const params = branch ? { params: { branch } } : {};
-    return this.httpClient.get<any[]>(`${this.apiUrl}Employee/GetAllEmployeesWithHistory`, params);
-  }
-
-  getClientsFromBranchId(branchId: string) {
-    return this.httpClient.get<any>(this.apiUrl + 'Master/GetClientMsterListByBranch?branchCode=' + branchId);
-  }
-
-  getNextEmployeeCode(clientId: string) {
-    return this.httpClient.get<any>(this.apiUrl + 'Employee/GetEmployeeNoByBranchID?branchId=' + clientId);
-  }
-
-  private errorHandle(error: HttpErrorResponse) {
-    let errorMessage: string = '';
-    if (error.error instanceof ErrorEvent) {
-      // A client-side or network error occurred. Handle it accordingly.
-      errorMessage = `An error occurred Cleint side: ${error.error}`;
-    } else {
-      // The backend returned an unsuccessful response code.
-      //errorMessage = `An error occurred Server side: ${error.status}, body was: ${error.error}`;
-    }
-    // Return an observable with a user-facing error message.
-    errorMessage += '\n This is the problem with service. We are notified & working on it. Please try again later..';
-    return throwError(errorMessage);
-  }
-}
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87

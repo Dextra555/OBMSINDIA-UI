@@ -1,12 +1,5 @@
-<<<<<<< HEAD
 .col-lg-2-5 {
     width: 20.83%; /* 2.5 columns worth of the grid */
     flex: 0 0 20.83%; /* Makes it behave like a grid column */
     max-width: 20.83%; /* Ensures it does not exceed the calculated width */
-=======
-.col-lg-2-5 {
-    width: 20.83%; /* 2.5 columns worth of the grid */
-    flex: 0 0 20.83%; /* Makes it behave like a grid column */
-    max-width: 20.83%; /* Ensures it does not exceed the calculated width */
->>>>>>> 5207b82f409ea4dcb09404b90ab7324a99cbff87
 }
