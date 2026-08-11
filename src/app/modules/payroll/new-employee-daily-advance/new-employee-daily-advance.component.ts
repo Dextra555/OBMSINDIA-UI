@@ -791,7 +791,7 @@ export class NewEmployeeDailyAdvanceComponent implements OnInit {
 
     }).subscribe(({ salaryProcess, resignDate }) => {
 
-      if (salaryProcess) {
+      if (salaryProcess && this.currentUser !== 'superadmin') {
         this.bindAdvanceDetails(this.EmployeeID);
         this.showMessage(
           `Salary already Process for this Guard/Staff. You do not have the right to update or save. Please contact HQ for more information.`,

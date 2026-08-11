@@ -649,7 +649,7 @@ export class NewEmployeeUniformLoanComponent implements OnInit {
               )
             }).subscribe({
               next: ({ salaryProcessed, resignDate }) => {
-                if (salaryProcessed) {
+                if (salaryProcessed && this.currentUser !== 'superadmin') {
                   this.showMessage(
                     `Salary already processed for this Guard/Staff. You do not have the right to update or save. Please contact HQ for more information.`,
                     'warning',
@@ -739,7 +739,7 @@ export class NewEmployeeUniformLoanComponent implements OnInit {
                     )
                   }).subscribe({
                     next: ({ salaryProcessed }) => {
-                      if (salaryProcessed) {
+                      if (salaryProcessed && this.currentUser !== 'superadmin') {
                         this.showMessage(
                           `Salary already processed for this Guard/Staff. You do not have the right to update or save. Please contact HQ for more information.`,
                           'warning',
