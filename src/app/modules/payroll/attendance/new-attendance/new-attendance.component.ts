@@ -17,6 +17,7 @@ import { UserAccessModel } from 'src/app/model/userAccesModel';
 import { DatasharingService } from 'src/app/service/datasharing.service';
 import { MastermoduleService } from 'src/app/service/mastermodule.service';
 import { PayrollModuleService } from 'src/app/service/payrollmodule.service';
+import { AttendancePeriodResult } from 'src/app/model/attendancePeriodModel';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -87,6 +88,13 @@ export class NewAttendanceComponent implements OnInit {
   employeeSearchCtrl = new FormControl();
   employeeSearchText: string = '';
   filteredEmployeeList: any[] = [];
+
+  /** Stores the client code selected for the current attendance entry.
+   *  Used to resolve the correct custom period via AttendancePeriodService. */
+  currentClientCode: string = '';
+
+  /** Cached period result from API — drives StartPeriod / EndPeriod */
+  currentAttendancePeriodResult: AttendancePeriodResult | null = null;
 
   private formatDate(date: any) {
     const d = new Date(date);
@@ -260,16 +268,16 @@ export class NewAttendanceComponent implements OnInit {
     this.dtAdvanceDate = this.formatDate(
       new Date(dtAdvanceDate.getFullYear(), dtAdvanceDate.getMonth() + 1, 0)
     );
-    this.StartPeriod = this.formatDate(this.firstOfMonth(new Date(this.attendancePeriod)));
-    this.EndPeriod = this.formatDate(this.lastOfMonth(new Date(this.attendancePeriod)));
 
-
-    if (this.branchCode != '' && this.branchCode != undefined) {
-      this.getEmployeeListByEmployeeType(this.branchCode, this.attendanceForm.value.EmployeeType, this.StartPeriod, this.EndPeriod, 'Active');
-      this.getClients(this.dtAdvanceDate, this.branchCode);
-    } else {
-      this.getEmployeeListByEmployeeType("0", this.attendanceForm.value.EmployeeType, this.StartPeriod, this.EndPeriod, 'Active');
-    }
+    // Use AttendancePeriodService for custom-period clients; falls back to calendar month
+    this.refreshAttendancePeriod(dtAdvanceDate, () => {
+      if (this.branchCode != '' && this.branchCode != undefined) {
+        this.getEmployeeListByEmployeeType(this.branchCode, this.attendanceForm.value.EmployeeType, this.StartPeriod, this.EndPeriod, 'Active');
+        this.getClients(this.dtAdvanceDate, this.branchCode);
+      } else {
+        this.getEmployeeListByEmployeeType("0", this.attendanceForm.value.EmployeeType, this.StartPeriod, this.EndPeriod, 'Active');
+      }
+    });
   }
   onBranchSelectionChange(event: any) {
     this.showLoadingSpinner = true;
@@ -284,26 +292,24 @@ export class NewAttendanceComponent implements OnInit {
     this.attendancePeriod = this.formatDate(this.attendanceForm.get('AdvanceDate')?.value);
     this.branchCode = event.value;
 
-    this.StartPeriod = this.formatDate(this.firstOfMonth(new Date(this.attendancePeriod)));
-    this.EndPeriod = this.formatDate(this.lastOfMonth(new Date(this.attendancePeriod)));
-
-    if (this.attendancePeriod != null && this.attendancePeriod != 'NaN-NaN-NaN' && this.branchCode != '') {
-      this.errorMessage = '';
-      // this.getEmployeeListByEmployeeType(advanceDate, branchCode, event.value, 1, 0, 'All');
-      this.getEmployeeListByEmployeeType(this.branchCode, this.attendanceForm.value.EmployeeType, this.StartPeriod, this.EndPeriod, 'Active');
-      this.getClients(this.attendancePeriod, this.branchCode);
-      setTimeout(() => {
-        this.hideloadingSpinner();
-      }, 200);
-    } else {
-      this.errorMessage = 'Please select advance date selection.';
-      this.attendanceForm.patchValue({
-        EmployeeType: 'None',
-      })
-      setTimeout(() => {
-        this.hideloadingSpinner();
-      }, 200);
-    }
+    // Resolve period using AttendancePeriodService (custom or calendar month)
+    const dtAdvDate = new Date(this.attendanceForm.get('AdvanceDate')?.value);
+    this.refreshAttendancePeriod(dtAdvDate, () => {
+      if (this.attendancePeriod != null && this.attendancePeriod != 'NaN-NaN-NaN' && this.branchCode != '') {
+        this.errorMessage = '';
+        this.getEmployeeListByEmployeeType(this.branchCode, this.attendanceForm.value.EmployeeType, this.StartPeriod, this.EndPeriod, 'Active');
+        this.getClients(this.attendancePeriod, this.branchCode);
+        setTimeout(() => {
+          this.hideloadingSpinner();
+        }, 200);
+      } else {
+        this.errorMessage = 'Please select advance date selection.';
+        this.attendanceForm.patchValue({ EmployeeType: 'None' });
+        setTimeout(() => {
+          this.hideloadingSpinner();
+        }, 200);
+      }
+    });
   }
   radioButtonTypeSelectionChange(event: any) {
     //this.dynamicEditable = 'emptype';
@@ -311,18 +317,17 @@ export class NewAttendanceComponent implements OnInit {
     this.employeeSelectedType = event.value;
     this.attendancePeriod = this.formatDate(this.attendanceForm.get('AdvanceDate')?.value);
     this.branchCode = this.attendanceForm.get('BranchCode')?.value;
-    this.StartPeriod = this.formatDate(this.firstOfMonth(new Date(this.attendancePeriod)));
-    this.EndPeriod = this.formatDate(this.lastOfMonth(new Date(this.attendancePeriod)));
-    if (this.branchCode != null && this.branchCode != 'NaN-NaN-NaN' && this.branchCode != '') {
-      this.errorMessage = '';
-      // this.getEmployeeListByEmployeeType(branchCode, event.value, dtStartPeriod,dtEndPeriod, 'All');
-      this.getEmployeeListByEmployeeType(this.branchCode, this.attendanceForm.value.EmployeeType, this.StartPeriod, this.EndPeriod, 'Active');
-    } else {
-      this.errorMessage = 'Please select advance date and branch selection.';
-      this.attendanceForm.patchValue({
-        EmployeeType: 'None',
-      })
-    }
+    // Resolve period via API (custom or calendar month fallback)
+    const dtAdvDate = new Date(this.attendanceForm.get('AdvanceDate')?.value);
+    this.refreshAttendancePeriod(dtAdvDate, () => {
+      if (this.branchCode != null && this.branchCode != 'NaN-NaN-NaN' && this.branchCode != '') {
+        this.errorMessage = '';
+        this.getEmployeeListByEmployeeType(this.branchCode, this.attendanceForm.value.EmployeeType, this.StartPeriod, this.EndPeriod, 'Active');
+      } else {
+        this.errorMessage = 'Please select advance date and branch selection.';
+        this.attendanceForm.patchValue({ EmployeeType: 'None' });
+      }
+    });
   }
   onEmployeeChange() {
     this.showLoadingSpinner = true;
@@ -430,16 +435,19 @@ export class NewAttendanceComponent implements OnInit {
                 }
               }
 
-              // Check if the AdvanceDate is in the current month and year
-              if (advanceDate.getMonth() === today.getMonth() && advanceDate.getFullYear() === today.getFullYear()) {
+              // Use custom period total days if available; otherwise use calendar month
+              if (this.currentAttendancePeriodResult?.IsCustom) {
+                iNoOfDays = this.currentAttendancePeriodResult.TotalDays;
+                iStartDay = 1; // getPeriodDate handles absolute index from period start
+              } else if (advanceDate.getMonth() === today.getMonth() && advanceDate.getFullYear() === today.getFullYear()) {
                 iNoOfDays = advanceDate.getDate();
               } else {
-                iNoOfDays = this.getDaysInMonth(advanceDate.toString()); // Use utility function to get days in month
+                iNoOfDays = this.getDaysInMonth(advanceDate.toString());
               }
               const attendanceDate = new Date(advanceDate.getFullYear(), advanceDate.getMonth(), 1);
 
               // Check if the employee has a resignation date
-              if (resignDate) {
+              if (resignDate && !this.currentAttendancePeriodResult?.IsCustom) {
                 const resignMonthStart = new Date(resignDate.getFullYear(), resignDate.getMonth(), 1);
 
                 // Validate: Attendance period cannot be after employee's resignation month
@@ -460,7 +468,10 @@ export class NewAttendanceComponent implements OnInit {
               }
 
               // Check if the AdvanceDate is in the employee's joining month and year
-              if (this.dtAttendanceDate.getMonth() === joinDate.getMonth() && this.dtAttendanceDate.getFullYear() === joinDate.getFullYear()) {
+              // (only for standard calendar period — custom period always starts from period start day)
+              if (!this.currentAttendancePeriodResult?.IsCustom &&
+                  this.dtAttendanceDate.getMonth() === joinDate.getMonth() &&
+                  this.dtAttendanceDate.getFullYear() === joinDate.getFullYear()) {
                 iStartDay = joinDate.getDate();
               }
 
@@ -549,27 +560,58 @@ export class NewAttendanceComponent implements OnInit {
     }
 
   }
+  /**
+   * Returns the actual Date for a given row index within the current attendance period.
+   * Custom period  → starts from currentAttendancePeriodResult.StartDate
+   * Normal period  → starts from 1st of the selected AdvanceDate month (existing behaviour)
+   *
+   * @param index  0-based row index
+   */
+  private getPeriodDate(index: number): Date {
+    if (this.currentAttendancePeriodResult?.IsCustom && this.currentAttendancePeriodResult.StartDate) {
+      const start = new Date(this.currentAttendancePeriodResult.StartDate);
+      return new Date(start.getFullYear(), start.getMonth(), start.getDate() + index);
+    }
+    // Standard: calendar month
+    const adv = this.attendanceForm.value.AdvanceDate;
+    return new Date(adv.getFullYear(), adv.getMonth(), index + 1);
+  }
+
+  /**
+   * Returns total days for the current attendance period.
+   * Custom  → TotalDays from API result
+   * Normal  → days in the selected month (existing behaviour)
+   */
+  private getPeriodTotalDays(): number {
+    if (this.currentAttendancePeriodResult?.IsCustom && this.currentAttendancePeriodResult.TotalDays) {
+      return this.currentAttendancePeriodResult.TotalDays;
+    }
+    const adv = this.attendanceForm.value.AdvanceDate;
+    if (!adv) return 30;
+    return this.getDaysInMonth(adv.toString());
+  }
+
   addFormFields(count: number, startDay: number = 1): void {
     const formArray = this.dynamicForm.get('formArray') as FormArray;
     formArray.clear();
+    // For custom period: startDay offset from period start; for normal: day-of-month
+    const isCustom = !!(this.currentAttendancePeriodResult?.IsCustom);
     for (let i = startDay - 1; i < count; i++) {
-      const currentDate = new Date();
-      currentDate.setDate(startDay + i);
+      // getPeriodDate uses absolute index from period start
+      const currentDate = isCustom
+        ? this.getPeriodDate(i)
+        : new Date(
+            this.attendanceForm.value.AdvanceDate.getFullYear(),
+            this.attendanceForm.value.AdvanceDate.getMonth(),
+            startDay + i
+          );
 
       formArray.push(this.fb.group({
         weekDay: this.getWeekday(currentDate.getDay()),
         dayField: [i + 1],
         ID: [0],
         AttendanceID: [0],
-        AttendanceDate: [
-          this.formatDate(
-            new Date(
-              this.attendanceForm.value.AdvanceDate.getFullYear(),
-              this.attendanceForm.value.AdvanceDate.getMonth(),
-              startDay + i
-            )
-          ),
-        ],
+        AttendanceDate: [this.formatDate(currentDate)],
         Client: [''],
         Type: ['General Working'],
         TimeStart: [null],
@@ -592,13 +634,16 @@ export class NewAttendanceComponent implements OnInit {
     this.showLoadingSpinner = true;
     const formArray = this.dynamicForm.get('formArray') as FormArray;
     formArray.clear();
+    const isCustom = !!(this.currentAttendancePeriodResult?.IsCustom);
 
     for (let i = iStartDay - 1; i < iNoOfDays; i++) {
-      const currentDate = new Date(
-        this.attendanceForm.value.AdvanceDate.getFullYear(),
-        this.attendanceForm.value.AdvanceDate.getMonth(),
-        i + 1
-      );
+      const currentDate = isCustom
+        ? this.getPeriodDate(i)
+        : new Date(
+            this.attendanceForm.value.AdvanceDate.getFullYear(),
+            this.attendanceForm.value.AdvanceDate.getMonth(),
+            i + 1
+          );
 
       const matchingRecord = data.find((record: any) => {
         const recordDate = new Date(record.AttendanceDate);
@@ -655,16 +700,25 @@ export class NewAttendanceComponent implements OnInit {
   addStaffFormFields(count: number, startDay: number = 1): void {
     const formArray = this.dynamicForm.get('formArray') as FormArray;
     formArray.clear();
+    const isCustom = !!(this.currentAttendancePeriodResult?.IsCustom);
 
     for (let i = startDay - 1; i < count; i++) {
-      const currentDate = new Date();
-      currentDate.setDate(startDay + i);
+      const currentDate = isCustom
+        ? this.getPeriodDate(i)
+        : (() => {
+            const d = new Date(
+              this.attendanceForm.value.AdvanceDate.getFullYear(),
+              this.attendanceForm.value.AdvanceDate.getMonth(),
+              startDay + i
+            );
+            return d;
+          })();
 
-      const weekDayIndex = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
+      const weekDayIndex = currentDate.getDay();
       const weekDayName = this.getWeekday(weekDayIndex);
 
       let type = 'General Working';
-      let hours = '8'; // default for MondayΓÇôFriday
+      let hours = '8';
 
       if (weekDayIndex === 0) { // Sunday
         type = 'Off Day';
@@ -679,15 +733,7 @@ export class NewAttendanceComponent implements OnInit {
         dayField: [i + 1],
         ID: [0],
         AttendanceID: [0],
-        AttendanceDate: [
-          this.formatDate(
-            new Date(
-              this.attendanceForm.value.AdvanceDate.getFullYear(),
-              this.attendanceForm.value.AdvanceDate.getMonth(),
-              startDay + i
-            )
-          ),
-        ],
+        AttendanceDate: [this.formatDate(currentDate)],
         Client: [''],
         Type: [type],
         TimeStart: [null],
@@ -712,13 +758,16 @@ export class NewAttendanceComponent implements OnInit {
     this.showLoadingSpinner = true;
     const formArray = this.dynamicForm.get('formArray') as FormArray;
     formArray.clear();
+    const isCustom = !!(this.currentAttendancePeriodResult?.IsCustom);
 
     for (let i = iStartDay - 1; i < iNoOfDays; i++) {
-      const currentDate = new Date(
-        this.attendanceForm.value.AdvanceDate.getFullYear(),
-        this.attendanceForm.value.AdvanceDate.getMonth(),
-        i + 1
-      );
+      const currentDate = isCustom
+        ? this.getPeriodDate(i)
+        : new Date(
+            this.attendanceForm.value.AdvanceDate.getFullYear(),
+            this.attendanceForm.value.AdvanceDate.getMonth(),
+            i + 1
+          );
 
       const weekDayIndex = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
       const weekDayName = this.getWeekday(weekDayIndex);
@@ -785,6 +834,24 @@ export class NewAttendanceComponent implements OnInit {
   }
   clientNameChange(event: any) {
     this.ClientName = event.value == '' ? '0' : event.value;
+  }
+
+  /**
+   * Called when Default Client dropdown changes.
+   * Looks up the client Code from the Name, then calls onClientSelectionChange()
+   * so the period date range banner updates immediately.
+   */
+  onClientSelectionChangeFromName(event: any): void {
+    const selectedName: string = event?.value || '';
+    if (!selectedName) {
+      this.currentClientCode = '';
+      this.currentAttendancePeriodResult = null;
+      return;
+    }
+    // Find the matching client in employeeModel (which holds ClientMaster rows)
+    const client = this.employeeModel?.find((c: any) => c.Name === selectedName);
+    const clientCode: string = client?.Code || '';
+    this.onClientSelectionChange(clientCode);
   }
   Shift2ClientChange(event: any) {
     this.Shift2Client = event.value == '' ? '0' : event.value;
@@ -1008,7 +1075,9 @@ export class NewAttendanceComponent implements OnInit {
     this.shift2StartTimeValidation = null
     this.shift2EndTimeValidation = null
     this.shift2HoursValidation = null
-
+    // Clear the period date range banner
+    this.currentAttendancePeriodResult = null;
+    this.currentClientCode = '';
   }
   getBranchMasterList() {
     this._masterService.getBranchMaster('null').subscribe((responseData) => {
@@ -1204,15 +1273,18 @@ export class NewAttendanceComponent implements OnInit {
     const joinDate = this.attendanceForm.value.JoinDate ? new Date(this.attendanceForm.value.JoinDate) : null;
     const resignDate = this.attendanceForm.value.ResignedDate ? new Date(this.attendanceForm.value.ResignedDate) : null;
 
-    // Check if the AdvanceDate is in the current month and year
-    if (advanceDate.getMonth() === today.getMonth() && advanceDate.getFullYear() === today.getFullYear()) {
+    // Use custom period total days if available; otherwise calendar month
+    if (this.currentAttendancePeriodResult?.IsCustom) {
+      iNoOfDays = this.currentAttendancePeriodResult.TotalDays;
+      iStartDay = 1;
+    } else if (advanceDate.getMonth() === today.getMonth() && advanceDate.getFullYear() === today.getFullYear()) {
       iNoOfDays = advanceDate.getDate();
     } else {
-      iNoOfDays = this.getDaysInMonth(advanceDate.toString()); // Use utility function to get days in month
+      iNoOfDays = this.getDaysInMonth(advanceDate.toString());
     }
 
-    // Check if the employee has a resignation date
-    if (resignDate) {
+    // Check if the employee has a resignation date (standard period only)
+    if (resignDate && !this.currentAttendancePeriodResult?.IsCustom) {
       const attendanceDate = new Date(advanceDate.getFullYear(), advanceDate.getMonth(), 1);
       if (attendanceDate > resignDate) {
         this.showMessage(`Employee has resigned on ${resignDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`, 'warning', 'Warning Message');
@@ -1225,8 +1297,10 @@ export class NewAttendanceComponent implements OnInit {
       }
     }
 
-    // Check if the AdvanceDate is in the employee's joining month and year
-    if (joinDate && advanceDate.getMonth() === joinDate.getMonth() && advanceDate.getFullYear() === joinDate.getFullYear()) {
+    // Check if the AdvanceDate is in the employee's joining month and year (standard period only)
+    if (!this.currentAttendancePeriodResult?.IsCustom &&
+        joinDate && advanceDate.getMonth() === joinDate.getMonth() &&
+        advanceDate.getFullYear() === joinDate.getFullYear()) {
       iStartDay = joinDate.getDate();
     }
 
@@ -1702,97 +1776,79 @@ export class NewAttendanceComponent implements OnInit {
   }
 
   assignTimeStartValue(startTime: number, dayField: number): any {
+    // Use period-aware date so custom periods get the correct date
+    const baseDate = this.currentAttendancePeriodResult?.IsCustom
+      ? this.getPeriodDate(dayField - 1)
+      : new Date(
+          this.attendanceForm.value.AdvanceDate.getFullYear(),
+          this.attendanceForm.value.AdvanceDate.getMonth(),
+          dayField
+        );
     if (startTime != null && startTime != undefined) {
       this.startTime = this.addLeadingZero(startTime);
       if (this.startTime != null) {
-        const newDate = new Date(
+        const newDate = new Date(baseDate);
+        newDate.setHours(newDate.getHours() + this.startTime);
+        return newDate;
+      }
+    }
+    return new Date(baseDate);
+  }
+  assignTimeEndValue(endTime: number, dayField: number): any {
+    const baseDate = this.currentAttendancePeriodResult?.IsCustom
+      ? this.getPeriodDate(dayField - 1)
+      : new Date(
           this.attendanceForm.value.AdvanceDate.getFullYear(),
           this.attendanceForm.value.AdvanceDate.getMonth(),
           dayField
         );
-        newDate.setHours(newDate.getHours() + this.startTime);
-        const formattedDate = newDate;
-        return formattedDate
-      }
-    } else {
-      const newDate = new Date(
-        this.attendanceForm.value.AdvanceDate.getFullYear(),
-        this.attendanceForm.value.AdvanceDate.getMonth(),
-        dayField
-      );
-      return newDate;
-    }
-    return '';
-  }
-  assignTimeEndValue(endTime: number, dayField: number): any {
     if (endTime != null && endTime != undefined) {
       this.endTime = this.addLeadingZero(endTime);
       if (this.endTime != null) {
-        const newDate = new Date(
-          this.attendanceForm.value.AdvanceDate.getFullYear(),
-          this.attendanceForm.value.AdvanceDate.getMonth(),
-          dayField
-        );
+        const newDate = new Date(baseDate);
         newDate.setHours(newDate.getHours() + this.endTime);
-        const formattedDate = newDate;
-        return formattedDate;
+        return newDate;
       }
-    } else {
-      const newDate = new Date(
-        this.attendanceForm.value.AdvanceDate.getFullYear(),
-        this.attendanceForm.value.AdvanceDate.getMonth(),
-        dayField
-      );
-      return newDate;
     }
-    return '';
+    return new Date(baseDate);
   }
 
   assignOTTimeStartValue(startTimeOT: number, dayField: number): any {
+    const baseDate = this.currentAttendancePeriodResult?.IsCustom
+      ? this.getPeriodDate(dayField - 1)
+      : new Date(
+          this.attendanceForm.value.AdvanceDate.getFullYear(),
+          this.attendanceForm.value.AdvanceDate.getMonth(),
+          dayField
+        );
     if (startTimeOT != null && startTimeOT != undefined) {
       this.shift2StartTime = this.addLeadingZero(startTimeOT);
       if (this.shift2StartTime != null) {
-        const newDate = new Date(
+        const newDate = new Date(baseDate);
+        newDate.setHours(newDate.getHours() + this.shift2StartTime);
+        return newDate;
+      }
+    }
+    return new Date(baseDate);
+  }
+
+  assignOTTimeEndValue(endTimeOT: number, dayField: number): any {
+    const baseDate = this.currentAttendancePeriodResult?.IsCustom
+      ? this.getPeriodDate(dayField - 1)
+      : new Date(
           this.attendanceForm.value.AdvanceDate.getFullYear(),
           this.attendanceForm.value.AdvanceDate.getMonth(),
           dayField
         );
-        newDate.setHours(newDate.getHours() + this.shift2StartTime);
-        const formattedDate = newDate;
-        return formattedDate
-      }
-    } else {
-      const newDate = new Date(
-        this.attendanceForm.value.AdvanceDate.getFullYear(),
-        this.attendanceForm.value.AdvanceDate.getMonth(),
-        dayField
-      );
-      return newDate;
-    }
-    return '';
-  }
-  assignOTTimeEndValue(endTimeOT: number, dayField: number): any {
     if (endTimeOT != null && endTimeOT != undefined) {
       this.shift2EndTime = this.addLeadingZero(endTimeOT);
       if (this.shift2EndTime != null) {
-        const newDate = new Date(
-          this.attendanceForm.value.AdvanceDate.getFullYear(),
-          this.attendanceForm.value.AdvanceDate.getMonth(),
-          dayField
-        );
+        const newDate = new Date(baseDate);
         newDate.setHours(newDate.getHours() + this.shift2EndTime);
-        const formattedDate = newDate;
-        return formattedDate;
+        return newDate;
       }
-    } else {
-      const newDate = new Date(
-        this.attendanceForm.value.AdvanceDate.getFullYear(),
-        this.attendanceForm.value.AdvanceDate.getMonth(),
-        dayField
-      );
-      return newDate;
     }
-    return '';
+    return new Date(baseDate);
   }
   addingHours(value: any): any {
     if (value != '' && value != null) {
@@ -1995,7 +2051,7 @@ export class NewAttendanceComponent implements OnInit {
       && (this.attendanceForm.value.Shift2Rate === '' || this.attendanceForm.value.Shift2Rate == 0)) {
       this.showMessage(`Please enter Shift II rate details.`, 'warning', 'Warning Message');
     } else {
-      this._payrollService.saveAndUpdateAttendance(this.attendanceModel, attendanceData)
+      this._payrollService.saveAndUpdateAttendance(this.attendanceModel, attendanceData, this.currentClientCode)
         .subscribe(response => {
           if (response.Success == 'Success') {
             this.hideloadingSpinner();
@@ -2256,6 +2312,75 @@ export class NewAttendanceComponent implements OnInit {
   }
   public lastOfMonth(date: Date): Date {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  }
+
+  /**
+   * Calls the backend AttendancePeriod API for the given date and the currently
+   * selected client code.  Sets this.StartPeriod, this.EndPeriod and
+   * this.currentAttendancePeriodResult, then calls callback().
+   * Falls back to calendar-month values synchronously if the API is unavailable.
+   */
+  private refreshAttendancePeriod(date: Date, callback: () => void): void {
+    if (!date || isNaN(date.getTime())) {
+      // Fallback: no valid date yet
+      this.StartPeriod = this.formatDate(this.firstOfMonth(date || new Date()));
+      this.EndPeriod   = this.formatDate(this.lastOfMonth(date || new Date()));
+      callback();
+      return;
+    }
+
+    const year  = date.getFullYear();
+    const month = date.getMonth() + 1; // JS months are 0-based
+
+    this._payrollService.getAttendancePeriod(this.currentClientCode || '', year, month)
+      .subscribe({
+        next: (result) => {
+          this.currentAttendancePeriodResult = result;
+          this.StartPeriod = this.formatDate(new Date(result.StartDate));
+          this.EndPeriod   = this.formatDate(new Date(result.EndDate));
+          // Update dtAdvanceDate to use the PeriodKey (last day of reference month)
+          this.dtAdvanceDate = this.formatDate(new Date(result.PeriodKey));
+          callback();
+        },
+        error: () => {
+          // Fallback to calendar month if API fails (backward compatible)
+          this.StartPeriod = this.formatDate(this.firstOfMonth(date));
+          this.EndPeriod   = this.formatDate(this.lastOfMonth(date));
+          callback();
+        }
+      });
+  }
+
+  /** Called when the user selects a client from the dropdown — updates currentClientCode
+   *  and re-resolves the period for the selected client + current date. */
+  onClientSelectionChange(clientCode: string): void {
+    this.currentClientCode = clientCode || '';
+    const advDate = new Date(this.attendanceForm.value.AdvanceDate);
+    if (advDate && !isNaN(advDate.getTime())) {
+      this.refreshAttendancePeriod(advDate, () => {
+        // If formArray already has rows (employee was selected before client),
+        // rebuild with the correct period dates now that we have the custom period info
+        const formArray = this.dynamicForm.get('formArray') as FormArray;
+        if (formArray && formArray.length > 0 && this.currentAttendancePeriodResult?.IsCustom) {
+          const iNoOfDays = this.currentAttendancePeriodResult.TotalDays;
+          if (this.employeeSelectedType === 'Guard') {
+            this.addFormFields(iNoOfDays, 1);
+          } else {
+            this.addStaffFormFields(iNoOfDays, 1);
+          }
+        }
+        // Re-fetch employee list with updated period range
+        if (this.branchCode) {
+          this.getEmployeeListByEmployeeType(
+            this.branchCode,
+            this.attendanceForm.value.EmployeeType,
+            this.StartPeriod,
+            this.EndPeriod,
+            'Active'
+          );
+        }
+      });
+    }
   }
 
   // Dynamic Allowance Calculation based on Working Days

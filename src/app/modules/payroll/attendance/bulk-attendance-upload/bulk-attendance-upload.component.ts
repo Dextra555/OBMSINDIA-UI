@@ -80,6 +80,11 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
     'NH': 'National Holiday - National festival holiday'
   };
 
+  // Custom attendance period support
+  clients: any[] = [];
+  attendancePeriodLabel: string = '';
+  attendancePeriodIsCustom: boolean = false;
+
   @ViewChild('errorTable') errorTable!: MatTable<BulkUploadError>;
   @ViewChild('successTable') successTable!: MatTable<BulkUploadSuccess>;
 
@@ -94,6 +99,11 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.initializeForm();
     this.loadBranches();
+
+    // Resolve period label immediately when period changes
+    this.uploadForm.get('period')?.valueChanges.subscribe(() => {
+      this.resolveAttendancePeriod();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -171,7 +181,8 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
   private initializeForm(): void {
     this.uploadForm = this.fb.group({
       period: [new Date(), Validators.required],
-      branchCode: ['', Validators.required]
+      branchCode: ['', Validators.required],
+      clientCode: ['']   // optional — drives custom attendance period resolution
     });
   }
 
@@ -212,6 +223,46 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
       this.uploadResult = null;
       this.successMessage = `Γ£ô File selected: ${file.name} (${this.formatFileSize(file.size)})`;
     }
+  }
+
+  /** Called when branch changes — reload client list for the branch */
+  onBranchChange(event: any): void {
+    const branchCode = event?.value || event;
+    if (!branchCode) { this.clients = []; return; }
+    this.payrollService.getClientsByBranch(branchCode).subscribe({
+      next: (data: any[]) => { this.clients = data || []; },
+      error: () => { this.clients = []; }
+    });
+    this.resolveAttendancePeriod();
+  }
+
+  /** Called when client changes — re-resolve the attendance period */
+  onClientChange(_event: any): void {
+    this.resolveAttendancePeriod();
+  }
+
+  /** Calls the backend to resolve the attendance period for the selected client + period month.
+   *  Updates attendancePeriodLabel and attendancePeriodIsCustom for display in the template. */
+  private resolveAttendancePeriod(): void {
+    const period: Date = this.uploadForm.get('period')?.value;
+    const clientCode: string = this.uploadForm.get('clientCode')?.value || '';
+    if (!period) { this.attendancePeriodLabel = ''; return; }
+
+    const year  = period.getFullYear();
+    const month = period.getMonth() + 1;
+
+    this.payrollService.getAttendancePeriod(clientCode, year, month).subscribe({
+      next: (result) => {
+        this.attendancePeriodLabel    = result.Label;
+        this.attendancePeriodIsCustom = result.IsCustom;
+      },
+      error: () => {
+        // Fallback display — calendar month
+        const lastDay = new Date(year, month, 0);
+        this.attendancePeriodLabel    = `01-${period.toLocaleString('en-GB', { month: 'short' })}-${year} to ${lastDay.getDate()}-${period.toLocaleString('en-GB', { month: 'short' })}-${year}`;
+        this.attendancePeriodIsCustom = false;
+      }
+    });
   }
 
   downloadTemplate(): void {

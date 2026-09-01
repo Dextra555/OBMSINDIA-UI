@@ -321,10 +321,10 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
 
     // Generate data rows HTML with complete formatting
     let dataRowsHtml = '';
-    // Format currency as Indian format (Γé╣)
+    // Format currency as Indian format ()
     const formatCurrency = (value: any) => {
       const num = parseFloat(value) || 0;
-      return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return Math.round(num).toLocaleString('en-IN');
     };
 
     if (data.dataRows && data.dataRows.length > 0) {
@@ -346,8 +346,8 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
             <td class="text-center">${hsnCode}</td>
             <td class="text-center">${duties}</td>
             <td class="text-center">${qty}</td>
-            <td class="text-right">Γé╣ ${rateFormatted}</td>
-            <td class="text-right">Γé╣ ${amountFormatted}</td>
+            <td class="text-right">₹ ${rateFormatted}</td>
+            <td class="text-right">₹ ${amountFormatted}</td>
         </tr>`;
       });
     } else {
@@ -418,7 +418,7 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
         .replace(/{{CGSTAmount}}/g, formatCurrency(totals.cgstAmount || 0))
         .replace(/{{SGSTAmount}}/g, formatCurrency(totals.sgstAmount || 0))
         .replace(/{{IGSTPct}}/g, '0')
-        .replace(/{{IGSTAmount}}/g, 'Γé╣ 0.00');
+        .replace(/{{IGSTAmount}}/g, '₹ 0.00');
       // Hide IGST row for intra-state using class selector
       html = html.replace(/<tr[^>]*class="igst-row"[^>]*>[\s\S]*?<\/tr>/gi, '');
     } else {
@@ -426,8 +426,8 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
       html = html
         .replace(/{{CGSTPct}}/g, '0')
         .replace(/{{SGSTPct}}/g, '0')
-        .replace(/{{CGSTAmount}}/g, 'Γé╣ 0.00')
-        .replace(/{{SGSTAmount}}/g, 'Γé╣ 0.00')
+        .replace(/{{CGSTAmount}}/g, '₹ 0.00')
+        .replace(/{{SGSTAmount}}/g, '₹ 0.00')
         .replace(/{{IGSTPct}}/g, (totals.igstPct || 18).toString())
         .replace(/{{IGSTAmount}}/g, formatCurrency(totals.igstAmount || 0));
       // Hide CGST and SGST rows for inter-state using class selectors

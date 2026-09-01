@@ -113,10 +113,10 @@ export class PrintInvoiceComputerGeneratedComponent implements OnInit {
 
     // Generate data rows HTML with complete formatting
     let dataRowsHtml = '';
-    // Format currency as Indian format (Γé╣)
+    // Format currency as Indian format ()
     const formatCurrency = (value: any) => {
       const num = parseFloat(value) || 0;
-      return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return Math.round(num).toLocaleString('en-IN');
     };
 
     if (data.dataRows && data.dataRows.length > 0) {
@@ -138,8 +138,8 @@ export class PrintInvoiceComputerGeneratedComponent implements OnInit {
             <td class="text-center">${hsnCode}</td>
             <td class="text-center">${duties}</td>
             <td class="text-center">${qty}</td>
-            <td class="text-right">Γé╣ ${rateFormatted}</td>
-            <td class="text-right">Γé╣ ${amountFormatted}</td>
+            <td class="text-right">₹ ${rateFormatted}</td>
+            <td class="text-right">₹ ${amountFormatted}</td>
         </tr>`;
       });
     } else {
@@ -209,7 +209,7 @@ export class PrintInvoiceComputerGeneratedComponent implements OnInit {
         .replace(/{{CGSTAmount}}/g, formatCurrency(totals.cgstAmount || 0))
         .replace(/{{SGSTAmount}}/g, formatCurrency(totals.sgstAmount || 0))
         .replace(/{{IGSTPct}}/g, '0')
-        .replace(/{{IGSTAmount}}/g, 'Γé╣ 0.00');
+        .replace(/{{IGSTAmount}}/g, '₹ 0.00');
       // Hide IGST row for intra-state using class selector
       html = html.replace(/<tr[^>]*class="igst-row"[^>]*>[\s\S]*?<\/tr>/gi, '');
     } else {
@@ -217,8 +217,8 @@ export class PrintInvoiceComputerGeneratedComponent implements OnInit {
       html = html
         .replace(/{{CGSTPct}}/g, '0')
         .replace(/{{SGSTPct}}/g, '0')
-        .replace(/{{CGSTAmount}}/g, 'Γé╣ 0.00')
-        .replace(/{{SGSTAmount}}/g, 'Γé╣ 0.00')
+        .replace(/{{CGSTAmount}}/g, '₹ 0.00')
+        .replace(/{{SGSTAmount}}/g, '₹ 0.00')
         .replace(/{{IGSTPct}}/g, (totals.igstPct || 18).toString())
         .replace(/{{IGSTAmount}}/g, formatCurrency(totals.igstAmount || 0));
       // Hide CGST and SGST rows for inter-state using class selectors
@@ -315,6 +315,32 @@ export class PrintInvoiceComputerGeneratedComponent implements OnInit {
     }
   }
 
+
+  viewAsPdf() {
+    if (!this.invoiceHtmlRaw) {
+      this.errorMessage = 'Please generate an invoice first.';
+      return;
+    }
+
+    const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tax Invoice</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #000; background: white; padding: 16px; }
+  </style>
+</head>
+<body>${this.invoiceHtmlRaw}</body>
+</html>`;
+
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
   // Fallback to old RPT method if needed
   printReportClick(invoiceID: number) {
     this.url = environment.baseReportUrl;

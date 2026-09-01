@@ -15,6 +15,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatListModule } from '@angular/material/list';
 import { DateAdapter, MatNativeDateModule, MatOptionModule } from '@angular/material/core';
@@ -402,6 +403,7 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     MatCheckboxModule,
     MatRadioModule,
     MatButtonToggleModule,
+    MatSlideToggleModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatTabsModule,
@@ -439,6 +441,7 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     MatCheckboxModule,
     MatRadioModule,
     MatButtonToggleModule,
+    MatSlideToggleModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatTabsModule,

@@ -14,6 +14,8 @@ import { InventoryCategory } from "../model/inventoryCategory";
 
 import { ItemMasterModel } from "../model/itemMasterModel";
 
+import { AttendancePeriodResult, ClientAttendancePeriodConfig } from "../model/attendancePeriodModel";
+
 import { MiscTransModel } from "../model/miscTransModel";
 
 import { AttendanceModel } from "../model/attendanceModel";
@@ -294,6 +296,13 @@ export class PayrollModuleService {
     }).pipe(catchError(this.errorHandle));
   }
 
+  /** GET /api/payroll/GetClientsByBranchOnly?branchCode= — returns all active clients for a branch */
+  getClientsByBranch(branchCode: string): Observable<any[]> {
+    return this.httpClient.get<any[]>(this.apiUrl + 'payroll/GetClientsByBranchOnly', {
+      params: { branchCode }
+    }).pipe(catchError(this.errorHandle));
+  }
+
   getEmployeeDetails(branchCode: string, employeeNo: string): Observable<any> {
 
     return this.httpClient.get<any>(this.apiUrl + 'payroll/GetEmployeeDetails', {
@@ -398,13 +407,15 @@ export class PayrollModuleService {
 
 
 
-  saveAndUpdateAttendance(attendanceModel: AttendanceModel, attendanceDetails: any[]): Observable<any> {
+  saveAndUpdateAttendance(attendanceModel: AttendanceModel, attendanceDetails: any[], clientCode?: string): Observable<any> {
 
     const payload = {
 
       attendanceModel: attendanceModel,
 
-      attendanceDetails: attendanceDetails
+      attendanceDetails: attendanceDetails,
+
+      ClientCode: clientCode || null
 
     };
 
@@ -434,6 +445,43 @@ export class PayrollModuleService {
 
     });
 
+  }
+
+  // ── Attendance Period (client-wise custom period) ────────────────────────────
+
+  /**
+   * Returns the attendance cycle dates for the given client + month.
+   * Fallback: if clientCode is empty, returns standard calendar month.
+   * GET /api/payroll/GetAttendancePeriod?clientCode=&year=&month=
+   */
+  getAttendancePeriod(clientCode: string, year: number, month: number): Observable<AttendancePeriodResult> {
+    const params = new HttpParams()
+      .set('clientCode', clientCode || '')
+      .set('year', year.toString())
+      .set('month', month.toString());
+    return this.httpClient
+      .get<AttendancePeriodResult>(this.apiUrl + 'payroll/GetAttendancePeriod', { params })
+      .pipe(catchError(this.errorHandle));
+  }
+
+  /** GET /api/client/GetAttendancePeriodConfig?clientCode= */
+  getClientAttendancePeriodConfig(clientCode: string): Observable<ClientAttendancePeriodConfig> {
+    return this.httpClient
+      .get<ClientAttendancePeriodConfig>(this.apiUrl + 'client/GetAttendancePeriodConfig', {
+        params: { clientCode }
+      })
+      .pipe(catchError(this.errorHandle));
+  }
+
+  /** POST /api/client/SaveAttendancePeriodConfig */
+  saveClientAttendancePeriodConfig(config: ClientAttendancePeriodConfig): Observable<ClientAttendancePeriodConfig> {
+    return this.httpClient
+      .post<ClientAttendancePeriodConfig>(
+        this.apiUrl + 'client/SaveAttendancePeriodConfig',
+        JSON.stringify(config),
+        { headers: new HttpHeaders({ 'Content-type': 'application/json; charset=UTF-8' }) }
+      )
+      .pipe(catchError(this.errorHandle));
   }
 
   getList(branch: string, employeeType: number, resignedDate: string, joinDate: string, attendancePeriod: string, status: string): Observable<any> {

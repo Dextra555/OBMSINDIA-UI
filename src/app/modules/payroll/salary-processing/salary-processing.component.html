@@ -47,6 +47,14 @@
                             </mat-option>
                         </mat-select>
                     </mat-form-field>
+                </div>
+                <!-- Attendance Period Info (auto-resolved from selected period) -->
+                <div class="col-12 mt-1 mb-2" *ngIf="dtSalaryProcessDate">
+                    <small class="text-muted">
+                        <mat-icon style="font-size:15px;vertical-align:middle">date_range</mat-icon>&nbsp;
+                        Processing attendance period ending: <strong>{{ dtSalaryProcessDate }}</strong>
+                        &nbsp;<span class="badge badge-secondary">{{ dtSalaryProcessDate | date:'MMM yyyy' }}</span>
+                    </small>
                 </div>                
             </div>
             <div class="col-12 col-sm-12 col-md-12 col-lg-12" *ngIf="warningMessage == ''">

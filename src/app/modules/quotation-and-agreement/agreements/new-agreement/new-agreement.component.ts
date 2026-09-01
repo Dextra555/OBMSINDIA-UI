@@ -68,6 +68,9 @@ export interface IItemDetails {
 
   FollowCalender: boolean,
 
+  MonthDays?: number,
+  AgreementType?: string,
+
   HasDiscount: boolean,
 
   DiscountAmount: any,
@@ -290,6 +293,9 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
         NoOfDays: [0],
 
         FollowCalender: [false],
+
+        MonthDays: [0],
+        AgreementType: ['N'],
 
         MonthTotal: [0],
 
@@ -839,7 +845,7 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
     }
 
-    if (details['NoOfGuards'] == 0) {
+    if (details['NoOfGuards'] == 0 && this.type !== 'LS') {
 
       this.errorDescription = "Number of Guards cannot be 0";
 
@@ -1007,6 +1013,10 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
       YearTotal: Math.round(d.MonthTotal * 12)
 
     };
+
+    // If MonthDays not saved (old Normal records), don't show 0 — leave as 0,
+    // but if District button is clicked later chkDistrict() will auto-fill from AgreementDate.
+    // For display: keep as-is from DB (0 for Normal, actual value for District).
 
 
 
@@ -1182,6 +1192,9 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
       FollowCalender: false,
 
+      MonthDays: 0,
+      AgreementType: 'N',
+
       MonthTotal: 0,
 
       YearTotal: 0,
@@ -1284,7 +1297,71 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
     row['index'] = index;
 
+    // Restore button type from stored AgreementType field
+    if (row.AgreementType === 'D') {
+      this.type = 'D';
+    } else if (row.AgreementType === 'LS') {
+      this.type = 'LS';
+    } else {
+      this.type = 'N';
+    }
+
+    // Apply mode-specific field states BEFORE patchValue so patchValue doesn't re-enable disabled controls
+    if (this.type === 'D') {
+      // District mode: disable Rate/NoOfHours
+      this.frm.get('details.Rate')?.disable({ onlySelf: true });
+      this.frm.get('details.NoOfHours')?.disable({ onlySelf: true });
+      this.frm.get('details.FollowCalender')?.disable({ onlySelf: true });
+      this.frm.get('details.NoOfGuards')?.enable({ onlySelf: true });
+      this.frm.get('details.NoOfDays')?.enable({ onlySelf: true });
+      this.frm.get('details.PerMonth')?.enable({ onlySelf: true });
+    } else if (this.type === 'LS') {
+      // Lump Sum mode: disable all inputs, only MonthTotal editable
+      this.frm.get('details.PerMonth')?.disable({ onlySelf: true });
+      this.frm.get('details.NoOfGuards')?.disable({ onlySelf: true });
+      this.frm.get('details.Rate')?.disable({ onlySelf: true });
+      this.frm.get('details.NoOfHours')?.disable({ onlySelf: true });
+      this.frm.get('details.NoOfDays')?.disable({ onlySelf: true });
+      this.frm.get('details.MonthDays')?.disable({ onlySelf: true });
+      this.frm.get('details.FollowCalender')?.disable({ onlySelf: true });
+      this.frm.get('details.MonthTotal')?.enable({ onlySelf: true });
+    } else {
+      // Normal mode: enable all relevant fields
+      this.frm.get('details.PerMonth')?.enable({ onlySelf: true });
+      this.frm.get('details.Rate')?.enable({ onlySelf: true });
+      this.frm.get('details.NoOfHours')?.enable({ onlySelf: true });
+      this.frm.get('details.NoOfGuards')?.enable({ onlySelf: true });
+      this.frm.get('details.NoOfDays')?.enable({ onlySelf: true });
+    }
+
+    // Patch all form values AFTER disabling — patchValue does NOT re-enable disabled controls
     this.frm.get('details')?.patchValue(row);
+
+    // Post-patch adjustments for District mode
+    if (this.type === 'D') {
+      // Force FollowCalendar off — District does not use calendar logic
+      this.frm.get('details.FollowCalender')?.setValue(false);
+      this.isFollowCalendarManuallyChanged = true;
+      // Auto-fill MonthDays if not set
+      const existingMonthDays = parseFloat(this.frm.get('details.MonthDays')?.value) || 0;
+      if (existingMonthDays === 0) {
+        let dt = this.frm.get('AgreementDate')?.value;
+        if (dt) {
+          const d = new Date(dt);
+          const autoMonthDays = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+          this.frm.get('details.MonthDays')?.setValue(autoMonthDays);
+        }
+      }
+    } else if (this.type === 'LS') {
+      this.frm.get('details.FollowCalender')?.setValue(false);
+      this.isFollowCalendarManuallyChanged = true;
+      // Restore DiscountHour state based on saved HasDiscount value
+      if (row.HasDiscount) {
+        this.frm.get('details.DiscountHour')?.enable({ onlySelf: true });
+      } else {
+        this.frm.get('details.DiscountHour')?.disable({ onlySelf: true });
+      }
+    }
 
   }
 
@@ -1561,6 +1638,12 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
 
 
+    this.frm.get('details.PerMonth')?.setValue(0);
+
+    this.frm.get('details.PerMonth')?.enable({ onlySelf: true });
+
+
+
     this.frm.get('details.NoOfGuards')?.setValue(0);
 
     this.frm.get('details.NoOfGuards')?.enable({ onlySelf: true });
@@ -1583,56 +1666,112 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
     this.frm.get('details.NoOfDays')?.enable({ onlySelf: true });
 
+    // Clear MonthDays for Normal type — not used
+    this.frm.get('details.MonthDays')?.setValue(0);
+    this.frm.get('details.AgreementType')?.setValue('N');
+    // Discount Hours disabled until checkbox is checked
+    this.frm.get('details.DiscountHour')?.setValue(0);
+    this.frm.get('details.DiscountHour')?.disable({ onlySelf: true });
+    this.frm.get('details.DiscountAmount')?.setValue(0);
+    this.frm.get('details.HasDiscount')?.setValue(false);
+
+  }
+
+  // District type: MonthTotal = ROUND(PerMonth / MonthDays * WorkingDays, 0)
+  chkDistrict(type: string) {
+
+    this.type = type;
+
+    // Only reset form data if NOT currently editing an existing row
+    if (!this.detailEdit) {
+      this.emptyDetailData();
+      this.frm.get('details.NoOfGuards')?.setValue(0);
+      this.frm.get('details.PerMonth')?.setValue(0);
+      this.frm.get('details.NoOfDays')?.setValue(0);
+    }
+
+    this.isFollowCalendarManuallyChanged = true;
+
+    this.frm.get('details.PerMonth')?.enable({ onlySelf: true });
+
+    this.frm.get('details.NoOfGuards')?.enable({ onlySelf: true });
+
+    // Auto-fill MonthDays from Agreement Date only if not already set
+    const existingMonthDays = parseFloat(this.frm.get('details.MonthDays')?.value) || 0;
+    if (existingMonthDays === 0) {
+      let dt = this.frm.get('AgreementDate')?.value;
+      if (dt) {
+        const d = new Date(dt);
+        const autoMonthDays = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        this.frm.get('details.MonthDays')?.setValue(autoMonthDays);
+      }
+    }
+
+    // Disable Rate / PerDay / NoOfHours — not used for District
+    this.frm.get('details.Rate')?.setValue(0);
+    this.frm.get('details.Rate')?.disable({ onlySelf: true });
+
+    this.frm.get('details.NoOfHours')?.setValue(0);
+    this.frm.get('details.NoOfHours')?.disable({ onlySelf: true });
+
+    this.frm.get('details.NoOfDays')?.enable({ onlySelf: true });
+    this.frm.get('details.FollowCalender')?.setValue(false);
+    this.frm.get('details.FollowCalender')?.disable({ onlySelf: true });
+    this.frm.get('details.AgreementType')?.setValue('D');
+
+    // Recalculate with existing values
+    this.DetailRowChange();
   }
 
 
 
+  // Lump Sum type: user enters MonthTotal directly; all other input columns are disabled
   chkLumpSum(type: string) {
-
     this.type = type;
+    this.isFollowCalendarManuallyChanged = true;
+    this.detailEdit = false;
 
-    this.emptyDetailData();
-
-    // Rate
-
-
-
-    // NoOfHours
-
-    // NoOfDays
-
-
-
-
-
-    this.frm.get('details.Rate')?.setValue(0);
-
+    // First disable all fields, then reset values
+    // Use disable() BEFORE setValue/patchValue so Angular doesn't re-enable them
+    this.frm.get('details.PerMonth')?.disable({ onlySelf: true });
+    this.frm.get('details.NoOfGuards')?.disable({ onlySelf: true });
     this.frm.get('details.Rate')?.disable({ onlySelf: true });
+    this.frm.get('details.NoOfHours')?.disable({ onlySelf: true });
+    this.frm.get('details.NoOfDays')?.disable({ onlySelf: true });
+    this.frm.get('details.MonthDays')?.disable({ onlySelf: true });
+    this.frm.get('details.FollowCalender')?.disable({ onlySelf: true });
+    this.frm.get('details.DiscountHour')?.disable({ onlySelf: true });
 
+    // MonthTotal is enabled — user enters the lump sum amount directly
+    this.frm.get('details.MonthTotal')?.enable({ onlySelf: true });
 
-
-    this.frm.get('details.NoOfHours')?.setValue(0);
-
-    this.frm.get('details.NoOfHours')?.enable({ onlySelf: true });
-
-
-
-    this.frm.get('details.NoOfGuards')?.setValue(0);
-
-    this.frm.get('details.NoOfGuards')?.enable({ onlySelf: true });
-
-
-
-    this.frm.get('details.NoOfDays')?.setValue(0);
-
-    this.frm.get('details.NoOfDays')?.enable({ onlySelf: true });
-
-
-
-    // Follow Calander
-
-    // this.frm.get('details.NoOfDays')?.setValue("");
-
+    // Now reset values using patchValue (does NOT re-enable disabled controls)
+    this.frm.get('details')?.patchValue({
+      ID: 0,
+      AgreementID: 0,
+      ServiceTypeID: null,
+      Description: '',
+      NoOfGuards: 0,
+      PerDay: 0,
+      PerMonth: 0,
+      Rate: 0,
+      NoOfHours: 0,
+      NoOfDays: 0,
+      FollowCalender: false,
+      MonthDays: 0,
+      AgreementType: 'LS',
+      MonthTotal: 0,
+      YearTotal: 0,
+      HasDiscount: false,
+      DiscountAmount: 0,
+      DiscountHour: 0,
+      IsTaxable: true,
+      TaxAmount: 0,
+      total: 0,
+      Category: '',
+      Reason: '',
+      index: -1
+    });
   }
 
   set8Hours() {
@@ -1859,6 +1998,17 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
   onPerMonthChange(): void {
 
+    // District mode: PerMonth input just triggers recalculation — no PerDay/Rate derivation needed
+    if (this.type === 'D') {
+      this.DetailRowChange();
+      return;
+    }
+
+    // Lump Sum mode: PerMonth is disabled; ignore any stray calls
+    if (this.type === 'LS') {
+      return;
+    }
+
     const perMonth = parseFloat(this.frm.get('details.PerMonth')?.value || 0);
 
     let noOfDays = parseFloat(this.frm.get('details.NoOfDays')?.value || 0);
@@ -1905,7 +2055,7 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
 
 
-      // DetailRowChange now uses PerMonth ├ù NoOfGuards for MonthTotal
+      // DetailRowChange now uses PerMonth x NoOfGuards for MonthTotal
       this.DetailRowChange();
 
     }
@@ -1947,6 +2097,14 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
       // Clear discount values when checkbox is unchecked
       this.frm.get('details.DiscountAmount')?.setValue(0);
       this.frm.get('details.DiscountHour')?.setValue(0);
+      if (this.type !== 'LS') {
+        this.frm.get('details.DiscountHour')?.disable({ onlySelf: true });
+      }
+    } else {
+      // Enable Days input when discount is checked (Normal/District only)
+      if (this.type !== 'LS') {
+        this.frm.get('details.DiscountHour')?.enable({ onlySelf: true });
+      }
     }
     this.DetailRowChange();
   }
@@ -2015,7 +2173,8 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
 
 
-    if (tNoOfHours > 0 && tNoOfHours <= 8 && !this.isFollowCalendarManuallyChanged) {
+    // Skip auto-FollowCalendar logic for District type
+    if (this.type !== 'D' && tNoOfHours > 0 && tNoOfHours <= 8 && !this.isFollowCalendarManuallyChanged) {
 
       if (!this.frm.get('details.FollowCalender')?.value) {
 
@@ -2033,8 +2192,15 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
     // Check Follow Calendar flag to determine calculation method
     const followCalendar = this.frm.get('details.FollowCalender')?.value;
-    
-    if (parseFloat(tPerMonth) > 0) {
+
+    if (this.type === 'D') {
+      // District type: MonthTotal = ROUND(PerMonth / MonthDays * WorkingDays, 0)
+      const perMonth = parseFloat(tPerMonth) || 0;
+      const noOfDays = parseFloat(tNoOfDays) || 0;
+      const monthDays = parseFloat(this.frm.get('details.MonthDays')?.value) || daysInMonth;
+      vMonthTotal = Math.round(perMonth / monthDays * noOfDays);
+      this.frm.get('details.MonthTotal')?.setValue(this.formatCurrency(vMonthTotal));
+    } else if (parseFloat(tPerMonth) > 0 && this.type !== 'LS') {
       if (followCalendar) {
         // Follow Calendar = true: Use full month rate
         if (parseInt("0" + tNoOfGuards, 10) === 0) {
@@ -2068,6 +2234,11 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
       this.frm.get('details.MonthTotal')?.setValue(this.formatCurrency(Math.round(vMonthTotal)));
 
+    } else if (this.type === 'LS') {
+
+      // Lump Sum: MonthTotal is entered directly by user — read it as-is
+      vMonthTotal = parseFloat(this.frm.get('details.MonthTotal')?.value) || 0;
+
     } else {
 
       vMonthTotal = parseFloat(this.frm.get('details.MonthTotal')?.value);
@@ -2083,23 +2254,25 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
 
 
-    // Calculate DiscountAmount based on days deduction
+    // Calculate DiscountAmount
     const tDiscountHour = parseFloat(this.frm.get('details.DiscountHour')?.value || '0');
 
-    if (this.frm.get('details.HasDiscount')?.value && tDiscountHour > 0) {
-      // Calculate per-day rate from PerMonth for discount calculation (use actual days in selected month)
-      const perDayRate = parseFloat(tPerMonth) / daysInMonth;
-      // Validate that discount days cannot exceed (NoOfGuards * Working Days)
-      const maxDiscountDays = tNoOfGuards * tNoOfDays;
-      if (tDiscountHour > maxDiscountDays) {
-        // Reset discount days to maximum allowed if it exceeds
-        this.frm.get('details.DiscountHour')?.setValue(maxDiscountDays);
-        const calculatedDiscount = perDayRate * maxDiscountDays;
-        this.frm.get('details.DiscountAmount')?.setValue(this.formatCurrency(Math.round(calculatedDiscount)));
+    if (this.frm.get('details.HasDiscount')?.value) {
+      if (this.type === 'LS') {
+        // Lump Sum mode: DiscountAmount entered directly by user — read as-is, no calculation
+        // (DiscountAmount is already set by user input, just leave it)
+      } else if (tDiscountHour > 0) {
+        // Normal/District mode: calculate from Days
+        const perDayRate = parseFloat(tPerMonth) / daysInMonth;
+        const maxDiscountDays = tNoOfGuards * tNoOfDays;
+        if (tDiscountHour > maxDiscountDays) {
+          this.frm.get('details.DiscountHour')?.setValue(maxDiscountDays);
+          this.frm.get('details.DiscountAmount')?.setValue(this.formatCurrency(Math.round(perDayRate * maxDiscountDays)));
+        } else {
+          this.frm.get('details.DiscountAmount')?.setValue(this.formatCurrency(Math.round(perDayRate * tDiscountHour)));
+        }
       } else {
-        // Calculate discount as monetary amount: (PerMonth/NoOfDays * Discount Days)
-        const calculatedDiscount = perDayRate * tDiscountHour;
-        this.frm.get('details.DiscountAmount')?.setValue(this.formatCurrency(Math.round(calculatedDiscount)));
+        this.frm.get('details.DiscountAmount')?.setValue(0);
       }
     } else {
       this.frm.get('details.DiscountAmount')?.setValue(0);

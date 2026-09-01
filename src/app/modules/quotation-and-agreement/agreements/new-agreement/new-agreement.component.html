@@ -136,7 +136,9 @@
 
         <div class="col-12 col-sm-12 col-md-12 col-lg-12">
 
-          <button type="button" class="btn wlt-c-furg-btn-secondary mr-3" (click)="chkNormal('N')"> Normal</button>
+          <button type="button" class="btn wlt-c-furg-btn-secondary mr-3" [class.active]="type === 'N'" (click)="chkNormal('N')"> Normal</button>
+          <button type="button" class="btn wlt-c-furg-btn-secondary mr-3" [class.active]="type === 'D'" (click)="chkDistrict('D')"> District</button>
+          <button type="button" class="btn wlt-c-furg-btn-secondary mr-3" [class.active]="type === 'LS'" (click)="chkLumpSum('LS')"> Lump Sum</button>
 
         </div>
 
@@ -165,6 +167,9 @@
               <th class="mat-header-cell" style="display: none;">Working<br/> Hours</th>
 
               <th class="mat-header-cell">Working<br/> Days</th>
+
+              <!-- Month Days header: always visible, used only for District type -->
+              <th class="mat-header-cell">Month<br/> Days</th>
 
               <th class="mat-header-cell">Follow <br/>Calendar</th>
 
@@ -217,7 +222,8 @@
                 <mat-form-field appearance="outline" style="width: 80px !important;">
 
                   <input type="text" formControlName="PerMonth" (input)="onPerMonthChange()" matInput placeholder=""
-
+                         [attr.readonly]="type === 'LS' ? true : null"
+                         [style.background-color]="type === 'LS' ? '#e9ecef' : null"
                          autocomplete="off">
 
                 </mat-form-field>
@@ -229,7 +235,8 @@
                 <mat-form-field appearance="outline" style="width: 45px !important;">
 
                   <input type="text" formControlName="NoOfGuards" (input)="DetailRowChange()" matInput placeholder=""
-
+                         [attr.readonly]="type === 'LS' ? true : null"
+                         [style.background-color]="type === 'LS' ? '#e9ecef' : null"
                          autocomplete="off">
 
                 </mat-form-field>
@@ -277,8 +284,26 @@
                 <mat-form-field appearance="outline" style="width: 45px !important;">
 
                   <input type="text" formControlName="NoOfDays" (input)="DetailRowChange()" matInput placeholder=""
-
+                         [attr.readonly]="type === 'LS' ? true : null"
+                         [style.background-color]="type === 'LS' ? '#e9ecef' : null"
                          autocomplete="off">
+
+                </mat-form-field>
+
+              </td>
+
+              <!-- Month Days: always visible, used for District type calculation -->
+              <td class="mat-cell">
+
+                <mat-form-field appearance="outline" style="width: 55px !important;">
+
+                  <mat-label>Mo.Days</mat-label>
+
+                  <input type="text" formControlName="MonthDays" (input)="DetailRowChange()" matInput
+                         [placeholder]="type === 'D' ? '' : '-'"
+                         autocomplete="off"
+                         [attr.readonly]="type !== 'D' ? true : null"
+                         [style.background-color]="type !== 'D' ? '#e9ecef' : null">
 
                 </mat-form-field>
 
@@ -286,7 +311,7 @@
 
               <td class="mat-cell">
 
-                <mat-checkbox formControlName="FollowCalender" (change)="changeFollowCalender($event)"></mat-checkbox>
+                <mat-checkbox formControlName="FollowCalender" (change)="changeFollowCalender($event)" [disabled]="type === 'D' || type === 'LS'"></mat-checkbox>
 
               </td>
 
@@ -295,7 +320,8 @@
                 <mat-form-field appearance="outline">
 
                   <input type="text" formControlName="MonthTotal" (input)="DetailRowChange()" matInput placeholder=""
-
+                         [attr.readonly]="type !== 'LS' ? true : null"
+                         [style.background-color]="type !== 'LS' ? '#e9ecef' : null"
                          autocomplete="off">
 
                 </mat-form-field>
@@ -307,7 +333,8 @@
                 <mat-form-field appearance="outline">
 
                   <input type="text" formControlName="YearTotal" matInput placeholder=""
-
+                         [attr.readonly]="true"
+                         [style.background-color]="'#e9ecef'"
                          autocomplete="off">
 
                 </mat-form-field>
@@ -325,20 +352,22 @@
                 <mat-form-field appearance="outline">
 
                   <input type="text" formControlName="DiscountAmount" matInput placeholder=""
-
-                         autocomplete="off" (input)="DetailRowChange()" [disabled]="!hasDiscount">
+                         autocomplete="off" (input)="DetailRowChange()"
+                         [attr.readonly]="type !== 'LS' ? true : null"
+                         [style.background-color]="type !== 'LS' ? '#e9ecef' : null">
 
                 </mat-form-field>
 
                 <br/>
 
-                <mat-form-field appearance="outline">
+                <!-- Days field: only for Normal/District mode -->
+                <mat-form-field appearance="outline" *ngIf="type !== 'LS'">
 
                   <mat-label>Days</mat-label>
 
                   <input type="text" formControlName="DiscountHour" matInput placeholder=""
 
-                         autocomplete="off" (input)="onDiscountHourChange()" [disabled]="!hasDiscount">
+                         autocomplete="off" (input)="onDiscountHourChange()">
 
                 </mat-form-field>
 

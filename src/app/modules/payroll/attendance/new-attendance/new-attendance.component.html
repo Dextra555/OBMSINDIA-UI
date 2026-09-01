@@ -246,12 +246,49 @@
                     <mat-form-field appearance="outline">
                         <mat-label>Default Client</mat-label>
                         <mat-select formControlName="ClientName" [panelClass]="'custom-dropdown-panel'"
-                            (selectionChange)="clientNameChange($event)">
+                            (selectionChange)="clientNameChange($event); onClientSelectionChangeFromName($event)">
                             <mat-option *ngFor="let employee of employeeModel" [value]="employee.Name">
                                 {{ employee.Shortname }}
                             </mat-option>
                         </mat-select>
                     </mat-form-field>
+                </div>
+
+                <!-- Attendance Period Date Range Banner -->
+                <div class="col-12 mt-1 mb-3" *ngIf="currentAttendancePeriodResult">
+                    <div style="
+                        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                        border: 1.5px solid #1976d2;
+                        border-radius: 8px;
+                        padding: 10px 16px;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        flex-wrap: wrap;
+                    ">
+                        <mat-icon style="color:#1976d2; font-size:20px; line-height:20px;">date_range</mat-icon>
+                        <div>
+                            <div style="font-size:13px; color:#555; font-weight:500; margin-bottom:2px;">
+                                Attendance Cycle
+                                <span *ngIf="currentAttendancePeriodResult.IsCustom"
+                                    style="background:#ff9800; color:white; font-size:10px; padding:1px 6px; border-radius:3px; margin-left:6px;">
+                                    CUSTOM
+                                </span>
+                                <span *ngIf="!currentAttendancePeriodResult.IsCustom"
+                                    style="background:#4caf50; color:white; font-size:10px; padding:1px 6px; border-radius:3px; margin-left:6px;">
+                                    STANDARD
+                                </span>
+                            </div>
+                            <div style="font-size:15px; font-weight:700; color:#1976d2; letter-spacing:0.3px;">
+                                {{ currentAttendancePeriodResult.StartDate | date:'dd-MMM-yyyy' }}
+                                &nbsp;→&nbsp;
+                                {{ currentAttendancePeriodResult.EndDate | date:'dd-MMM-yyyy' }}
+                                <span style="font-size:12px; color:#777; font-weight:400; margin-left:8px;">
+                                    ({{ currentAttendancePeriodResult.TotalDays }} days)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-12 col-sm-12 col-md-4 col-lg-2" style="margin-top: 10px;">
                     <mat-label>Normal Timings</mat-label>

@@ -18,9 +18,8 @@
 <div *ngIf="invoiceHtml && errorMessage === ''" class="invoice-container mt-4">
     <div class="row mb-3">
         <div class="col-12 text-right">
-            <button class="btn wlt-c-furg-btn-primary m-1" (click)="printInvoice()">
-                <i class="fas fa-print"></i> Print Invoice
-            </button>
+            <button class="btn wlt-c-furg-btn-secondary m-1" (click)="viewAsPdf()"><i class="fas fa-file-pdf"></i> View as PDF</button>
+            <button class="btn wlt-c-furg-btn-primary m-1" (click)="printInvoice()"><i class="fas fa-print"></i> Print Invoice</button>
         </div>
     </div>
     <div [innerHTML]="invoiceHtml" class="invoice-display"></div>

@@ -12,6 +12,8 @@ import Swal from 'sweetalert2';
 import { IndianComplianceService } from 'src/app/service/indian-compliance.service';
 import { INDIAN_STATES, GSTIN_PATTERN, PAN_PATTERN, PIN_CODE_PATTERN } from 'src/app/model/indian-client.model';
 import { GSTConfiguration } from 'src/app/model/indian-compliance.model';
+import { PayrollModuleService } from 'src/app/service/payrollmodule.service';
+import { ClientAttendancePeriodConfig } from 'src/app/model/attendancePeriodModel';
 
 @Component({
   selector: 'app-new-client-master',
@@ -43,6 +45,18 @@ export class NewClientMasterComponent implements OnInit {
   // Address Copy Options
   copyAddressToShipping: boolean = false;
   copyAddressToBilling: boolean = false;
+
+  // ── Attendance Period Config ───────────────────────────────────────────────
+  attendancePeriodConfig: ClientAttendancePeriodConfig = {
+    ID: 0,
+    ClientCode: '',
+    PeriodStartDay: 1,
+    PeriodEndDay: 0,
+    IsCustomPeriod: false
+  };
+  attendancePeriodPreview: string = '';
+  attendancePeriodError: string = '';
+  attendancePeriodSaving: boolean = false;
 
   private formatDate(date: any) {
     const d = new Date(date);
@@ -92,7 +106,8 @@ export class NewClientMasterComponent implements OnInit {
 
   constructor(private fb: FormBuilder, private _masterService: MastermoduleService,
     private _router: Router, private _activatedRoute: ActivatedRoute, private _dataService: DatasharingService,
-    private _indianComplianceService: IndianComplianceService) {
+    private _indianComplianceService: IndianComplianceService,
+    private _payrollService: PayrollModuleService) {
     this.clientForm = this.fb.group({
       Id: this.fb.control(0),
       Code: this.fb.control('', [Validators.required]),
@@ -170,7 +185,9 @@ export class NewClientMasterComponent implements OnInit {
       if (params['code'] != undefined) {
         this.getClientMasterList(params['code'], params['status']);
         this.getBranchMasterListByUser(this.currentUser);
-        this.getAllClientMasterList('null', 'Active');
+        this.getAllClientMasterList(params['code'], params['status']);
+        // Load attendance period config for existing client
+        this.loadAttendancePeriodConfig(params['code']);
       } else {
         //this.getAllClientMasterList(this.clientCode, 'Active');
         this.getBranchMasterListByUser(this.currentUser);
@@ -587,4 +604,121 @@ export class NewClientMasterComponent implements OnInit {
       confirmButtonText: 'OK'
     });
   };
+
+  // ── Attendance Period Config methods ────────────────────────────────────────
+
+  /** Load existing period config for the given client code. */
+  loadAttendancePeriodConfig(clientCode: string): void {
+    if (!clientCode) return;
+    this._payrollService.getClientAttendancePeriodConfig(clientCode).subscribe({
+      next: (config) => {
+        this.attendancePeriodConfig = config;
+        this.attendancePeriodPreview = config.PreviewLabel || '';
+      },
+      error: () => {
+        // Default — calendar month; non-fatal
+        this.attendancePeriodConfig.ClientCode = clientCode;
+        this.updateAttendancePeriodPreview();
+      }
+    });
+  }
+
+  /** Toggle handler — reset days to defaults when switching off custom mode. */
+  onCustomPeriodToggle(): void {
+    if (!this.attendancePeriodConfig.IsCustomPeriod) {
+      this.attendancePeriodConfig.PeriodStartDay = 1;
+      this.attendancePeriodConfig.PeriodEndDay = 0;
+    }
+    this.updateAttendancePeriodPreview();
+  }
+
+  /** Refresh the preview label by calling the API. */
+  updateAttendancePeriodPreview(): void {
+    this.attendancePeriodError = '';
+    const start = this.attendancePeriodConfig.PeriodStartDay;
+    const end   = this.attendancePeriodConfig.PeriodEndDay;
+
+    // Validate
+    if (this.attendancePeriodConfig.IsCustomPeriod) {
+      if (start < 1 || start > 28) {
+        this.attendancePeriodError = 'Period Start Day must be between 1 and 28.';
+        return;
+      }
+      if (end < 0 || end > 28) {
+        this.attendancePeriodError = 'Period End Day must be 0 (last day) or between 1 and 28.';
+        return;
+      }
+    }
+
+    const clientCode = this.attendancePeriodConfig.ClientCode
+      || this.clientForm.get('Code')?.value || '';
+    if (!clientCode) {
+      this.attendancePeriodPreview = this.attendancePeriodConfig.IsCustomPeriod
+        ? `Cycle: ${start} of prev month → ${end || 'last'} of ref month`
+        : '1st – last day of month (standard)';
+      return;
+    }
+
+    const now = new Date();
+    this._payrollService.getAttendancePeriod(clientCode, now.getFullYear(), now.getMonth() + 1)
+      .subscribe({
+        next: (result) => {
+          this.attendancePeriodPreview = result.Label;
+        },
+        error: () => {
+          this.attendancePeriodPreview = 'Preview unavailable';
+        }
+      });
+  }
+
+  /** Save only the attendance period config (independent of the main client save). */
+  saveAttendancePeriodConfig(): void {
+    this.attendancePeriodError = '';
+    const clientCode = this.clientForm.get('Code')?.value || '';
+    if (!clientCode) {
+      this.attendancePeriodError = 'Please save the client first before configuring attendance period.';
+      return;
+    }
+
+    const start = this.attendancePeriodConfig.PeriodStartDay;
+    const end   = this.attendancePeriodConfig.PeriodEndDay;
+
+    if (this.attendancePeriodConfig.IsCustomPeriod) {
+      if (start < 1 || start > 28) {
+        this.attendancePeriodError = 'Period Start Day must be between 1 and 28.';
+        return;
+      }
+      if (end < 0 || end > 28) {
+        this.attendancePeriodError = 'Period End Day must be 0 or between 1 and 28.';
+        return;
+      }
+    }
+
+    this.attendancePeriodSaving = true;
+    const payload: ClientAttendancePeriodConfig = {
+      ...this.attendancePeriodConfig,
+      ClientCode: clientCode,
+      LastUpdatedBy: this.currentUser
+    } as any;
+
+    this._payrollService.saveClientAttendancePeriodConfig(payload).subscribe({
+      next: (saved) => {
+        this.attendancePeriodConfig = saved;
+        this.attendancePeriodPreview = saved.PreviewLabel || '';
+        this.attendancePeriodSaving = false;
+        Swal.fire({
+          toast: true,
+          position: 'top',
+          showConfirmButton: false,
+          icon: 'success',
+          title: 'Attendance period configuration saved.',
+          timer: 3000
+        });
+      },
+      error: () => {
+        this.attendancePeriodSaving = false;
+        this.attendancePeriodError = 'Failed to save attendance period configuration. Please try again.';
+      }
+    });
+  }
 }

@@ -557,19 +557,19 @@ export class InvoiceComponent implements AfterViewInit {
 
 
     this.ServiceCharges = Math.round(this.ServiceCharges);
-    this.DiscountAmount = Math.round(this.DiscountAmount * 100) / 100;
-    this.TaxAmount = Math.round(this.TaxAmount * 100) / 100;
-    this.Total = this.ServiceCharges - this.DiscountAmount + this.TaxAmount;
+    this.DiscountAmount = Math.round(this.DiscountAmount);
+    this.TaxAmount = Math.round(this.TaxAmount);
+    this.Total = Math.round(this.ServiceCharges - this.DiscountAmount + this.TaxAmount);
 
 
 
-    this.frm.get('service_charge')?.setValue(Number(this.ServiceCharges).toFixed(2));
+    this.frm.get('service_charge')?.setValue(this.ServiceCharges);
 
-    this.frm.get('discount')?.setValue(Number(this.DiscountAmount).toFixed(2));
+    this.frm.get('discount')?.setValue(this.DiscountAmount);
 
-    this.frm.get('tax')?.setValue(Number(this.TaxAmount).toFixed(2));
+    this.frm.get('tax')?.setValue(this.TaxAmount);
 
-    this.frm.get('total')?.setValue(Number(this.Total).toFixed(2));
+    this.frm.get('total')?.setValue(this.Total);
 
   }
 

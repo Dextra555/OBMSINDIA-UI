@@ -79,7 +79,7 @@
         <div class="col-12 col-sm-12 col-md-6 col-lg-3">
           <mat-form-field appearance="outline" class="w-100">
             <mat-label>Branch</mat-label>
-            <mat-select formControlName="branchCode">
+            <mat-select formControlName="branchCode" (selectionChange)="onBranchChange($event)">
               <mat-option value="">Select Branch</mat-option>
               <mat-option *ngFor="let branch of branches" [value]="branch.Code">
                 {{ branch.Name }}
@@ -89,8 +89,29 @@
           </mat-form-field>
         </div>
 
+        <!-- Optional: Client Code (for custom-period clients) -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-3">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Client (optional)</mat-label>
+            <mat-select formControlName="clientCode" (selectionChange)="onClientChange($event)">
+              <mat-option value="">All Clients / Auto-detect</mat-option>
+              <mat-option *ngFor="let client of clients" [value]="client.Code">
+                {{ client.Code }} – {{ client.Name }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Select to use client's custom attendance period</mat-hint>
+          </mat-form-field>
+        </div>
+
         <!-- Action Buttons -->
-        <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+        <div class="col-12 mt-2" *ngIf="attendancePeriodLabel">
+          <div class="alert alert-info py-2 mb-2">
+            <mat-icon style="vertical-align:middle;font-size:18px;">date_range</mat-icon>&nbsp;
+            <strong>Attendance Cycle:</strong> {{ attendancePeriodLabel }}
+            <span *ngIf="attendancePeriodIsCustom" class="badge badge-warning ml-2">Custom Period</span>
+          </div>
+        </div>
+        <div class="col-12 col-sm-12 col-md-12 col-lg-12">
           <div class="action-buttons">
             <button mat-raised-button color="primary" (click)="downloadTemplate()" [disabled]="uploadForm.invalid">
               <mat-icon>download</mat-icon>

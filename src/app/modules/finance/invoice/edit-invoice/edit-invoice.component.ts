@@ -666,7 +666,10 @@ export class EditInvoiceComponent implements AfterViewInit {
 
 
 
-    this.Total = this.ServiceCharges - this.DiscountAmount + this.TaxAmount;
+    this.ServiceCharges = Math.round(this.ServiceCharges);
+    this.DiscountAmount = Math.round(this.DiscountAmount);
+    this.TaxAmount = Math.round(this.TaxAmount);
+    this.Total = Math.round(this.ServiceCharges - this.DiscountAmount + this.TaxAmount);
 
 
 

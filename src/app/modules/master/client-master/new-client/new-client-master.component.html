@@ -360,6 +360,80 @@
                 </div>
             </div>
             <div class="row pt-3">
+                <div class="col-12 col-sm-12 col-md-12 col-lg-12 wlt-c-furg-profile">
+                    <h2><span>Attendance Period Configuration</span></h2>
+                    <small class="text-muted">
+                        Configure the attendance cycle start/end day for this client.
+                        Leave <b>Custom Period</b> off to use the standard calendar month (1st – last day).
+                    </small>
+                </div>
+
+                <!-- Custom Period Toggle -->
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4 mt-2">
+                    <mat-slide-toggle
+                        [(ngModel)]="attendancePeriodConfig.IsCustomPeriod"
+                        [ngModelOptions]="{standalone: true}"
+                        color="primary"
+                        (change)="onCustomPeriodToggle()">
+                        Custom Attendance Period
+                    </mat-slide-toggle>
+                </div>
+
+                <!-- Start Day -->
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4 mt-2"
+                     [style.opacity]="attendancePeriodConfig.IsCustomPeriod ? '1' : '0.4'">
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Period Start Day (1–28)</mat-label>
+                        <input type="number" matInput
+                            [(ngModel)]="attendancePeriodConfig.PeriodStartDay"
+                            [ngModelOptions]="{standalone: true}"
+                            [disabled]="!attendancePeriodConfig.IsCustomPeriod"
+                            min="1" max="28"
+                            (change)="updateAttendancePeriodPreview()">
+                        <mat-hint>Day of previous month when cycle starts</mat-hint>
+                    </mat-form-field>
+                </div>
+
+                <!-- End Day -->
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4 mt-2"
+                     [style.opacity]="attendancePeriodConfig.IsCustomPeriod ? '1' : '0.4'">
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Period End Day (1–28, 0=last day)</mat-label>
+                        <input type="number" matInput
+                            [(ngModel)]="attendancePeriodConfig.PeriodEndDay"
+                            [ngModelOptions]="{standalone: true}"
+                            [disabled]="!attendancePeriodConfig.IsCustomPeriod"
+                            min="0" max="28"
+                            (change)="updateAttendancePeriodPreview()">
+                        <mat-hint>Day of reference month when cycle ends (0 = last day)</mat-hint>
+                    </mat-form-field>
+                </div>
+
+                <!-- Preview -->
+                <div class="col-12 mt-2" *ngIf="attendancePeriodPreview">
+                    <div class="alert alert-info py-2">
+                        <strong>Preview (current month):</strong>&nbsp;{{ attendancePeriodPreview }}
+                        <span *ngIf="attendancePeriodConfig.IsCustomPeriod" class="badge badge-warning ml-2">Custom</span>
+                        <span *ngIf="!attendancePeriodConfig.IsCustomPeriod" class="badge badge-success ml-2">Standard</span>
+                    </div>
+                </div>
+
+                <!-- Validation error -->
+                <div class="col-12" *ngIf="attendancePeriodError">
+                    <div class="alert alert-danger py-2">{{ attendancePeriodError }}</div>
+                </div>
+
+                <!-- Save Period Config button (only when editing an existing client) -->
+                <div class="col-12 mt-1" *ngIf="clientCodeStatus !== 'new'">
+                    <button class="btn wlt-c-furg-btn-primary btn-sm"
+                        (click)="saveAttendancePeriodConfig()"
+                        [disabled]="attendancePeriodSaving">
+                        <span *ngIf="attendancePeriodSaving">Saving…</span>
+                        <span *ngIf="!attendancePeriodSaving">Save Attendance Period Config</span>
+                    </button>
+                </div>
+            </div>
+            <div class="row pt-3">
                 <div class="col-12 col-sm-12 col-md-4 col-lg-2 wlt-c-furg-profile">
                     <mat-label>Status</mat-label>
                 </div>

@@ -1,83 +1,52 @@
 <!-- ===================== -->
-
 <!-- ORIGINAL HEADER (UNCHANGED) -->
-
 <!-- ===================== -->
 
 <div class="wlt-c-furg-content-header" *ngIf="(menuName != 'finance')">
-
   <div class="container-fluid">
-
     <div class="row mb-2">
-
       <div class="col-12 col-sm-12 col-md-6 col-lg-6">
-
         <h1 class="mb-1">Dashboard</h1>
-
       </div>
-
       <div class="col-12 col-sm-12 col-md-6 col-lg-6 my-1">
-
         <ol class="breadcrumb float-md-right">
-
           <li class="breadcrumb-item">
-
             <a routerLink="/dashboard">Dashboard</a>
-
           </li>
-
         </ol>
-
       </div>
-
     </div>
-
   </div>
-
 </div>
 
 
-
-
-
 <!-- ===================== -->
-
-<!-- ≡ƒöö NEW SYSTEM NOTICE -->
-
+<!-- SYSTEM NOTICE BANNER  -->
 <!-- ===================== -->
 
 <div class="container-fluid mb-3" *ngIf="menuName != 'finance'">
-
   <div class="alert alert-info shadow-sm border-0 d-flex align-items-center" role="alert"
     style="border-left:5px solid #0d6efd; border-radius:10px;">
 
     <i class="fas fa-rocket mr-3" style="font-size:22px;"></i>
 
     <div>
-
-<strong>Welcome to the New OBMS India System ΓÇô FreightWatch G Security Services India Pvt. Ltd.</strong><br><br>
-
-Experience a faster, smarter, and more secure OBMS India platform designed to streamline daily operations and enhance user productivity.<br><br>
-
-The upgraded system delivers improved performance, stronger security, and a more user-friendly experience for efficient access and management.<br><br>
-
-Legacy modules will continue to remain available for features that are currently under migration to the new OBMS India system.
-
+      <strong>Welcome to the New OBMS India System &ndash; FreightWatch G Security Services India Pvt. Ltd.</strong><br><br>
+      Experience a faster, smarter, and more secure OBMS India platform designed to streamline daily operations and enhance user productivity.<br><br>
+      The upgraded system delivers improved performance, stronger security, and a more user-friendly experience for efficient access and management.<br><br>
+      Legacy modules will continue to remain available for features that are currently under migration to the new OBMS India system.
     </div>
 
   </div>
-
 </div>
 
 
-
 <!-- ===================== -->
-
-<!-- Γ£¿ WHATΓÇÖS IMPROVED SECTION -->
-
+<!-- STATS & ALERTS SECTION -->
 <!-- ===================== -->
 
 <div class="container-fluid mb-4" *ngIf="menuName != 'finance'">
+
   <!-- Quick Stats Cards (Admin/Super Admin only) -->
   <div class="row mb-4" *ngIf="isAdminOrSuperAdmin">
     <div class="col-md-3 col-sm-6 mb-3">
@@ -128,6 +97,7 @@ Legacy modules will continue to remain available for features that are currently
 
   <!-- Alerts & Info (Admin/Super Admin only) -->
   <div class="row" *ngIf="isAdminOrSuperAdmin">
+
     <!-- System Alerts -->
     <div class="col-md-8 mb-4">
       <mat-card class="shadow-sm">
@@ -139,6 +109,7 @@ Legacy modules will continue to remain available for features that are currently
         </mat-card-header>
         <mat-card-content>
           <div class="alerts-list">
+
             <div class="alert-item alert-pending" *ngIf="websiteDetails.systemStats.pendingPayments > 0">
               <div class="alert-icon">
                 <i class="fas fa-clock"></i>
@@ -181,6 +152,7 @@ Legacy modules will continue to remain available for features that are currently
                 <div class="alert-desc">All systems operational - Last updated {{currentDate | date:'short'}}</div>
               </div>
             </div>
+
           </div>
         </mat-card-content>
       </mat-card>
@@ -228,160 +200,91 @@ Legacy modules will continue to remain available for features that are currently
         </mat-card-content>
       </mat-card>
     </div>
+
   </div>
 </div>
+
 
 <!-- ===================== -->
 <!-- WHAT'S IMPROVED SECTION -->
 <!-- ===================== -->
 
 <div class="container-fluid mb-4" *ngIf="menuName != 'finance'">
-
   <mat-card class="shadow-sm">
-
     <mat-card-header>
-
       <mat-card-title>
-
         <i class="fas fa-star text-primary mr-2"></i>
-
-        WhatΓÇÖs Improved in the New OBMS?
-
+        What&apos;s Improved in the New OBMS?
       </mat-card-title>
-
     </mat-card-header>
 
-
-
     <mat-card-content>
-
       <div class="row">
 
         <div class="col-md-6">
-
           <ul class="improvement-list">
-
-            <li>ΓÜí Faster system performance</li>
-
-            <li>≡ƒöÆ Enhanced data security</li>
-
-            <li>≡ƒûÑ Modern and easier-to-use interface</li>
-
+            <li>&#9889; Faster system performance</li>
+            <li>&#128274; Enhanced data security</li>
+            <li>&#127775; Modern and easier-to-use interface</li>
           </ul>
-
         </div>
-
-
 
         <div class="col-md-6">
-
           <ul class="improvement-list">
-
-            <li>≡ƒôè Improved dashboard and reports</li>
-
-            <li>≡ƒöì Better search and navigation</li>
-
-            <li>≡ƒÜÇ Continuous feature upgrades coming soon</li>
-
+            <li>&#128202; Improved dashboard and reports</li>
+            <li>&#128269; Better search and navigation</li>
+            <li>&#128640; Continuous feature upgrades coming soon</li>
           </ul>
-
         </div>
 
       </div>
-
     </mat-card-content>
-
   </mat-card>
-
 </div>
 
 
-
-
 <!-- ===================== -->
-
-<!-- ≡ƒûÑ LEGACY REPORT CARD -->
-
+<!-- LEGACY REPORT HEADER  -->
 <!-- ===================== -->
-
-
 
 <div class="wlt-c-furg-content-header" *ngIf="(menuName === 'finance')">
-
   <div class="container-fluid">
-
     <div class="row mb-2">
-
       <div class="col-12 col-sm-12 col-md-6 col-lg-6">
-
         <h1 class="mb-1">Report/Payment Due List</h1>
-
       </div>
-
       <div class="col-12 col-sm-12 col-md-6 col-lg-6 my-1">
-
         <ol class="breadcrumb float-md-right">
-
           <li class="breadcrumb-item">
-
             <a routerLink="/dashboard">Report</a>
-
           </li>
-
           <li class="breadcrumb-item active">
-
             Payment Due List
-
           </li>
-
         </ol>
-
       </div>
-
     </div>
-
   </div>
-
 </div>
 
 
-
-
-
 <!-- ===================== -->
-
 <!-- FINANCE REPORT SECTION (UNCHANGED) -->
-
 <!-- ===================== -->
 
 <mat-card *ngIf="menuName == 'finance'" class="report-card full-width-report">
-
   <mat-card-content>
-
     <br />
 
-
-
     <div *ngIf="warningMessage !== ''">
-
       <mat-label style="color:red" [innerHTML]="warningMessage"></mat-label>
-
     </div>
-
-
 
     <div *ngIf="errorMessage !== ''">
-
       <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
-
     </div>
-
-
 
     <iframe width="1200px" height="1200px" #myFrame [src]="urlSafe"></iframe>
 
-
-
   </mat-card-content>
-
 </mat-card>
