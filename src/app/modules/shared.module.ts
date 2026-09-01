@@ -172,8 +172,11 @@ import { PaymentVoucherSummaryComponent } from './report/finance/payment-voucher
 import { ReceiptVoucherSummaryComponent } from './report/finance/receipt-voucher-summary/receipt-voucher-summary.component';
 import { BranchTransactionsComponent } from './report/finance/branch-transactions/branch-transactions.component';
 import { BranchCollectionsComponent } from './report/finance/branch-collections/branch-collections.component';
+import { BranchPaymentSummaryComponent } from './report/finance/branch-payment-summary/branch-payment-summary.component';
 import { ChequeStatusReportComponent } from './report/finance/cheque-status-report/cheque-status-report.component';
 import { CreditNoteSummaryComponent } from './report/finance/credit-note-summary/credit-note-summary.component';
+import { CreditNoteComponent } from './finance/credit-note/credit-note.component';
+import { DebitNoteComponent } from './finance/debit-note/debit-note.component';
 import { PasswordChangeComponent } from './user/password-change/password-change.component';
 import { InvoiceCollectionStatusReportComponent } from './report/finance/invoice-collection-status-report/invoice-collection-status-report.component';
 import { LoanLedgerReportComponent } from './report/payroll/loan-ledger-report/loan-ledger-report.component';
@@ -191,6 +194,7 @@ import { InvoiceAgeingComponent } from './report/finance/invoice-ageing/invoice-
 import { ProfitAndLossComponent } from './report/finance/profit-and-loss/profit-and-loss.component';
 import { InvoiceReportComponent } from './report/finance/invoice-report/invoice-report.component';
 import { PrintIndianInvoiceComponent } from './report/finance/print-indian-invoice/print-indian-invoice.component';
+import { SalesInvoiceCollectionReportComponent } from './report/finance/sales-invoice-collection-report/sales-invoice-collection-report.component';
 import { UniformLoanReportComponent } from './payroll/employee-uniform-loan/uniform-loan-report/uniform-loan-report.component';
 import { DailyAdvanceVoucherReportComponent } from './payroll/new-employee-daily-advance/daily-advance-voucher-report/daily-advance-voucher-report.component';
 import { LoanVoucherReportComponent } from './payroll/employee-loan/loan-voucher-report/loan-voucher-report.component';
@@ -284,6 +288,8 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     InvoiceComponent,
     BatchInvoiceComponent,
     InvoiceRecycleBinComponent,
+    CreditNoteComponent,
+    DebitNoteComponent,
     PaymentsComponent,
     PaymentsRecycleBinComponent,
     ReceiptsComponent,
@@ -328,6 +334,7 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     ReceiptVoucherSummaryComponent,
     BranchTransactionsComponent,
     BranchCollectionsComponent,
+    BranchPaymentSummaryComponent,
     ChequeStatusReportComponent,
     CreditNoteSummaryComponent,
     InvoiceCollectionStatusReportComponent,
@@ -346,6 +353,7 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     ProfitAndLossComponent,
     InvoiceReportComponent,
     PrintIndianInvoiceComponent,
+    SalesInvoiceCollectionReportComponent,
     UniformLoanReportComponent,
     DailyAdvanceVoucherReportComponent,
     LoanVoucherReportComponent,

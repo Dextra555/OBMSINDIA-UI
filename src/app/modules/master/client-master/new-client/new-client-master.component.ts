@@ -165,14 +165,16 @@ export class NewClientMasterComponent implements OnInit {
     // Load Indian states for GST calculations
     this.loadIndianStates();
 
+   this.getUserAccessRights(this.currentUser, 'Client Master');
     this._activatedRoute.queryParams.subscribe((params) => {
       if (params['code'] != undefined) {
         this.getClientMasterList(params['code'], params['status']);
         this.getBranchMasterListByUser(this.currentUser);
-        this.getAllClientMasterList(params['code'], params['status']);
+        this.getAllClientMasterList('null', 'Active');
       } else {
-        this.getAllClientMasterList('all', 'Active'); // Load all active clients for dropdown
+        //this.getAllClientMasterList(this.clientCode, 'Active');
         this.getBranchMasterListByUser(this.currentUser);
+        this.getAllClientMasterList('null', 'Active');
         this.getNewVoucherNumber();
       }
     });
@@ -279,6 +281,11 @@ export class NewClientMasterComponent implements OnInit {
       );
     }
   }
+      
+
+
+
+  
 
   getClientMasterList(clientCode: string, status: string) {
     this.showLoadingSpinner = true;
@@ -361,18 +368,20 @@ export class NewClientMasterComponent implements OnInit {
       (error) => this.handleErrors(error)
     );
   }
+ 
+  
+
+
 
   onCheckboxChange(e: MatCheckboxChange) {
     if (e.checked) {
       this.disableSelect = true;
-      // Disable the SuperClientCode control in the form
-      this.clientForm.get('SuperClientCode')?.disable();
+      this.clientForm.patchValue({ SuperClientCode: '' }); // HQ-ஆ mark பண்ணும்போது SuperClientCode clear
     } else {
       this.disableSelect = false;
-      // Enable the SuperClientCode control in the form
-      this.clientForm.get('SuperClientCode')?.enable();
     }
   }
+
 
   onGSTRegistrationStatusChange(event: any) {
     const gstStatus = event.value;

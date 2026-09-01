@@ -788,5 +788,70 @@ export class FinanceService {
 
   }
 
+  generateCreditNoteNo(branch: string, date: string): Observable<any> {
+    return this.httpClient.get(`${this.apiUrl}CreditDebitNote/GenerateCreditNoteNo`, {
+      params: { branch, date },
+      responseType: 'text' as 'json'
+    }).pipe(catchError(this.errorHandle));
+  }
+
+   getCreditNotes(branch: string, client: string, agreementID?: number | null): Observable<any[]> {
+    let params = new HttpParams()
+      .set('branch', branch)
+      .set('client', client);
+    if (agreementID != null) params = params.set('agreementID', agreementID.toString());
+    return this.httpClient.get<any[]>(`${this.apiUrl}CreditDebitNote/GetCreditNotes`, { params })
+      .pipe(catchError(this.errorHandle));
+  }
+
+    deleteCreditNote(id: number, currentUser: string): Observable<any> {
+    return this.httpClient.post(
+      `${this.apiUrl}CreditDebitNote/DeleteCreditNote?id=${id}&currentUser=${encodeURIComponent(currentUser)}`, null
+    ).pipe(catchError(this.errorHandle));
+  }
+
+  saveCreditNote(body: any): Observable<any> {
+    return this.httpClient.post(`${this.apiUrl}CreditDebitNote/SaveCreditNote`, body)
+      .pipe(catchError(this.errorHandle));
+  }
+
+    updateCreditNote(body: any): Observable<any> {
+    return this.httpClient.post(`${this.apiUrl}CreditDebitNote/UpdateCreditNote`, body)
+      .pipe(catchError(this.errorHandle));
+  }
+
+  saveDebitNote(body: any): Observable<any> {
+    return this.httpClient.post(`${this.apiUrl}CreditDebitNote/SaveDebitNote`, body)
+      .pipe(catchError(this.errorHandle));
+  }
+
+  updateDebitNote(body: any): Observable<any> {
+    return this.httpClient.post(`${this.apiUrl}CreditDebitNote/UpdateDebitNote`, body)
+      .pipe(catchError(this.errorHandle));
+  }
+
+  deleteDebitNote(id: number, currentUser: string): Observable<any> {
+    return this.httpClient.post(
+      `${this.apiUrl}CreditDebitNote/DeleteDebitNote?id=${id}&currentUser=${encodeURIComponent(currentUser)}`, null
+    ).pipe(catchError(this.errorHandle));
+  }
+
+  generateDebitNoteNo(branch: string, date: string): Observable<any> {
+    return this.httpClient.get(`${this.apiUrl}CreditDebitNote/GenerateDebitNoteNo`, {
+      params: { branch, date },
+      responseType: 'text' as 'json'
+    }).pipe(catchError(this.errorHandle));
+  }
+
+  getDebitNotes(branch: string, client: string, agreementID?: number | null): Observable<any[]> {
+    let params = new HttpParams()
+      .set('branch', branch)
+      .set('client', client);
+    if (agreementID != null) params = params.set('agreementID', agreementID.toString());
+    return this.httpClient.get<any[]>(`${this.apiUrl}CreditDebitNote/GetDebitNotes`, { params })
+      .pipe(catchError(this.errorHandle));
+  }
+
+  
 }
 

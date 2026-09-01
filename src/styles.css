@@ -2767,3 +2767,48 @@ td.mat-cell {
   overflow-y: hidden !important;
   /* Prevent unintended scrolling */
 }
+
+/* =====================================================
+   REPORT HEIGHT – MATCH FWG-MALAYSIA
+   ===================================================== */
+
+/* Default report wrapper for normal reports */
+.report-wrapper.fixed-height {
+  width: 100%;
+  max-width: 100%;
+  height: calc(100vh - 140px);
+  overflow: auto;
+  padding-left: 0;
+  /* normal left margin */
+  padding-right: 16px;
+  /* normal right margin */
+  box-sizing: border-box;
+  background: #B3C4D6;
+  display: block;
+}
+
+/* iframe inside wrapper */
+.report-wrapper.fixed-height iframe {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  display: block;
+  background: #B3C4D6;
+}
+
+/* FULL_WIDTH: remove all card & content padding */
+mat-card.full-width-report,
+mat-card.full-width-report .mat-card-content.full-width-card-content {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  box-shadow: none;
+  /* optional */
+}
+
+/* FULL_WIDTH: iframe stretches fully */
+mat-card.full-width-report .report-wrapper.fixed-height,
+mat-card.full-width-report .report-wrapper.fixed-height iframe {
+  width: 100% !important;
+  padding: 0 !important;
+}

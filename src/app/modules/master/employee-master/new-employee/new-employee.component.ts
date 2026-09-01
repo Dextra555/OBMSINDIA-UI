@@ -144,6 +144,10 @@ export class NewEmployeeComponent implements OnInit {
 
 
   isEdit: boolean = false;
+  /** Branch code that was loaded on page init (edit mode only). */
+  originalBranchCode: string = '';
+  /** True when the user has changed EMP_BRANCH_CODE in edit mode. */
+  isBranchChanged: boolean = false;
 
 
 
@@ -705,7 +709,9 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
-
+      // ── Branch Transfer fields ──────────────────────────────────────
+      IsBranchChanged: [false],
+      BranchStartDate: [null],
 
 
 
@@ -1133,12 +1139,15 @@ export class NewEmployeeComponent implements OnInit {
 
         });
 
-
+        // ── Store original branch so we can detect a change later ──────
+        this.originalBranchCode = employee['EMP_BRANCH_CODE']?.toString() ?? '';
+        this.isBranchChanged = false;
+        this.frm.get('IsBranchChanged')?.setValue(false);
+        this.frm.get('BranchStartDate')?.setValue(null);
+        this.frm.get('BranchStartDate')?.clearValidators();
+        this.frm.get('BranchStartDate')?.updateValueAndValidity();
 
       }, () => {
-
-
-
       }, () => {
 
 
@@ -1607,31 +1616,31 @@ export class NewEmployeeComponent implements OnInit {
 
   clientChange(value: any) {
 
-
-
     this._employeeService.getClientsFromBranchId(value, this.frm.get('EMP_ROLE')?.value).subscribe((data: any) => {
-
-
 
       // this.empCodeData = data.emp
 
-
-
       console.log(data);
-
-
 
       this.clientList = data['clientList'];
 
-
-
       this.setEmpCode();
-
-
 
     })
 
-
+    // ── Detect branch change in edit mode ──────────────────────────────
+    if (this.isEdit && this.originalBranchCode && value !== this.originalBranchCode) {
+      this.isBranchChanged = true;
+      this.frm.get('IsBranchChanged')?.setValue(true);
+      this.frm.get('BranchStartDate')?.setValidators([Validators.required]);
+      this.frm.get('BranchStartDate')?.updateValueAndValidity();
+    } else {
+      this.isBranchChanged = false;
+      this.frm.get('IsBranchChanged')?.setValue(false);
+      this.frm.get('BranchStartDate')?.clearValidators();
+      this.frm.get('BranchStartDate')?.setValue(null);
+      this.frm.get('BranchStartDate')?.updateValueAndValidity();
+    }
 
   }
 
@@ -2541,9 +2550,11 @@ export class NewEmployeeComponent implements OnInit {
 
     data['TransferDate'] = null;
 
-
-
-
+    // ── Branch Transfer: inject change flag and effective start date ───
+    data['IsBranchChanged'] = this.isBranchChanged;
+    data['BranchStartDate'] = this.isBranchChanged && this.frm.get('BranchStartDate')?.value
+      ? this.returnDate(this.frm.get('BranchStartDate')?.value)
+      : null;
 
 
 

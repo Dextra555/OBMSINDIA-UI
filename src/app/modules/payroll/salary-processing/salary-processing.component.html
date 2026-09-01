@@ -81,7 +81,9 @@
                         <mat-label class="mr-3"><strong>Last Remarks</strong></mat-label>
                     </div>
                     <div class="col-12 col-sm-12 col-md-4 col-lg-4" style="margin-left: -80px; margin-top: -9px;border: 1px solid #ccc;">
-                            <textarea matInput rows="3" formControlName="LastRemarks"></textarea>
+                        <div [innerHTML]="salaryProcessingForm.get('LastRemarks')?.value"
+                             style="padding: 6px; min-height: 60px; font-size: 14px; white-space: pre-wrap; word-wrap: break-word;">
+                        </div>
                     </div>
                 </div>
             </div>

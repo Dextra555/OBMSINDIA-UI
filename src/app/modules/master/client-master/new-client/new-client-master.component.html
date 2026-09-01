@@ -336,16 +336,25 @@
                 <div class="col-12 col-sm-12 col-md-4 col-lg-2 wlt-c-furg-profile">
                     <mat-label>Master Client</mat-label>
                 </div>
-                <div class="col-12 col-sm-12 col-md-4 col-lg-6">
-                    <mat-checkbox formControlName="IsClientHeadQuarters" (change)="onCheckboxChange($event)">
-                    </mat-checkbox>
-                    <mat-form-field appearance="outline"
-                        [ngClass]="{'w-100' : !clientForm.get('IsClientHeadQuarters')?.value}">
-                        <mat-label>Super Client Code</mat-label>
-                        <mat-select formControlName="SuperClientCode">
-                            <mat-option *ngFor="let client of clientModelDropdown" [value]="client.Code">
-                                {{ client.Code }} - {{ client.Name }}
-                            </mat-option>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-3">
+                    <mat-checkbox formControlName="IsClientHeadQuarters"
+                        (change)="onCheckboxChange($event)"></mat-checkbox>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 col-sm-12 col-md-4 col-lg-2 wlt-c-furg-profile">
+                    <mat-label>Client HQ</mat-label>
+                </div>
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+                    <mat-form-field appearance="outline">
+                        <mat-select [disabled]="disableSelect" formControlName="SuperClientCode"
+                            [panelClass]="'custom-dropdown-panel'">
+                            <mat-option [value]="''"></mat-option>
+                            <ng-container *ngFor="let client of clientModelDropdown">
+                                <mat-option *ngIf="client.IsClientHeadQuarters === true && client.Code !== clientForm.get('Code')?.value" [value]="client.Code">
+                                    {{ client.Code }} - {{ client.Name }}
+                                </mat-option>
+                            </ng-container>
                         </mat-select>
                     </mat-form-field>
                 </div>

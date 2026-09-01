@@ -142,6 +142,9 @@ import { InvoiceRecycleBinComponent } from "../../modules/finance/invoice-recycl
 
 import { BatchInvoiceComponent } from "../../modules/finance/batch-invoice/batch-invoice.component";
 
+import { CreditNoteComponent } from "../../modules/finance/credit-note/credit-note.component";
+import { DebitNoteComponent } from "../../modules/finance/debit-note/debit-note.component";
+
 import { InvoiceComponent } from "../../modules/finance/invoice/invoice.component";
 
 import { NewAttendanceComponent } from 'src/app/modules/payroll/attendance/new-attendance/new-attendance.component';
@@ -212,6 +215,8 @@ import { BranchTransactionsComponent } from "../../modules/report/finance/branch
 
 import { BranchCollectionsComponent } from "../../modules/report/finance/branch-collections/branch-collections.component";
 
+import { BranchPaymentSummaryComponent } from "../../modules/report/finance/branch-payment-summary/branch-payment-summary.component";
+
 import { ChequeStatusReportComponent } from "../../modules/report/finance/cheque-status-report/cheque-status-report.component";
 
 import { CreditNoteSummaryComponent } from "../../modules/report/finance/credit-note-summary/credit-note-summary.component";
@@ -249,6 +254,8 @@ import { ProfitAndLossComponent } from 'src/app/modules/report/finance/profit-an
 import { InvoiceReportComponent } from 'src/app/modules/report/finance/invoice-report/invoice-report.component';
 
 import { PrintIndianInvoiceComponent } from 'src/app/modules/report/finance/print-indian-invoice/print-indian-invoice.component';
+
+import { SalesInvoiceCollectionReportComponent } from 'src/app/modules/report/finance/sales-invoice-collection-report/sales-invoice-collection-report.component';
 
 import { SearchReceiptsComponent } from 'src/app/modules/finance/receipts/search-receipts/search-receipts.component';
 
@@ -547,6 +554,10 @@ const routes: Routes = [
 
   { path: 'finance/invoice-recycle-bin', component: InvoiceRecycleBinComponent, canActivate: [AuthGuard] },
 
+  { path: 'finance/credit-note', component: CreditNoteComponent, canActivate: [AuthGuard] },
+
+  { path: 'finance/debit-note', component: DebitNoteComponent, canActivate: [AuthGuard] },
+
   { path: 'finance/payments', component: PaymentsComponent, canActivate: [AuthGuard] },
 
   { path: 'finance/search-payments', component: SearchPaymentsComponent, canActivate: [AuthGuard] },
@@ -675,6 +686,8 @@ const routes: Routes = [
 
   { path: 'report/finance/branch-collections-report', component: BranchCollectionsComponent, canActivate: [AuthGuard] },
 
+  { path: 'report/finance/branch-payment-summary-report', component: BranchPaymentSummaryComponent, canActivate: [AuthGuard] },
+
   { path: 'report/finance/cheque-status-report', component: ChequeStatusReportComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/credit-note-summary-report', component: CreditNoteSummaryComponent, canActivate: [AuthGuard] },
@@ -686,6 +699,8 @@ const routes: Routes = [
   { path: 'report/finance/monthly-invoice-status', component: MonthlyInvoiceStatusComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/deleted-invoice-details', component: DeletedInvoiceDetailsComponent, canActivate: [AuthGuard] },
+
+  { path: 'report/finance/sales-invoice-collection-report', component: SalesInvoiceCollectionReportComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/client-statement', component: ClientStatementComponent, canActivate: [AuthGuard] },
 

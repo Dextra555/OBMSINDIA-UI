@@ -21,6 +21,10 @@ export class InvoiceAgeingComponent implements OnInit {
   frm!: FormGroup;
   branchList: any = [];
   itemList: any = [];
+  allMasterClientList: any = [];   // full list loaded on init
+  masterClientList: any = [];
+  allClientList: any = [];         // full client list loaded on init
+  clientList: any = [];
   currentUser: string = "";
   errorMessage: string = '';
   warningMessage: string = '';
@@ -44,20 +48,8 @@ export class InvoiceAgeingComponent implements OnInit {
     }
 
   }
-  ngOnInit(): void {
-    this.router.events.subscribe(event => {
-      if (event instanceof NavigationEnd) {
-        this._dataService.scrollToTop(); // Scroll to top on route change
-      }
-    });
-    this.currentUser = sessionStorage.getItem('username')!;
-    if (this.currentUser == null || this.currentUser == undefined) {
-      this._dataService.getUsername().subscribe((username) => {
-        this.currentUser = username;
-      });
-    }
-    this.getUserAccessRights(this.currentUser, 'Invoice Ageing Report');
-  }
+
+
 
   getUserAccessRights(userName: string, screenName: string) {
     this.showLoadingSpinner = true;
@@ -72,6 +64,12 @@ export class InvoiceAgeingComponent implements OnInit {
             this.warningMessage = '';
             this._masterService.GetBranchListByUserName(this.currentUser).subscribe((d: any) => {
               this.branchList = d;
+            });
+            // Load all HQ master clients independent of branch selection
+            this._masterService.getClientMsterListByStatus('Active').subscribe((d: any) => {
+              this.allMasterClientList = d.filter((c: any) => c.IsClientHeadQuarters === true);
+              this.masterClientList = [...this.allMasterClientList];
+              this.allClientList = d;
             });
 
           } else {
@@ -88,6 +86,22 @@ export class InvoiceAgeingComponent implements OnInit {
       }
     );
   }
+  ngOnInit(): void {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this._dataService.scrollToTop(); // Scroll to top on route change
+      }
+    });
+    this.currentUser = sessionStorage.getItem('username')!;
+    if (this.currentUser == null || this.currentUser == undefined) {
+      this._dataService.getUsername().subscribe((username) => {
+        this.currentUser = username;
+      });
+    }
+    this.getUserAccessRights(this.currentUser, 'Invoice Ageing Report');
+  }
+
+ 
   returnDate(date?: any) {
     let currentDate = new Date();
     if (date) {
@@ -130,6 +144,38 @@ export class InvoiceAgeingComponent implements OnInit {
   };
   hideSpinner() {
     this.showLoadingSpinner = false;
+  }
+
+    masterClientChange(data: any) {
+    this.errorMessage = '';
+    this.clientList = [];
+    this.frm.patchValue({ Client: '' });
+
+    const hqCode = data.value;
+    const branchCode = this.frm.get('Branch')?.value;
+
+    if (hqCode) {
+      // Show clients that belong to this HQ (sub-clients via SuperClientCode, or the HQ itself)
+      let filtered = this.allClientList.filter(
+        (c: any) => c.SuperClientCode === hqCode || c.Code === hqCode
+      );
+      // Further narrow by branch if one is selected
+      if (branchCode && branchCode !== '0') {
+        filtered = filtered.filter((c: any) => c.Branch === branchCode);
+      }
+      this.clientList = filtered;
+    }
+  }
+
+    branchChange(data: any) {
+    this.errorMessage = '';
+    this.clientList = [];
+    this.frm.patchValue({ MasterClient: '', Client: '' });
+
+    // Always show all HQ clients regardless of branch selection.
+    // HQ clients are corporate entities and may not share the same branch code
+    // as their sub-clients — filtering HQ by branch here would hide valid options.
+    this.masterClientList = [...this.allMasterClientList];
   }
 
 }

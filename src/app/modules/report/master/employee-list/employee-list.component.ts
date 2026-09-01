@@ -39,7 +39,8 @@ export class EmployeeListComponent implements OnInit {
 
     this.frm = fb.group({
       branch: ["", Validators.required],
-      type: ["Guard"]
+      type: ["Guard"],
+      csgtngStatus: ["All"]
     })
   }
 
@@ -86,6 +87,8 @@ export class EmployeeListComponent implements OnInit {
     }
     this.url += "&Branch=" + this.frm.get("branch")?.value
     this.url += "&EmployeeType=" + this.frm.get("type")?.value
+    const csgtngStatus = this.frm.get("csgtngStatus")?.value || "All";
+    this.url += "&CSGTNGStatus=" + csgtngStatus;
     this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.url);
   }
 

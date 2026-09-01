@@ -168,7 +168,19 @@
 
         </div>
 
-
+        <!-- Effective Start Date at new branch — shown only when branch is changed in edit mode -->
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4" *ngIf="isBranchChanged">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Effective Start Date (New Branch) <span style="color:red">*</span></mat-label>
+            <input matInput [matDatepicker]="branchStartDatePicker" formControlName="BranchStartDate"
+              placeholder="DD/MM/YYYY">
+            <mat-datepicker-toggle matSuffix [for]="branchStartDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #branchStartDatePicker></mat-datepicker>
+            <mat-error *ngIf="frm.get('BranchStartDate')?.hasError('required') && (frm.get('BranchStartDate')?.touched || submitted)">
+              Effective Start Date is required when changing branch.
+            </mat-error>
+          </mat-form-field>
+        </div>
 
         <div class="col-12 col-sm-12 col-md-4 col-lg-4">
 

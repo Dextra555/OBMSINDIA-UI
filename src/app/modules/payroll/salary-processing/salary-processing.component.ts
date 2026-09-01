@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 
@@ -94,9 +94,9 @@ export class SalaryProcessingComponent implements OnInit {
 
       EmployeeID: [''],
 
-      SalaryPeriod: [''],
+      SalaryPeriod: [null, Validators.required],
 
-      BranchCode: [''],
+      BranchCode: ['', Validators.required],
 
       EmployeeType: ['None'],
 
@@ -108,7 +108,7 @@ export class SalaryProcessingComponent implements OnInit {
 
       unprocessedChecked: [false],
 
-      Remarks: [''],
+      Remarks: ['', Validators.required],
 
       LastUpdate: [this.formatDate(new Date)],
 
@@ -204,9 +204,21 @@ export class SalaryProcessingComponent implements OnInit {
 
   changeSalaryPeriod(type: string, event: MatDatepickerInputEvent<Date>) {
 
-    this.salaryProcessingForm.value.SalaryPeriod = this.formatDate(`${type}: ${event.value}`);
+    const selectedDate = event.value;
 
-    if (this.salaryProcessingForm.get('BranchCode')?.value != '' && this.salaryProcessingForm.get('BranchCode')?.value != undefined) {
+    if (!selectedDate) {
+
+      return;
+
+    }
+
+    this.salaryProcessingForm.patchValue({
+
+      SalaryPeriod: selectedDate
+
+    });
+
+    if (this.salaryProcessingForm.get('BranchCode')?.value) {
 
       this.ShowLastProcessedDate();
 
@@ -305,55 +317,36 @@ export class SalaryProcessingComponent implements OnInit {
   }
 
   ShowLastRemarks() {
-
-    // SalaryPeriod comes from formatDate as a string 'yyyy-MM-dd', need to convert it to Date
-
-    let dtSalaryProcessDateString = this.salaryProcessingForm.value.SalaryPeriod;
-
-    let dtSalaryProcessDate = new Date(dtSalaryProcessDateString);
-
-    this.dtSalaryProcessDate = this.formatDate(
-
-      new Date(dtSalaryProcessDate.getFullYear(), dtSalaryProcessDate.getMonth() + 1, 0)
-
-    );
-
-
-
+    const salaryPeriod = this.salaryProcessingForm.get('SalaryPeriod')?.value;
     const employeeType = this.salaryProcessingForm.get('EmployeeType')?.value;
-
     const branchCode = this.salaryProcessingForm.get('BranchCode')?.value;
-
-    this._payrollService.getLastSalaryProcessRemarks(this.dtSalaryProcessDate, branchCode, employeeType).subscribe(response => {
-
-      if (response != null) {
-
-        const remarks = response.remarks == 'null' ? '' : response.remarks;
-
-        this.salaryProcessingForm.patchValue({
-
-          LastRemarks: remarks,
-
-          Remarks:''
-
-        });
-
-      } else {
-
-        this.salaryProcessingForm.patchValue({
-
-          LastRemarks: '',
-
-          Remarks:''
-
-        });
-
-      }
-
-    })
-
-
-
+    if (!salaryPeriod || !branchCode) {
+      return;
+    }
+    const periodDate = new Date(salaryPeriod);
+    if (isNaN(periodDate.getTime())) {
+      return;
+    }
+    this.dtSalaryProcessDate = this.formatDate(
+      new Date(periodDate.getFullYear(), periodDate.getMonth() + 1, 0)
+    );
+    this._payrollService.getLastSalaryProcessRemarks(this.dtSalaryProcessDate, branchCode, employeeType).subscribe(
+      response => {
+        if (response != null) {
+          const remarks = response.remarks == 'null' ? '' : response.remarks;
+          this.salaryProcessingForm.patchValue({
+            LastRemarks: remarks,
+            Remarks: ''
+          });
+        } else {
+          this.salaryProcessingForm.patchValue({
+            LastRemarks: '',
+            Remarks: ''
+          });
+        }
+      },
+      error => this.handleErrors(error)
+    );
   }
 
   IsFullySalaryProcessEmployeesForLastPeriod() {
@@ -442,61 +435,83 @@ export class SalaryProcessingComponent implements OnInit {
 
   onProcessClick(): void {
 
-    this.showLoadingSpinner = true;
-
     const employeeType = this.salaryProcessingForm.get('EmployeeType')?.value;
 
     const branchCode = this.salaryProcessingForm.get('BranchCode')?.value;
 
     let remarks = this.salaryProcessingForm.get('Remarks')?.value;
 
-    const lockChecked = (this.salaryProcessingForm.get('lockChecked')?.value == null
+    const lockChecked = this.salaryProcessingForm.get('lockChecked')?.value ?? false;
 
-      ? false : this.salaryProcessingForm.get('lockChecked')?.value);
+    const salaryPeriod = this.salaryProcessingForm.get('SalaryPeriod')?.value;
 
 
 
-    if (employeeType == 'None') {
+    if (!salaryPeriod || !branchCode || !remarks || employeeType === 'None') {
 
-      this.showMessage(`Please select Employee Type is mandatory fields.`, 'warning', 'Warning Message');
+      this.showMessage(`Please complete all mandatory fields before processing.`, 'warning', 'Warning Message');
 
-    } else if (remarks == '' || remarks == null) {
-
-      this.showMessage(`Please select  Remarks is mandatory fields.`, 'warning', 'Warning Message');
+      return;
 
     }
 
-    else {
+    const periodDate = new Date(salaryPeriod);
 
-      remarks = this.salaryProcessingForm.get('LastRemarks')?.value + ' ' + remarks;
+    if (isNaN(periodDate.getTime())) {
 
-      // Prepare the API call in forkJoin
+      this.showMessage(`Invalid Salary Period. Please select a valid month.`, 'warning', 'Warning Message');
 
-      forkJoin([
+      return;
 
-        this._payrollService.salaryProcess(branchCode, employeeType, remarks, this.dtSalaryProcessDate, lockChecked,
+    }
 
-          this.currentUser, 'EASTWEST'),
 
-      ]).subscribe(
+
+    this.showLoadingSpinner = true;
+
+    this.dtSalaryProcessDate = this.formatDate(new Date(periodDate.getFullYear(), periodDate.getMonth() + 1, 0));
+
+    const now = new Date();
+
+    const dateStamp = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    const timeStamp = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+    const taggedRemarks = `[${this.currentUser} ${dateStamp} ${timeStamp}] ${remarks}`;
+
+    const existingRemarks = this.salaryProcessingForm.get('LastRemarks')?.value || '';
+
+    remarks = existingRemarks ? `${existingRemarks}<br>${taggedRemarks}` : taggedRemarks;
+
+
+
+    // Prepare the API call in forkJoin
+
+    forkJoin([
+
+      this._payrollService.salaryProcess(branchCode, employeeType, remarks, this.dtSalaryProcessDate, lockChecked,
+
+        this.currentUser, 'EASTWEST'),
+
+    ]).subscribe(
 
         ([response]) => {
 
-          const message = response?.result?.Message || 'Unknown response';
+          const message = response?.result?.Message;
 
 
 
-          if (message === 'Unknown response') {
+        if (!message || message === 'Unknown response') {
 
-            this.salaryProcessingForm.reset();
+          this.salaryProcessingForm.reset();
 
-            this.showMessage(`Salary processing completed successfully.`, 'success', 'Success Message');
+          this.showMessage(`Salary processing completed successfully.`, 'success', 'Success Message');
 
-          } else {
+        } else {
 
-            this.showMessage(`${message}`, 'warning', 'Warning Message');
+          this.showMessage(`${message}`, 'warning', 'Warning Message');
 
-          }
+        }
 
         },
 
@@ -507,10 +522,6 @@ export class SalaryProcessingComponent implements OnInit {
         }
 
       );
-
-      
-
-    }
 
   }
 
