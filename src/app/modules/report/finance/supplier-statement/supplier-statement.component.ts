@@ -197,7 +197,7 @@ onSubmit() {
     this.frm.get("Supplier")?.setErrors({ required: true });
     return;
   }
-  const payload = { StartDate: startDate, EndDate: endDate, Branch: branch, Supplier: supplier, PayTo: payTo, Category: category, Status: status };
+  const payload = { startDate, endDate, branch, supplier, payTo, category, status };
 
   this._financeService.executeSupplierReport(payload).subscribe({
     next: () => {
@@ -207,7 +207,6 @@ onSubmit() {
       localURL += `&EndDate=${endDate}`;
       localURL += `&Branch=${branch}`;
       localURL += `&Supplier=${supplier}`;
-      localURL += `&Status=${status}`;
 
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(
         environment.baseReportUrl + this.currentUrl + this.reportPageName + localURL

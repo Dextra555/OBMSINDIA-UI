@@ -8,6 +8,7 @@ import { EmployeeService } from "../../../../service/employee.service";
 import { Router, NavigationEnd } from '@angular/router';
 import { DatasharingService } from 'src/app/service/datasharing.service';
 import { UserAccessModel } from 'src/app/model/userAccesModel';
+import { CommonService } from 'src/app/service/common.service';
 
 @Component({
   selector: 'app-payment-voucher-summary',
@@ -37,7 +38,7 @@ export class PaymentVoucherSummaryComponent implements OnInit {
   ];
 
   constructor(public sanitizer: DomSanitizer, private _masterService: MastermoduleService, private service: InventoryService,
-    private empService: EmployeeService, private fb: FormBuilder, private router: Router, private _dataService: DatasharingService) {
+    private _commonService: CommonService, private fb: FormBuilder, private router: Router, private _dataService: DatasharingService) {
     
     this.frm = fb.group({
       Branch: ["0"],
@@ -88,7 +89,7 @@ export class PaymentVoucherSummaryComponent implements OnInit {
               this.branchList = d;
             });
         
-            this._masterService.GetBankListByUserName(this.currentUser).subscribe((d: any) => {
+            this._commonService.getUserBankList(this.currentUser).subscribe((d: any) => {
               this.bankList = d;
             })
         
@@ -119,12 +120,15 @@ export class PaymentVoucherSummaryComponent implements OnInit {
     return `${year}-${month}-${day}`;
   }
   clkBtn(number: number) {
+    this.reportPageName = '';
     this.reportType = number === 1 ? 1 : 2;
-    if (this.frm.get("ChequeAmountVisible")?.value) {
-      this.reportPageName = number == 1 ? "PaymentVoucherSummaryReport.aspx?" : 'PaymentSummaryCustomReport.aspx?';
-    } else {
-      this.reportPageName = number == 1 ? "PaymentVoucherSummaryWithChequeReport.aspx?" : 'PaymentSummaryCustomReport.aspx?';
-    }
+    //here Ui side hiden the fields if suppose enable the if elase should be changed
+    // if (this.frm.get("ChequeAmountVisible")?.value) {
+    //   this.reportPageName = number == 1 ? "PaymentVoucherSummaryWithChequeReport.aspx?" : 'PaymentSummaryCustomReport.aspx?';
+    // } else {
+    //   this.reportPageName = number == 1 ? "PaymentVoucherSummaryReport.aspx?" : 'PaymentSummaryCustomReport.aspx?';
+    // }
+    this.reportPageName = number == 1 ? "PaymentVoucherSummaryReport.aspx?" : 'PaymentSummaryCustomReport.aspx?';
     this.reportPageName += "LoginID=" + this.currentUser;
   }
   onSubmit() {

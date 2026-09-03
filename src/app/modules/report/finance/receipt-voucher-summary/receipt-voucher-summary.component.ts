@@ -8,6 +8,7 @@ import { EmployeeService } from "../../../../service/employee.service";
 import { NavigationEnd, Router } from '@angular/router';
 import { DatasharingService } from 'src/app/service/datasharing.service';
 import { UserAccessModel } from 'src/app/model/userAccesModel';
+import { CommonService } from 'src/app/service/common.service';
 
 @Component({
   selector: 'app-receipt-voucher-summary',
@@ -32,7 +33,7 @@ export class ReceiptVoucherSummaryComponent implements OnInit {
   reportType!: any;
 
   constructor(public sanitizer: DomSanitizer, private _masterService: MastermoduleService, private service: InventoryService,
-    private empService: EmployeeService, private fb: FormBuilder, private router: Router, private _dataService: DatasharingService) {
+    private _commonService: CommonService, private fb: FormBuilder, private router: Router, private _dataService: DatasharingService) {
     this.frm = fb.group({
       Branch: ["0"],
       Bank: ["0"],
@@ -77,7 +78,7 @@ export class ReceiptVoucherSummaryComponent implements OnInit {
               this.branchList = d;
             });
 
-            this._masterService.GetBankListByUserName(this.currentUser).subscribe((d: any) => {
+            this._commonService.getUserBankList(this.currentUser).subscribe((d: any) => {
               this.bankList = d;
             })
 

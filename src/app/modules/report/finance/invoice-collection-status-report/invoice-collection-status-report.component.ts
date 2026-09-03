@@ -102,9 +102,13 @@ export class InvoiceCollectionStatusReportComponent implements OnInit {
   }
 
   clkBtn(number: number) {    
-    this.reportPageName = number == 1 ? "InvoiceCollectionReport.aspx?" : number == 2 ? 'InvoiceCollectionTotalReportNoTax.aspx?':
-                          number == 3 ?'InvoiceCollectionTotalReport.aspx?' : 'InvoiceCollectionTotalCurrentPeriodReport.aspx?';
+    this.reportPageName = number == 1 ? "InvoiceCollectionReport.aspx?" :
+                          number == 2 ? "InvoiceCollectionTotalReportNoTax.aspx?" :
+                          number == 3 ? "InvoiceCollectionTotalReport.aspx?" :
+                          number == 4 ? "InvoiceCollectionTotalCurrentPeriodReport.aspx?" :
+                                        "InvoiceCollectionBranchSummaryReport.aspx?";
     this.reportPageName += "LoginID=" + this.currentUser;
+    this.onSubmit();
   }
 
   onSubmit() {
@@ -117,7 +121,7 @@ export class InvoiceCollectionStatusReportComponent implements OnInit {
 
     localURL += "&StartDate=" + this.returnDate(this.frm.get("StartDate")?.value)
     localURL += "&EndDate=" + this.returnDate(this.frm.get("EndDate")?.value)
-    localURL += "&Branch=" + (this.frm.get("Branch")?.value ?? 0)
+    localURL += "&Branch=" + (this.frm.get("Branch")?.value ?? '')
 
     this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.url +  this.reportPageName + localURL);
 

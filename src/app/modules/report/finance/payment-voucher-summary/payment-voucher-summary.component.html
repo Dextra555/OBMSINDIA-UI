@@ -15,7 +15,7 @@
   </div><!-- /.container-fluid -->
 </div>
 
-<mat-card>
+<mat-card class="report-card">
   <mat-card-content>
 
     <form [formGroup]="frm" (ngSubmit)="onSubmit()">
@@ -44,9 +44,9 @@
         <div class="col-12 col-sm-12 col-md-3 col-lg-3">
           <mat-form-field appearance="outline">
             <mat-label>Bank</mat-label>
-            <mat-select formControlName="Bank" [panelClass]="'custom-dropdown-panel'">
-              <mat-option [value]="0"></mat-option>
-              <mat-option *ngFor="let d of bankList" value="{{d.BankId}}">{{d.Accname}}</mat-option>
+            <mat-select formControlName="Bank">
+              <mat-option [value]="0" class="highlight-option"></mat-option>
+              <mat-option *ngFor="let d of bankList" value="{{d.ID}}">{{d.BankName}}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
@@ -54,15 +54,16 @@
           <mat-form-field appearance="outline">
             <mat-label>Branch</mat-label>
             <mat-select formControlName="Branch" [panelClass]="'custom-dropdown-panel'">
-              <mat-option [value]="0"></mat-option>
-              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Name}}</mat-option>
+              <mat-option [value]="0" class="highlight-option"></mat-option>
+              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
       </div>
-      <div class="row align-items-center" *ngIf="warningMessage ===''">
-        <div class="col-12 col-sm-12 col-md-6 col-lg-8">
-          <mat-radio-group aria-label="Select a Type" formControlName="PaymentType" style="display: flex; flex-wrap: wrap; gap: 12px;">
+      <div class="row" *ngIf="warningMessage ===''">
+        <div class="col-12 col-sm-12 col-md-4 col-lg-5">
+          <br />
+          <mat-radio-group aria-label="Select a Type" formControlName="PaymentType">
             <mat-radio-button value="0">All</mat-radio-button>
             <mat-radio-button value="1">Cheque</mat-radio-button>
             <mat-radio-button value="2">Cash</mat-radio-button>
@@ -70,9 +71,30 @@
             <mat-radio-button value="4">Online Fund Transfer</mat-radio-button>
           </mat-radio-group>
         </div>
-        <div class="col-12 col-sm-12 col-md-6 col-lg-4 text-left">
+
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4 text-left">
           <div class="btn-group" role="group">
             <button class="btn wlt-c-furg-btn-primary m-1" (click)="clkBtn(1)"> Show</button>
+            <button class="btn wlt-c-furg-btn-primary m-1" (click)="clkBtn(2)"> Custom</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" *ngIf="warningMessage ===''">
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3" hidden>
+          <br />
+          <div class="col-12 col-sm-12 col-md-6 col-lg-4" *ngFor="let item of checklistItems">
+            <mat-checkbox [formControlName]="'Purpose_' + item.value">
+              {{ item.label }}
+            </mat-checkbox>
+          </div>
+        </div>
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3" hidden>
+          <br />
+          <div class="col-12 col-sm-12 col-md-6 col-lg-4">
+            <mat-checkbox formControlName="ChequeAmountVisible" value="1">
+              Cheque Amount Visible
+            </mat-checkbox>
           </div>
         </div>
       </div>
@@ -85,7 +107,7 @@
         <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
     </div>
     <br/>
-    <iframe width="1200px" height="1200px" #myFrame [src]="urlSafe"></iframe>
+    <iframe *ngIf="urlSafe" class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
   </mat-card-content>
 </mat-card>
 

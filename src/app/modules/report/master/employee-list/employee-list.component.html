@@ -15,28 +15,30 @@
   </div><!-- /.container-fluid -->
 </div>
 
-<mat-card>
+<mat-card class="report-card full-width-report">
   <mat-card-content>
 
-      <form [formGroup]="frm" (ngSubmit)="onSubmit()">
-        <div class="row" *ngIf="warningMessage ===''">
-          <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+      <form [formGroup]="frm" (ngSubmit)="onSubmit()" >
+        <div class="row ml-1 mt-2" *ngIf="warningMessage ===''">
+          <div class="col-12 col-sm-12 col-md-4 col-lg-2">
             <mat-label class="mr-3"><strong>Type</strong></mat-label>
-            <br/>
-            <mat-radio-group aria-label="Select a Type" formControlName="type" >
+            <br />
+            <mat-radio-group aria-label="Select a Type" formControlName="type">
               <mat-radio-button value="Guard">Guard</mat-radio-button>
               <mat-radio-button value="Staff">Staff</mat-radio-button>
+                        <mat-radio-button value="Others">Other Guards</mat-radio-button>
             </mat-radio-group>
           </div>
           <div class="col-12 col-sm-12 col-md-4 col-lg-4">
             <mat-form-field appearance="outline">
               <mat-label>Branch</mat-label>
-              <mat-select formControlName="branch" >
-                <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Name}}</mat-option>
+              <mat-select formControlName="branch" [panelClass]="'custom-dropdown-panel'"
+                (keydown)="onKeyDropdown($event, 'branchSearchString', 'branchList', 'filteredBranchList', 'Code', branchSearchSubject)">
+                <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}}</mat-option>
               </mat-select>
             </mat-form-field>
           </div>
-          <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+          <div class="col-12 col-sm-12 col-md-4 col-lg-2">
             <mat-form-field appearance="outline">
               <mat-label>CSG/TNG</mat-label>
               <mat-select formControlName="csgtngStatus">
@@ -58,7 +60,7 @@
       <div *ngIf="errorMessage !==''">
           <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
       </div>
-      <iframe *ngIf="warningMessage ===''" width="1200px" height="1200px" #myFrame [src]="urlSafe"></iframe>
+      <iframe *ngIf="urlSafe" (load)="onReportLoad()" class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
   </mat-card-content>
 </mat-card>
 

@@ -50,6 +50,8 @@
         <div class="btn-group" role="group">
           <button type="submit" class="btn wlt-c-furg-btn-secondary m-1" (click)="seachCategory()">
             Search</button>
+          <button type="button" class="btn wlt-c-furg-btn-primary m-1" (click)="printReport()">
+            <i class="fa fa-print"></i> Print Report</button>
         </div>
       </div>
     </div>
@@ -112,3 +114,10 @@
     </mat-paginator>
   </mat-dialog-content>
 </form>
+
+<!-- Crystal Report iframe -->
+<div *ngIf="showReport" class="row mt-3">
+  <div class="col-12">
+    <iframe [src]="reportUrlSafe" class="report-wrapper" style="width:100%; height:700px; border:1px solid #ccc;"></iframe>
+  </div>
+</div>

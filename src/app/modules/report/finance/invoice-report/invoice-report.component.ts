@@ -55,7 +55,7 @@ export class InvoiceReportComponent implements AfterViewInit {
     }
     this.frm = this.fb.group({
       invoice_period: ['', [Validators.required]],
-      branch: ['', [Validators.required]],
+      branch: ['0', [Validators.required]],
       client: [''],
       checkAll: [false]
     });
@@ -211,6 +211,10 @@ export class InvoiceReportComponent implements AfterViewInit {
     this.dataSource = new MatTableDataSource(d);
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
+  }
+
+  get hasSelectedInvoices(): boolean {
+    return Array.isArray(this.selectedBatchInvoiceIds) && this.selectedBatchInvoiceIds.length > 0;
   }
 
   returnDate(date?: any) {

@@ -15,7 +15,7 @@
   </div><!-- /.container-fluid -->
 </div>
 
-<mat-card>
+<mat-card class="report-card full-width-report">
   <mat-card-content>
 
     <form [formGroup]="frm" (ngSubmit)="onSubmit()">
@@ -24,8 +24,8 @@
           <mat-form-field appearance="outline">
             <mat-label>Branch</mat-label>
             <mat-select formControlName="Branch"  [panelClass]="'custom-dropdown-panel'">
-              <mat-option [value]="0"></mat-option>
-              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Name}}</mat-option>
+              <mat-option [value]="0" class="highlight-option"></mat-option>
+              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
@@ -53,7 +53,7 @@
         <div class="col-12 col-sm-12 col-md-4 col-lg-3 text-right">
           <div class="btn-group" role="group">
             <button class="btn wlt-c-furg-btn-primary m-1" (click)="clkBtn(1)"> Show</button>
-            <button class="btn wlt-c-furg-btn-primary m-1" (click)="clkBtn(2)"> Show(Total)-No Tax</button>
+            <button class="btn wlt-c-furg-btn-primary m-1" (click)="clkBtn(2)" hidden> Show(Total)-No Tax</button>
           </div>
         </div>
       </div>
@@ -66,7 +66,7 @@
         <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
     </div>
     <br/>
-    <iframe width="1200px" height="1200px" #myFrame [src]="urlSafe"></iframe>
+    <iframe *ngIf="urlSafe" class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
   </mat-card-content>
 </mat-card>
 

@@ -8,6 +8,7 @@ import {EmployeeService} from "../../../../service/employee.service";
 import { Router, NavigationEnd } from '@angular/router';
 import { UserAccessModel } from 'src/app/model/userAccesModel';
 import { DatasharingService } from 'src/app/service/datasharing.service';
+import { CommonService } from 'src/app/service/common.service';
 
 @Component({
   selector: 'app-cheque-status-report',
@@ -29,7 +30,8 @@ export class ChequeStatusReportComponent implements OnInit {
   showLoadingSpinner: boolean = false;
   userAccessModel!: UserAccessModel;
 
-  constructor(public sanitizer: DomSanitizer, private _masterService: MastermoduleService, private service: InventoryService, private empService: EmployeeService, 
+  constructor(public sanitizer: DomSanitizer, private _masterService: MastermoduleService, private _commonService: CommonService,
+    private empService: EmployeeService,
     private fb: FormBuilder,private router: Router, private _dataService: DatasharingService) {    
       this.frm = fb.group({
         ChequeStatus: ["P",Validators.required],
@@ -72,7 +74,7 @@ export class ChequeStatusReportComponent implements OnInit {
           this.userAccessModel.createAccess = data.Create;
           if (this.userAccessModel.readAccess === true || this.currentUser == 'superadmin') {
             this.warningMessage = '';
-            this._masterService.GetBankListByUserName(this.currentUser).subscribe((d: any) => {
+            this._commonService.getUserBankList(this.currentUser).subscribe((d: any) => {
               this.bankList = d;
             })
 

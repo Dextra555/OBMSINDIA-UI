@@ -6,14 +6,14 @@
             </div><!-- /.col -->
             <div class="col-12 col-sm-12 col-md-8 col-lg-8 my-1">
                 <ol class="breadcrumb float-md-right">
-                    <li class="breadcrumb-item"><a href="#">Report</a></li>
-                    <li class="breadcrumb-item"><a href="#">Invoice Report</a></li>
+                    <li class="breadcrumb-item"><a routerLink="/dashboard">Report</a></li>
+                    <li class="breadcrumb-item active">Invoice Report</li>
                 </ol>
             </div><!-- /.col -->
         </div><!-- /.row -->
     </div><!-- /.container-fluid -->
 </div>
-<mat-card>
+<mat-card class="report-card">
     <mat-card-content>
         <form [formGroup]="frm">
             <div class="row" *ngIf="warningMessage ===''">
@@ -31,8 +31,8 @@
                     <mat-form-field appearance="outline">
                         <mat-label>Branch</mat-label>
                         <mat-select formControlName="branch" (selectionChange)="getClients()">
-                            <mat-option [value]="0"></mat-option>
-                            <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Name}}</mat-option>
+                            <mat-option [value]="0" class="highlight-option"></mat-option>
+                            <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}}</mat-option>
                         </mat-select>
                     </mat-form-field>
                 </div>
@@ -65,12 +65,14 @@
                 <div class="col-12">
                     <div class="text-left">
                         <div class="btn-group" role="group">
+                            <button class="btn wlt-c-furg-btn-primary m-1" (click)="printNoDetailsClick()"
+                                [disabled]="!hasSelectedInvoices" hidden> Print (No Details)</button>
                             <button class="btn wlt-c-furg-btn-primary m-1" (click)="printAmountClick()"
-                                [disabled]="frm.invalid"> Print (Amounts)</button>
+                                [disabled]="!hasSelectedInvoices" hidden> Print (Amounts)</button>
                             <button class="btn wlt-c-furg-btn-primary m-1" (click)="printWithDetailsClick()"
-                                [disabled]="frm.invalid"> Print (With Details)</button>
+                                [disabled]="!hasSelectedInvoices"> Print (With Details)</button>
                             <button class="btn wlt-c-furg-btn-primary m-1" (click)="printTaxInvoiceClick()"
-                                [disabled]="frm.invalid"> Print Tax Invoice</button>
+                                [disabled]="!hasSelectedInvoices"> Print Tax Invoice</button>
                         </div>
                     </div>
                 </div>
@@ -83,7 +85,7 @@
             <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
         </div>
         <br />
-        <iframe *ngIf="warningMessage ===''" width="1200px" height="1200px" #myFrame [src]="urlSafe"></iframe>
+        <iframe  *ngIf="urlSafe"  class="report-wrapper fixed-height"[src]="urlSafe"></iframe>
     </mat-card-content>
 </mat-card>
 

@@ -27,7 +27,7 @@ export class EmployeeHistoryComponent implements OnInit {
   frm!: FormGroup;
   employees: any = [];
   dataSource!: MatTableDataSource<IEmployee>;
-  displayedColumns: string[] = ['EMP_CODE', 'EMP_NAME', 'HasTransfered', 'TransferDate', 'EMP_ROLE', 'EMP_BRANCH_CODE', 'OldBranch'];
+  displayedColumns: string[] = ['EMP_CODE', 'EMP_NAME', 'Emp_StartDate', 'Emp_EndDate', 'HasTransfered', 'TransferDate', 'EMP_ROLE', 'EMP_BRANCH_CODE', 'OldBranch'];
   branchList: any = [];
   currentUser: string = '';
   showLoadingSpinner: boolean = false;
@@ -158,6 +158,8 @@ export class EmployeeHistoryComponent implements OnInit {
 export interface IEmployee {
   EMP_CODE: string;
   EMP_NAME: string;
+  Emp_StartDate: Date;
+  Emp_EndDate: Date;
   HasTransfered: string;
   TransferDate: string;
   EMP_ROLE: string;

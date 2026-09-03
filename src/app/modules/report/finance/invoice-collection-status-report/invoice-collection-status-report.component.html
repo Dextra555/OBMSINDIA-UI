@@ -54,6 +54,7 @@
           <div class="btn-group" role="group">
             <button class="btn wlt-c-furg-btn-primary m-1" (click)="clkBtn(1)"> Show</button>
             <button class="btn wlt-c-furg-btn-primary m-1" (click)="clkBtn(3)"> Show(Total)</button>
+            <button class="btn wlt-c-furg-btn-primary m-1" (click)="clkBtn(5)"> Show(Branch Summary)</button>
           </div>
         </div>
       </div>
@@ -66,7 +67,7 @@
         <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
     </div>
     <br/>
-    <iframe width="1200px" height="1200px" #myFrame [src]="urlSafe"></iframe>
+    <iframe *ngIf="urlSafe" class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
   </mat-card-content>
 </mat-card>
 

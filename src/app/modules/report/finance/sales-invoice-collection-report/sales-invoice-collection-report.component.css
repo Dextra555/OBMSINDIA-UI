@@ -1,1 +1,17 @@
-/* Sales Report */
+.report-card {
+  margin: 20px;
+}
+
+.full-width-report {
+  width: calc(100% - 40px);
+}
+
+.report-wrapper {
+  width: 100%;
+  height: 800px;
+  border: none;
+}
+
+.fixed-height {
+  height: 800px;
+}

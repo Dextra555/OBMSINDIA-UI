@@ -78,7 +78,7 @@
         <div *ngIf="errorMessage !==''">
             <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
         </div>
-        <iframe *ngIf="warningMessage ===''" width="1200px" height="1200px" #myFrame [src]="urlSafe"></iframe>
+        <iframe *ngIf="warningMessage ===''" class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
     </mat-card-content>
 </mat-card>
 

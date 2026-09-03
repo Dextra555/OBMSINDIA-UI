@@ -31,8 +31,8 @@
             <mat-label>Branch</mat-label>
             <mat-select formControlName="Branch" (selectionChange)="branchChange($event)"
             [panelClass]="'custom-dropdown-panel'">
-              <mat-option [value]="0"></mat-option>
-              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Name}}</mat-option>
+              <mat-option [value]="0" class="highlight-option"></mat-option>
+              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
@@ -41,7 +41,7 @@
           <mat-form-field appearance="outline">
             <mat-label>Client</mat-label>
             <mat-select formControlName="Client">
-              <mat-option [value]="0"></mat-option>
+              <mat-option [value]="" class="highlight-option"></mat-option>
               <mat-option *ngFor="let d of clientList" value="{{d.Code}}">{{d.Name}}</mat-option>
             </mat-select>
           </mat-form-field>
@@ -75,6 +75,6 @@
       </div> 
     </form>
 
-    <iframe width="1200px" height="1200px" #myFrame [src]="urlSafe"></iframe>
+    <iframe *ngIf="urlSafe" class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
   </mat-card-content>
 </mat-card>

@@ -37,7 +37,7 @@ export class ClientStatementComponent implements OnInit {
 
     this.frm = fb.group({
       Branch: ["0"],
-      Client: ["0"],
+      Client: [""],
       StartDate: ["", Validators.required],
       EndDate: ["", Validators.required],
     })
@@ -157,6 +157,7 @@ export class ClientStatementComponent implements OnInit {
   }
 
   branchChange(data: any) {
+    this.errorMessage = '';
     this._masterService.getClientMsterListByBranch(data.value).subscribe((d: any) => {
       this.clientList = d;
     })

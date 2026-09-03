@@ -35,7 +35,7 @@ export class MonthlyInvoiceStatusComponent implements OnInit {
   userAccessModel!: UserAccessModel;
   reportPageName: string = "";
   reportType!: number;
-  displayedColumns: string[] = ['invoicedate', 'ClientName', 'InvoiceNumber', 'ServiceCharges', 'Discount','TaxAmount','InvoiceAmount','Payment'];
+  displayedColumns: string[] = ['invoicedate', 'ClientName', 'WorkPlace', 'InvoiceNumber', 'ServiceCharges', 'Discount','TaxAmount','InvoiceAmount','Payment'];
   dataSource: any;
   monthlyInvoiceStatus: MonthlyInvoiceStatus[] = [];
 
@@ -120,41 +120,54 @@ export class MonthlyInvoiceStatusComponent implements OnInit {
   }
 
   clkBtn(number: number) {
+    this.errorMessage = '';
     this.reportType = number;
     if (this.frm.get("Branch")?.value == 0) {
-           this.getMonthlyInvoicesList();
+      if (this.reportType == 1) {  
+        this.errorMessage = ''; 
+        this.dataSource = new MatTableDataSource<any[]>([]);     
+        this.getMonthlyInvoicesList();
+      } else {
+        this.errorMessage = 'Please select branch';
+      }
     } else {
       this.dataSource = new MatTableDataSource([]);
-      this.reportPageName = number == 1 ? "MonthlyInvoiceReport.aspx?" : number == 2 ? 'InvoiceCollectionTotalReportNoTax.aspx?' : '';
+      this.reportPageName = number == 1 ? "MonthlyInvoiceReport.aspx?" : 'MonthlyInvoiceReportWithoutSST.aspx?';
       this.reportPageName += "LoginID=" + this.currentUser;
     }
   }
 
   onSubmit() {
-    if((this.reportType == 1 && this.frm.get("Branch")?.value !== 0) || this.reportType == 2){
-    this.url = environment.baseReportUrl;
-    this.url += this.currentUrl;
-    let localURL = "";
-    if (this.frm.invalid) {
-      return;
-    }
+    if ((this.reportType == 1 && this.frm.get("Branch")?.value !== 0) || this.reportType == 2) {
+      this.url = environment.baseReportUrl;
+      this.url += this.currentUrl;
+      let localURL = "";
+      if (this.frm.invalid) {
+        return;
+      }
 
-    localURL += "&StartDate=" + this.returnDate(this.frm.get("StartDate")?.value)
-    localURL += "&EndDate=" + this.returnDate(this.frm.get("EndDate")?.value)
-    localURL += "&Branch=" + (this.frm.get("Branch")?.value ?? 0)
-    if (this.reportPageName != '') {
-      this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.url + this.reportPageName + localURL);
-    }
-  }else{
-    this.getMonthlyInvoiceStatusList(this.returnDate(this.frm.get("StartDate")?.value),this.returnDate(this.frm.get("EndDate")?.value),this.frm.get("Branch")?.value);
-  }
+      localURL += "&StartDate=" + this.returnDate(this.frm.get("StartDate")?.value)
+      localURL += "&EndDate=" + this.returnDate(this.frm.get("EndDate")?.value)
+      localURL += "&Branch=" + (this.frm.get("Branch")?.value ?? 0)
+      if (this.reportPageName != '') {
+        this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.url + this.reportPageName + localURL);
+      }
+    } //else {
+    //this.getMonthlyInvoiceStatusList(this.returnDate(this.frm.get("StartDate")?.value), this.returnDate(this.frm.get("EndDate")?.value), this.frm.get("Branch")?.value);
+    //}
   }
   getMonthlyInvoicesList(){
     forkJoin({
-      invoices: this._masterService.getMonthlyInvoices(this.returnDate(this.frm.get("StartDate")?.value), this.returnDate(this.frm.get("EndDate")?.value)),
+      invoices: this._masterService.getMonthlyInvoiceList(this.frm.get("StartDate")?.value, this.frm.get("EndDate")?.value),
     }).subscribe(
       ({ invoices }) => {
-        this.dataSource = new MatTableDataSource<any[]>(invoices);      
+        if(invoices.length > 0){
+          this.errorMessage ='';
+          this.dataSource = new MatTableDataSource<any[]>(invoices);
+        }else{
+          this.errorMessage = `No data available for given selected criteria.`; 
+          this.urlSafe = undefined;             
+        }        
       },
       (error) => {
         this.errorMessage = error.message;

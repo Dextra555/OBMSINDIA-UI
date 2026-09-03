@@ -36,6 +36,8 @@ export class InvoiceAgeingComponent implements OnInit {
     private fb: FormBuilder, private router: Router, private _dataService: DatasharingService) {
     this.frm = fb.group({
       Branch: [""],
+      MasterClient: [""],
+      Client: [""],
       StartDate: ["", Validators.required],
       EndDate: ["", Validators.required],
     })
@@ -116,9 +118,18 @@ export class InvoiceAgeingComponent implements OnInit {
   }
 
   clkBtn(number: number) {
-    this.reportPageName = number == 1 ? "InvoiceAgeingReport.aspx?" : number == 2 ? 'InvoiceCollectionTotalReportNoTax.aspx?' :
-      'InvoiceAgeingAllBranchesReport.aspx?';
+    const branchValue = this.frm.get('Branch')?.value;
+    if (number == 1) {
+      this.reportPageName = (branchValue === 'ALL')
+        ? 'InvoiceAgeingAllBranchesReport.aspx?'
+        : 'InvoiceAgeingReport.aspx?';
+    } else if (number == 2) {
+      this.reportPageName = 'InvoiceCollectionTotalReportNoTax.aspx?';
+    } else {
+      this.reportPageName = 'InvoiceAgeingAllBranchesReport.aspx?';
+    }
     this.reportPageName += "LoginID=" + this.currentUser;
+    this.onSubmit();
   }
 
   onSubmit() {
@@ -131,9 +142,11 @@ export class InvoiceAgeingComponent implements OnInit {
 
     localURL += "&StartDate=" + this.returnDate(this.frm.get("StartDate")?.value)
     localURL += "&EndDate=" + this.returnDate(this.frm.get("EndDate")?.value)
-    localURL += "&Branch=" + (this.frm.get("Branch")?.value ?? 0)
+    localURL += "&Branch=" + (this.frm.get("Branch")?.value === 'ALL' ? '' : (this.frm.get("Branch")?.value || ''))
+    localURL += "&MasterClient=" + (this.frm.get("MasterClient")?.value ?? '')
+    localURL += "&Client=" + (this.frm.get("Client")?.value ?? '')
 
-    this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.url + this.reportPageName + localURL);
+    this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.url +  this.reportPageName + localURL);
 
   }
 

@@ -31,7 +31,7 @@ export class DeletedInvoiceDetailsComponent implements OnInit {
   constructor(public sanitizer: DomSanitizer, private _masterService: MastermoduleService, private service: InventoryService, private empService: EmployeeService, 
     private fb: FormBuilder,private router: Router, private _dataService: DatasharingService) {    
     this.frm = fb.group({
-      Branch: ["",Validators.required],
+      Branch: ["0"],
       StartDate: ["", Validators.required],
       EndDate: ["", Validators.required],
     })

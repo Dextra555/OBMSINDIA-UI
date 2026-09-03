@@ -7,6 +7,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FinanceService } from 'src/app/service/finance.service';
 import { forkJoin } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 export interface PeriodicElement {
   voucher_no: string,
   payment_date: string,
@@ -36,6 +38,9 @@ export class CategorySearchComponent implements AfterViewInit {
   displayedColumns: string[] = ['voucher_no', 'payment_date', 'supplier_name', 'bank_code', 'cheque_no', 'amount', 'particulars'];
   dataSource: MatTableDataSource<any> = new MatTableDataSource<any>([]);
   pageSizeOptions: number[] = [];
+  reportUrlSafe: SafeResourceUrl | undefined;
+  showReport: boolean = false;
+  currentUser: string = '';
 
   private formatDate(date: any) {
     const d = new Date(date);
@@ -49,7 +54,7 @@ export class CategorySearchComponent implements AfterViewInit {
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
   constructor(private fb: FormBuilder, private _liveAnnouncer: LiveAnnouncer, public dialog: MatDialog,
-    private _financeService: FinanceService
+    private _financeService: FinanceService, private sanitizer: DomSanitizer
   ) {
     this.frm = this.fb.group({
       StartDate: [''],
@@ -71,6 +76,7 @@ export class CategorySearchComponent implements AfterViewInit {
     this.dataSource.sort = this.sort;
   }
   ngOnInit(): void {
+    this.currentUser = sessionStorage.getItem('username') || '';
     this._financeService.getInventoryCategoryList().subscribe({
       next: (data) => this.categoryList = data,
       error: (err) => console.error('Error fetching categories', err)
@@ -87,6 +93,8 @@ export class CategorySearchComponent implements AfterViewInit {
     const categoryId = this.frm.get('Category')?.value;
     const startDate = this.formatDate(new Date(this.frm.get('StartDate')?.value));
     const endDate = this.formatDate(new Date(this.frm.get('EndDate')?.value));
+    this.showReport = false;
+    this.reportUrlSafe = undefined;
     forkJoin([
       this._financeService.getPaymentListByCategory(categoryId, startDate, endDate),
       this._financeService.getBranchPaymentsTotalAmountByCategory(categoryId, startDate, endDate)
@@ -123,6 +131,37 @@ export class CategorySearchComponent implements AfterViewInit {
         console.error('Error fetching data:', error);
       }
     );
+  }
+
+  private returnDateForReport(date: any): string {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  printReport() {
+    const categoryId = this.frm.get('Category')?.value || '';
+    const startDateVal = this.frm.get('StartDate')?.value;
+    const endDateVal = this.frm.get('EndDate')?.value;
+
+    if (!startDateVal || !endDateVal) {
+      alert('Please select Start Date and End Date before printing.');
+      return;
+    }
+
+    const startDate = this.returnDateForReport(startDateVal);
+    const endDate = this.returnDateForReport(endDateVal);
+
+    let reportUrl = environment.baseReportUrl + 'Finance/PaymentCategoryReport.aspx?';
+    reportUrl += 'LoginID=' + encodeURIComponent(this.currentUser);
+    reportUrl += '&StartDate=' + encodeURIComponent(startDate);
+    reportUrl += '&EndDate=' + encodeURIComponent(endDate);
+    reportUrl += '&Category=' + encodeURIComponent(categoryId);
+
+    this.reportUrlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(reportUrl);
+    this.showReport = true;
   }
 }
 
