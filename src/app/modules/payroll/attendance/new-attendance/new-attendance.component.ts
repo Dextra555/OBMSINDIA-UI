@@ -81,6 +81,7 @@ export class NewAttendanceComponent implements OnInit {
   iMaternityLeave: number = 0;
   iPaternityLeave: number = 0;
   iHospitalizationLeave: number = 0;
+  leaveBalances: any = {};
   attendanceDetails: any[] = [];
 
   employeeSearchCtrl = new FormControl();
@@ -328,6 +329,18 @@ export class NewAttendanceComponent implements OnInit {
     this.errorMessage = '';
     this.dynamicEditable = 'set';
     this.employeeSelectedType = this.attendanceForm.value.EmployeeType;
+    // Reset attendanceID immediately so the Edit-mode button shows 'Create'
+    // for a new employee, even before the async API call completes.
+    this.attendanceID = 0;
+    this.attendanceForm.patchValue({ ID: 0 });
+
+    // Always recalculate dtAdvanceDate: if the user navigates back or reloads,
+    // dtAdvanceDate may be stale or unset, so attendanceByEmployeeID must use the correct Period.
+    const advDate = new Date(this.attendanceForm.value.AdvanceDate);
+    this.dtAdvanceDate = this.formatDate(
+      new Date(advDate.getFullYear(), advDate.getMonth() + 1, 0)
+    );
+
     if (this.attendancePeriod != null && this.attendancePeriod != '') {
       this._payrollService.getEmployeeDetails(this.attendanceForm.value.BranchCode, this.attendanceForm.value.EmployeeNo).subscribe(
         (data) => {
@@ -367,13 +380,21 @@ export class NewAttendanceComponent implements OnInit {
             attendanceData: this._payrollService.attendanceByEmployeeID(this.dtAdvanceDate, this.attendanceForm.value.EmployeeID),
           }).subscribe(
             ({ annualLeave, medicalLeave, maternityLeave, paternityLeave, hospitalizationLeave, attendanceData }) => {
-              // Patch leave details
+              // Patch leave details: display clamps negatives to 0 (so no "-1" is ever shown),
+              // raw values are kept in leaveBalances for exact validation math below.
+              this.leaveBalances = {
+                Annual: annualLeave.LeaveRemaining,
+                Medical: medicalLeave.LeaveRemaining,
+                Maternity: maternityLeave.LeaveRemaining,
+                Paternity: paternityLeave.LeaveRemaining,
+                Hospitalization: hospitalizationLeave.LeaveRemaining,
+              };
               this.attendanceForm.patchValue({
-                Annual: annualLeave.LeaveAvailable,
-                Medical: medicalLeave.LeaveAvailable,
-                Maternity: maternityLeave.LeaveAvailable,
-                Paternity: paternityLeave.LeaveAvailable,
-                Hospitalization: hospitalizationLeave.LeaveAvailable,
+                Annual: Math.max(0, annualLeave.LeaveRemaining ?? 0),
+                Medical: Math.max(0, medicalLeave.LeaveRemaining ?? 0),
+                Maternity: Math.max(0, maternityLeave.LeaveRemaining ?? 0),
+                Paternity: Math.max(0, paternityLeave.LeaveRemaining ?? 0),
+                Hospitalization: Math.max(0, hospitalizationLeave.LeaveRemaining ?? 0),
               });
 
               // Calculate working days allowance dynamically
@@ -498,22 +519,20 @@ export class NewAttendanceComponent implements OnInit {
                         }
                       });
                       this.updateFormFields(attendanceDetails, iNoOfDays, iStartDay);
+                      this.hideloadingSpinner();
 
                     } else {
                       this.advanceDateError = '';
                       this.addFormFields(iNoOfDays, iStartDay);
+                      this.hideloadingSpinner();
                     }
                   })
                 }
               } else {
                 this.advanceDateError = '';
                 this.addFormFields(iNoOfDays, iStartDay);
-              }
-
-              // Hide loading spinner after completion
-              setTimeout(() => {
                 this.hideloadingSpinner();
-              }, 2500);
+              }
             },
             (error) => this.handleErrors(error)
           );
@@ -630,9 +649,7 @@ export class NewAttendanceComponent implements OnInit {
       }));
     }
 
-    setTimeout(() => {
-      this.hideloadingSpinner();
-    }, 3000);
+    this.hideloadingSpinner();
   }
 
   addStaffFormFields(count: number, startDay: number = 1): void {
@@ -752,9 +769,7 @@ export class NewAttendanceComponent implements OnInit {
       }));
       this.hoursTimeChange(i, hours)
     }
-    setTimeout(() => {
-      this.hideloadingSpinner();
-    }, 3000);
+    this.hideloadingSpinner();
   }
   normalValues1Change(event: any) {
     this.normalValue1Change = event.value == '' ? '0' : event.value;
@@ -789,9 +804,7 @@ export class NewAttendanceComponent implements OnInit {
         // Prepend an empty option to the list
         this.employeeModel = [{ Name: '' }, ...clients] as any;
         console.log('employeeModel after update:', this.employeeModel);
-        setTimeout(() => {
-          this.hideloadingSpinner();
-        }, 2000);
+        this.hideloadingSpinner();
       },
       (error: any) => {
         console.error('getClients API error:', error);
@@ -1137,6 +1150,31 @@ export class NewAttendanceComponent implements OnInit {
       this.workTypeId = 17;
     }
     return this.workTypeId;
+  }
+  applyIncrementByType(type: number): void {
+    switch (type) {
+      case 7:
+        this.iAbsent++;
+        break;
+      case 8:
+        this.iAnnualLeave++;
+        break;
+      case 9:
+        this.iMedicalLeave++;
+        break;
+      case 10:
+        this.iMaternityLeave++;
+        break;
+      case 11:
+        this.iPaternityLeave++;
+        break;
+      case 12:
+        this.iHospitalizationLeave++;
+        break;
+      default:
+        // No action needed
+        break;
+    }
   }
   getWeekday(dayIndex: number): string {
     const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -1864,29 +1902,14 @@ export class NewAttendanceComponent implements OnInit {
       }
     }
 
-    // // Get allowed leave values from form
-    // const medicalAllowed = this.attendanceForm.get('Medical')?.value;
-    // const maternityAllowed = this.attendanceForm.get('Maternity')?.value;
-    // const paternityAllowed = this.attendanceForm.get('Paternity')?.value;
-    // const hospitalizationAllowed = this.attendanceForm.get('Hospitalization')?.value;
-
-    // // Check if taken leaves exceed allowed limits
-    // if (this.iMedicalLeave > medicalAllowed) {
-    //   this.showMessage('Medical Leave exceeds allowed limit.', 'warning', 'Warning Message');
-    //   return;
-    // }
-    // if (this.iMaternityLeave > maternityAllowed) {
-    //   this.showMessage('Maternity Leave exceeds allowed limit.', 'warning', 'Warning Message');
-    //   return;
-    // }
-    // if (this.iPaternityLeave > paternityAllowed) {
-    //   this.showMessage('Paternity Leave exceeds allowed limit.', 'warning', 'Warning Message');
-    //   return;
-    // }
-    // if (this.iHospitalizationLeave > hospitalizationAllowed) {
-    //   this.showMessage('Hospitalization Leave exceeds allowed limit.', 'warning', 'Warning Message');
-    //   return;
-    // }
+    // Get allowed leave values from form.
+    // When editing an existing record, the "remaining" value already has the current record's
+    // leaves deducted. Add them back so the comparison reflects the true available quota.
+    const annualAllowed = (this.leaveBalances['Annual'] ?? 0) + (this.attendanceID > 0 ? this.iAnnualLeave : 0);
+    const medicalAllowed = (this.leaveBalances['Medical'] ?? 0) + (this.attendanceID > 0 ? this.iMedicalLeave : 0);
+    const maternityAllowed = (this.leaveBalances['Maternity'] ?? 0) + (this.attendanceID > 0 ? this.iMaternityLeave : 0);
+    const paternityAllowed = (this.leaveBalances['Paternity'] ?? 0) + (this.attendanceID > 0 ? this.iPaternityLeave : 0);
+    const hospitalizationAllowed = (this.leaveBalances['Hospitalization'] ?? 0) + (this.attendanceID > 0 ? this.iHospitalizationLeave : 0);
     let dtAdvanceDate = this.attendanceForm.value.AdvanceDate;
     this.dtAdvanceDate = this.formatDate(
       new Date(dtAdvanceDate.getFullYear(), dtAdvanceDate.getMonth() + 1, 0)
@@ -1916,6 +1939,42 @@ export class NewAttendanceComponent implements OnInit {
       return dataWithoutUnwantedFields;
     });
 
+    // 1️⃣ Reset counters first
+    this.iAbsent = 0;
+    this.iAnnualLeave = 0;
+    this.iMedicalLeave = 0;
+    this.iMaternityLeave = 0;
+    this.iPaternityLeave = 0;
+    this.iHospitalizationLeave = 0;
+
+    // 2️⃣ Loop through the attendanceData array
+    attendanceData.forEach((row: any) => {
+      // row.Type is already a number
+      this.applyIncrementByType(row.Type);
+    });
+
+    // Check if taken leaves exceed allowed limits
+    if (this.iAnnualLeave > annualAllowed) {
+      this.showMessage('Annual Leave exceeds allowed limit.', 'warning', 'Warning Message');
+      return;
+    }
+    if (this.iMedicalLeave > medicalAllowed) {
+      this.showMessage('Medical Leave exceeds allowed limit.', 'warning', 'Warning Message');
+      return;
+    }
+    if (this.iMaternityLeave > maternityAllowed) {
+      this.showMessage('Maternity Leave exceeds allowed limit.', 'warning', 'Warning Message');
+      return;
+    }
+    if (this.iPaternityLeave > paternityAllowed) {
+      this.showMessage('Paternity Leave exceeds allowed limit.', 'warning', 'Warning Message');
+      return;
+    }
+    if (this.iHospitalizationLeave > hospitalizationAllowed) {
+      this.showMessage('Hospitalization Leave exceeds allowed limit.', 'warning', 'Warning Message');
+      return;
+    }
+
     formArray.controls.forEach((group) => {
       const startTime = group.get('StartTimeOT')?.value ?? '';
       const endTime = group.get('EndTimeOT')?.value ?? '';
@@ -1939,9 +1998,7 @@ export class NewAttendanceComponent implements OnInit {
       this._payrollService.saveAndUpdateAttendance(this.attendanceModel, attendanceData)
         .subscribe(response => {
           if (response.Success == 'Success') {
-            setTimeout(() => {
-              this.hideloadingSpinner();
-            }, 2000);
+            this.hideloadingSpinner();
             this.getEmployeeListByEmployeeType(this.branchCode, this.attendanceForm.value.EmployeeType, this.StartPeriod, this.EndPeriod, 'Active');
             this.clearFormFields();
             this._router.navigate(['/payroll/new-attendance']);

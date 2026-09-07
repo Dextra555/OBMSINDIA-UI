@@ -34,6 +34,7 @@
                     <mat-form-field appearance="outline">
                         <mat-label>Branch Code</mat-label>
                         <mat-select formControlName="BranchCode">
+                            <mat-option value="" class="highlight-option"><strong>All Branches</strong></mat-option>
                             <mat-option *ngFor="let branch of branchModel" [value]="branch.Code">
                                 {{ branch.Code }}
                             </mat-option>

@@ -42,7 +42,7 @@ export class MiscTransactionReportComponent implements OnInit {
     private _masterService: MastermoduleService,private router: Router) {
     this.miscTransForm = this.fb.group({
       AdvanceDate: [this.formatDate(new Date)],
-      BranchCode: ['', Validators.required],
+      BranchCode: [''],
       EmployeeType: ['Guard'],
       Type: ['1'],
     });
@@ -121,7 +121,8 @@ export class MiscTransactionReportComponent implements OnInit {
     this.url += 'Payroll/MiscTransReport.aspx?';
     this.url += "LoginID=" + this.currentUser;
     this.url += "&Branch=" + this.miscTransForm.get("BranchCode")?.value
-    this.url += "&Period=" + this.dtAdvanceDate
+    const period = this.dtAdvanceDate || this.formatDate(this.miscTransForm.value.AdvanceDate);
+    this.url += "&Period=" + period
     this.url += "&EmployeeType=" + this.miscTransForm.get("EmployeeType")?.value
     this.url += "&TransType=" + this.miscTransForm.get("Type")?.value
     this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.url);

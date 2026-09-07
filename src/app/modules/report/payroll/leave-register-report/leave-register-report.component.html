@@ -3,24 +3,24 @@
         <div class="row mb-2">
             <div class="col-12 col-sm-12 col-md-4 col-lg-4">
                 <h1 class="md-1">Leave Register Report</h1>
-            </div><!-- /.col -->
+            </div>
             <div class="col-12 col-sm-12 col-md-8 col-lg-8 my-1">
                 <ol class="breadcrumb float-md-right">
-                    <li class="breadcrumb-item"><a routerLink="/dashboard">Master</a></li>
+                    <li class="breadcrumb-item"><a routerLink="/dashboard">Report</a></li>
                     <li class="breadcrumb-item">Leave Register Report
                     </li>
                 </ol>
-            </div><!-- /.col -->
-        </div><!-- /.row -->
-    </div><!-- /.container-fluid -->
+            </div>
+        </div>
+    </div>
 </div>
-<mat-card>
+<mat-card class="report-card full-width-report">
     <mat-card-content>
         <form [formGroup]="leaveRegisterForm">
             <div class="row" *ngIf="warningMessage ===''">
                 <div class="col-12 col-sm-12 col-md-12 col-lg-2">
                     <mat-form-field appearance="outline">
-                        <mat-label class="mr-3">Year Period</mat-label>                        
+                        <mat-label class="mr-3">Year Period</mat-label>
                         <mat-select [value]="selectedYear" (selectionChange)="onYearChange($event)">
                             <mat-option *ngFor="let year of taxYears" [value]="year">
                                 {{ year }}
@@ -31,10 +31,22 @@
                 <div class="col-12 col-sm-12 col-md-12 col-lg-4">
                     <mat-form-field appearance="outline">
                         <mat-label>Branch Code</mat-label>
-                        <mat-select formControlName="BranchCode">
+                        <mat-select formControlName="BranchCode"
+                            (keydown)="onKeyDropdown($event, 'branchSearchString', 'branchModel', 'filteredBranchList', 'Code', branchSearchSubject)"
+                            [panelClass]="'custom-dropdown-panel'">
+                            <mat-option value="">All Branches</mat-option>
                             <mat-option *ngFor="let branch of branchModel" [value]="branch.Code">
                                 {{ branch.Code }}
                             </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-3">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Type</mat-label>
+                        <mat-select formControlName="LeaveType">
+                            <mat-option value="Summary">Summary</mat-option>
+                            <mat-option value="Detail">Detail</mat-option>
                         </mat-select>
                     </mat-form-field>
                 </div>
@@ -50,27 +62,17 @@
                         <mat-radio-button value="Guard">Guard</mat-radio-button>
                         <mat-radio-button value="Staff">Staff</mat-radio-button>
                         <mat-radio-button value="FGuard">Foreign Guard</mat-radio-button>
+                        <mat-radio-button value="Others">Other Guards</mat-radio-button>
                     </mat-radio-group>
                 </div>
                 <div class="col-12 col-sm-12 col-md-4 col-lg-2">
-                    <button class="btn wlt-c-furg-btn-primary m-1"
-                                (click)="generateExcelFileClick()">Generate Excel File</button>
-                    </div>
-            </div>
-            <div class="row" *ngIf="warningMessage ===''">
-                <div class="col-12 col-sm-12 col-md-4 col-lg-3">
-                    <mat-label class="mr-3"><strong>Type</strong></mat-label>
-                    <br />
-                    <mat-radio-group aria-label="Select a Type" formControlName="LeaveType">
-                        <mat-radio-button value="Summary">Summary</mat-radio-button>
-                        <mat-radio-button value="Detail">Detail</mat-radio-button>
-                    </mat-radio-group>
+                    <button class="btn wlt-c-furg-btn-primary m-1" (click)="generateExcelFileClick()">Generate Excel
+                        File</button>
                 </div>
                 <div class="col-12 col-sm-12 col-md-12 col-lg-4">
                     <div class="text-left">
                         <button class="btn wlt-c-furg-btn-primary" [disabled]="leaveRegisterForm.invalid"
-                            (click)="getLeaveRegisterReportClick()">Show </button>&nbsp;
-
+                            (click)="getLeaveRegisterReportClick()">Show</button>&nbsp;
                     </div>
                 </div>
             </div>
@@ -82,7 +84,7 @@
         <div *ngIf="errorMessage !==''">
             <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
         </div>
-        <iframe *ngIf="warningMessage ===''" class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
+        <iframe *ngIf="urlSafe" class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
     </mat-card-content>
 </mat-card>
 
