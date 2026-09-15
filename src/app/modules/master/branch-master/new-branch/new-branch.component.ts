@@ -114,10 +114,9 @@ export class NewBranchComponent implements OnInit {
     this.loadAvailableBranches();
     this._activatedRoute.queryParams.subscribe((params) => {
       if (params['code'] != undefined) {
+        this.getBranchCode();
         this.getBranchMasterList(params['code']);
-      }else{
-        this.getBranchCode();       
-      }      
+      }
     });
   }
   getUserAccessRights(userName: string, screenName: string) {   

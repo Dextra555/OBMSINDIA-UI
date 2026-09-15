@@ -31,6 +31,9 @@
     <div *ngIf="errorMessage !== ''">
       <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
     </div>
+    <div *ngIf="successMessage !== ''">
+      <mat-label style="color:green" [innerHTML]="successMessage"></mat-label>
+    </div>
 
     <!-- Report Form -->
     <form [formGroup]="frm" *ngIf="warningMessage === ''">

@@ -204,11 +204,12 @@ export class PfStatementReportComponent implements OnInit {
   }
 
   private buildRow(row: any, index: number): string {
-    // Backend returns: uan, memberName, grossWages, epfWages, epsWages, edliWages, epfContributionRemitted, epsContributionRemitted, epfDifference, ncpDays, refundOfAdvances, numberOfDays
+    // Backend returns: EMP_ID, uan, memberName, grossWages, epfWages, epsWages, edliWages, epfContributionRemitted, epsContributionRemitted, epfDifference, ncpDays, refundOfAdvances, numberOfDays
     const fmt = (v: any) => (v != null ? Number(v).toLocaleString('en-IN') : '0');
+    const uanVal = String(row.uan ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
     return `<tr>
       <td class="text-center">${row.sno ?? index + 1}</td>
-      <td>${row.uan ?? ''}</td>
+      <td>${uanVal}</td>
       <td>${row.memberName ?? row.empName ?? ''}</td>
       <td class="text-right">${fmt(row.grossWages)}</td>
       <td class="text-right">${fmt(row.epfWages)}</td>

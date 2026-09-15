@@ -128,4 +128,14 @@ export class AgreementService {
   CancelAgreement(agreementId: number) {
     return this.httpClient.post(`${this.apiUrl}Agreement/CancelAgreement?agreementId=${agreementId}`, {});
   }
+
+  checkDuplicateAgreement(branch: string, client: string, agreementDate: string, excludeId: number = 0, workPlace: string = ''): Observable<any> {
+    const params = {
+      params: new HttpParams({
+        fromString: `?branch=${branch}&client=${client}&agreementDate=${agreementDate}&excludeId=${excludeId}&workPlace=${encodeURIComponent(workPlace)}`
+      })
+    };
+    return this.httpClient.get<any>(this.apiUrl + 'Agreement/CheckDuplicateAgreement', params)
+      .pipe(catchError(this.errorHandle));
+  }
 }

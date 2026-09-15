@@ -567,6 +567,14 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
+      
+
+
+
+      
+
+
+
       ESINumber: [''],
 
 
@@ -1009,7 +1017,11 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
-        this.frm.get('TMPGUARD')?.setValue(salaryDetail?.TMPGUARD == true ? "0" : "1");
+
+
+
+
+        this.frm.get('TMPGUARD')?.setValue(salaryDetail?.TMPGUARD == false ? "0" : "1");
 
 
 
@@ -1146,6 +1158,18 @@ export class NewEmployeeComponent implements OnInit {
         this.frm.get('BranchStartDate')?.setValue(null);
         this.frm.get('BranchStartDate')?.clearValidators();
         this.frm.get('BranchStartDate')?.updateValueAndValidity();
+
+        // ── Reload branch clients so EMP_CLIENT dropdown shows the saved client ──
+        if (this.originalBranchCode) {
+          this._employeeService.getClientsFromBranchId(this.originalBranchCode, this.frm.get('EMP_ROLE')?.value).subscribe((cd: any) => {
+            if (cd && cd['clientList']) {
+              this.clientList = cd['clientList'];
+            }
+          });
+        }
+
+        // ── Re-apply reverse mapping in case lists loaded after the record ──
+        this.applyEditReverseMappings();
 
       }, () => {
       }, () => {
@@ -1795,6 +1819,9 @@ export class NewEmployeeComponent implements OnInit {
 
 
         this.departmentList = response;
+        if (this.isEdit) {
+          this.applyEditReverseMappings();
+        }
 
 
 
@@ -1860,6 +1887,10 @@ export class NewEmployeeComponent implements OnInit {
 
         this.designationList = response;
 
+        if (this.isEdit) {
+          this.applyEditReverseMappings();
+        }
+
 
 
       },
@@ -1891,6 +1922,30 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
+
+
+
+  applyEditReverseMappings(): void {
+    if (!this.isEdit) return;
+
+    const jobTitle = this.frm.get('EMPPAY_JOB_TITLE')?.value;
+
+    if (jobTitle) {
+      const department = this.departmentList.find(dept => dept.DepartmentName === jobTitle);
+      if (department) {
+        this.frm.get('DepartmentId')?.setValue(department.DepartmentId);
+      }
+    }
+
+    const category = this.frm.get('EMPPAY_CATEGORY')?.value;
+
+    if (category) {
+      const designation = this.designationList.find(desig => desig.DesignationName === category);
+      if (designation) {
+        this.frm.get('DesignationId')?.setValue(designation.DesignationId);
+      }
+    }
+  }
 
 
 
@@ -2478,7 +2533,7 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
-    data['EMP_SP_WORK'] = this.frm.get('EMP_SP_WORK')?.value == 'Yes';
+    data['EMP_SP_WORK'] = this.frm.get('EMP_SP_WORK')?.value == '1';
 
 
 
@@ -2498,7 +2553,7 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
-    data['TMPGUARD'] = this.frm.get('TMPGUARD')?.value == '0';
+    data['TMPGUARD'] = this.frm.get('TMPGUARD')?.value == '0' ? false : true;
 
 
 

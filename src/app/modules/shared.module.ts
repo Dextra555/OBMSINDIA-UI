@@ -178,6 +178,8 @@ import { ChequeStatusReportComponent } from './report/finance/cheque-status-repo
 import { CreditNoteSummaryComponent } from './report/finance/credit-note-summary/credit-note-summary.component';
 import { CreditNoteComponent } from './finance/credit-note/credit-note.component';
 import { DebitNoteComponent } from './finance/debit-note/debit-note.component';
+import { CreditNoteReportComponent } from './report/finance/credit-note-report/credit-note-report.component';
+import { DebitNoteReportComponent } from './report/finance/debit-note-report/debit-note-report.component';
 import { PasswordChangeComponent } from './user/password-change/password-change.component';
 import { InvoiceCollectionStatusReportComponent } from './report/finance/invoice-collection-status-report/invoice-collection-status-report.component';
 import { LoanLedgerReportComponent } from './report/payroll/loan-ledger-report/loan-ledger-report.component';
@@ -291,6 +293,8 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     InvoiceRecycleBinComponent,
     CreditNoteComponent,
     DebitNoteComponent,
+    CreditNoteReportComponent,
+    DebitNoteReportComponent,
     PaymentsComponent,
     PaymentsRecycleBinComponent,
     ReceiptsComponent,

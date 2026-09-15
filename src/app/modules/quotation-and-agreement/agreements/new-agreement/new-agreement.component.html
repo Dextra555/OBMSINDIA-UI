@@ -18,7 +18,7 @@
 
           <li class="breadcrumb-item"><a href="#">Agreements</a></li>
 
-          <li class="breadcrumb-item active">{{isEdit ? 'Update' : 'New'}} Agreements</li>
+          <li class="breadcrumb-item active">{{isEdit ? 'Update' : 'Add'}} Agreements</li>
 
         </ol>
 
@@ -352,16 +352,13 @@
                 <mat-form-field appearance="outline">
 
                   <input type="text" formControlName="DiscountAmount" matInput placeholder=""
-                         autocomplete="off" (input)="DetailRowChange()"
-                         [attr.readonly]="type !== 'LS' ? true : null"
-                         [style.background-color]="type !== 'LS' ? '#e9ecef' : null">
+                         autocomplete="off" (input)="DetailRowChange()">
 
                 </mat-form-field>
 
                 <br/>
 
-                <!-- Days field: only for Normal/District mode -->
-                <mat-form-field appearance="outline" *ngIf="type !== 'LS'">
+                <mat-form-field appearance="outline">
 
                   <mat-label>Days</mat-label>
 
@@ -733,7 +730,7 @@
 
             <button class="btn wlt-c-furg-btn-gray mr-3" type="button" (click)="cancel()"> Cancel</button>
 
-            <button class="btn wlt-c-furg-btn-primary"> {{isEdit ? 'Update' : 'Save'}}</button>
+            <button class="btn wlt-c-furg-btn-primary">{{isEdit ? 'Update' : 'Save'}}</button>
 
           </div>
 

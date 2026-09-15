@@ -185,14 +185,13 @@ export class NewClientMasterComponent implements OnInit {
       if (params['code'] != undefined) {
         this.getClientMasterList(params['code'], params['status']);
         this.getBranchMasterListByUser(this.currentUser);
-        this.getAllClientMasterList(params['code'], params['status']);
+        this.getAllClientMasterList('all', 'Active');
         // Load attendance period config for existing client
         this.loadAttendancePeriodConfig(params['code']);
       } else {
-        //this.getAllClientMasterList(this.clientCode, 'Active');
+        this.getNewVoucherNumber();
         this.getBranchMasterListByUser(this.currentUser);
         this.getAllClientMasterList('null', 'Active');
-        this.getNewVoucherNumber();
       }
     });
   }

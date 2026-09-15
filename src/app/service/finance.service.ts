@@ -76,6 +76,18 @@ export class FinanceService {
 
 
 
+  getAgreementByAgreementId(agreementId: number, branchId: string) {
+
+    const params = { params: new HttpParams({ fromString: "?agreementId=" + agreementId + "&branchId=" + branchId }) };
+
+    return this.httpClient.get<any>(this.apiUrl + 'Finance/GetAgreementDetailsByAgreementId', params
+
+    ).pipe(catchError(this.errorHandle));
+
+  }
+
+
+
   getClientInvoiceById(invoiceId: string) {
 
     const params = { params: new HttpParams({ fromString: "?invoiceId=" + invoiceId }) };

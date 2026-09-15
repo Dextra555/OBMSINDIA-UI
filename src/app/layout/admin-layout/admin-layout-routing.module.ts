@@ -221,6 +221,10 @@ import { ChequeStatusReportComponent } from "../../modules/report/finance/cheque
 
 import { CreditNoteSummaryComponent } from "../../modules/report/finance/credit-note-summary/credit-note-summary.component";
 
+import { CreditNoteReportComponent } from "../../modules/report/finance/credit-note-report/credit-note-report.component";
+
+import { DebitNoteReportComponent } from "../../modules/report/finance/debit-note-report/debit-note-report.component";
+
 import { AuthGuard } from 'src/app/service/auth.guard';
 
 import { LoanLedgerReportComponent } from 'src/app/modules/report/payroll/loan-ledger-report/loan-ledger-report.component';
@@ -691,6 +695,10 @@ const routes: Routes = [
   { path: 'report/finance/cheque-status-report', component: ChequeStatusReportComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/credit-note-summary-report', component: CreditNoteSummaryComponent, canActivate: [AuthGuard] },
+
+  { path: 'report/finance/credit-note-report', component: CreditNoteReportComponent, canActivate: [AuthGuard] },
+
+  { path: 'report/finance/debit-note-report', component: DebitNoteReportComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/profit-and-loss-report', component: ProfitAndLossComponent, canActivate: [AuthGuard] },
 

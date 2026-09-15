@@ -143,5 +143,7 @@
       }
     }
   },
-  "defaultProject": "angularapp"
+  "defaultProject": "obms"
+    
 }
+

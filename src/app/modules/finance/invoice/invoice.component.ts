@@ -38,6 +38,8 @@ export interface PeriodicElement {
 
   Name: string,
 
+  WorkPlace: string,
+
 }
 
 
@@ -56,7 +58,7 @@ export interface PeriodicElement {
 
 export class InvoiceComponent implements AfterViewInit {
 
-  displayedColumns: string[] = ['actions', 'Name',];
+  displayedColumns: string[] = ['actions', 'Name', 'WorkPlace'];
 
   dataSource = new MatTableDataSource<PeriodicElement>();
 
@@ -414,7 +416,15 @@ export class InvoiceComponent implements AfterViewInit {
 
     let invoicePeriod = this.returnDate(this.frm.get("invoice_period")?.value);
 
-    this.service.getAgreement(branch, invoicePeriod, client?.Code).subscribe((d: any) => {
+    const agreementId: number = client?.AgreementID ?? 0;
+
+    const agreementData$ = agreementId > 0
+
+      ? this.service.getAgreementByAgreementId(agreementId, branch)
+
+      : this.service.getAgreement(branch, invoicePeriod, client?.Code);
+
+    agreementData$.subscribe((d: any) => {
 
       console.log('Received Agreement Data:', d);
 

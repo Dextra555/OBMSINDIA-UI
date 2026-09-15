@@ -699,19 +699,12 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
     // Validation: Check if agreement has invoices and prevent editing in the same month
     if (this.isEdit && this.ID > 0) {
-      console.log('Validation triggered - checking final invoice date...');
       this.service.getFinalInvoiceDate(this.ID).subscribe((finalInvoiceDate: any) => {
-        console.log('Final Invoice Date response:', finalInvoiceDate);
-        console.log('Is array:', Array.isArray(finalInvoiceDate), 'Length:', finalInvoiceDate?.length);
         
-        // Handle array response from backend
         let hasInvoiceInNewMonth = false;
         let newAgreementDate = new Date(data['AgreementDate']);
         
         if (Array.isArray(finalInvoiceDate) && finalInvoiceDate.length > 0) {
-          console.log('All invoices in array:', finalInvoiceDate);
-          
-          // Check if any invoice is in the same month as the new agreement date
           const newMonth = newAgreementDate.getMonth();
           const newYear = newAgreementDate.getFullYear();
           
@@ -731,12 +724,8 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
               const invoiceMonth = invoiceDate.getMonth();
               const invoiceYear = invoiceDate.getFullYear();
               
-              console.log('Invoice date:', invoiceDate, 'Invoice Year/Month:', invoiceYear, invoiceMonth, 'New Year/Month:', newYear, newMonth);
-              
-              // Check if invoice is in the same month as new agreement date
               if (invoiceYear === newYear && invoiceMonth === newMonth) {
                 hasInvoiceInNewMonth = true;
-                console.log('Found invoice in same month as new agreement date');
                 break;
               }
             }
@@ -744,7 +733,6 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
         }
         
         if (hasInvoiceInNewMonth) {
-          console.log('Validation FAILED - invoice exists in the same month as new agreement date');
           Swal.fire({
             title: 'Warning Message',
             text: `New Agreement Period can not be less than ${newAgreementDate.toISOString().substring(0, 7)}`,
@@ -753,46 +741,84 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
             confirmButtonColor: '#3085d6',
             confirmButtonText: 'OK'
           });
-          return; // Prevent save
-        } else {
-          console.log('Validation PASSED - no invoices in the same month as new agreement date');
+          return;
         }
         
-        // If validation passes or no invoices, proceed with save
-        this.saveAgreement(data);
+        // Invoice check passed - now check duplicate then save
+        this.checkDuplicateAndSave(data);
       });
-      return; // Wait for async validation
+      return;
     }
 
-    console.log('Skipping validation - not an edit or ID is 0');
-    // For new agreements or when validation is not needed
-    this.saveAgreement(data);
+    // New agreement - check duplicate then save
+    this.checkDuplicateAndSave(data);
 
   }
 
+  checkDuplicateAndSave(data: any) {
+    const branch = data['Branch'];
+    const client = data['Client'];
+    const agreementDate = data['AgreementDate'];
+    const excludeId = this.isEdit ? (this.ID || 0) : 0;
+
+    this.service.checkDuplicateAgreement(branch, client, agreementDate, excludeId, data['WorkPlace']).subscribe({
+      next: (result: any) => {
+        if (result && result.IsDuplicate) {
+          const dateObj = new Date(agreementDate);
+          const monthYear = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+          Swal.fire({
+            title: 'Duplicate Agreement',
+            text: `An agreement already exists for this Branch and Client in ${monthYear}. Please check and try again.`,
+            icon: 'warning',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+        this.saveAgreement(data);
+      },
+      error: () => {
+        this.saveAgreement(data);
+      }
+    });
+  }
+
   saveAgreement(data: any) {
-    let msg = "";
+    let msg = this.isEdit ? 'Successfully Updated Agreement Details' : 'Successfully Saved Agreement Details';
+
     this.service.save(data).subscribe({
       next: (d: any) => {
-        if (this.isEdit) {
-          msg = 'Successfully Updated Agreement Details';
-        } else {
-          msg = 'Successfully Saved Agreement Details';
+        if (d && d.Success === 'Duplicate') {
+          Swal.fire({
+            title: 'Duplicate Agreement',
+            text: d.Message || 'An agreement already exists for this Branch and Client in the same period.',
+            icon: 'warning',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
+          });
+          return;
         }
         Swal.fire({
-          toast: true,
-          position: 'top',
-          showConfirmButton: false,
           title: 'Success',
           text: msg,
           icon: 'success',
-          showCloseButton: false,
-          timer: 3000,
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK'
         }).then(() => {
           this.route.navigate(['/quotation-and-agreement/agreements']);
         });
       },
       error: (err: any) => {
+        if (err.error && err.error.Success === 'Duplicate') {
+          Swal.fire({
+            title: 'Duplicate Agreement',
+            text: err.error.Message || 'An agreement already exists for this Branch and Client in the same period.',
+            icon: 'warning',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
         this.handleErrors(err);
         Swal.fire('Error', 'Failed to save agreement details', 'error');
       }
@@ -2198,6 +2224,9 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
       const perMonth = parseFloat(tPerMonth) || 0;
       const noOfDays = parseFloat(tNoOfDays) || 0;
       const monthDays = parseFloat(this.frm.get('details.MonthDays')?.value) || daysInMonth;
+      // Calculate PerDay = PerMonth / MonthDays and save it to the form field
+      const perDayCalc = monthDays > 0 ? perMonth / monthDays : 0;
+      this.frm.get('details.PerDay')?.setValue(this.formatCurrency(perDayCalc));
       vMonthTotal = Math.round(perMonth / monthDays * noOfDays);
       this.frm.get('details.MonthTotal')?.setValue(this.formatCurrency(vMonthTotal));
     } else if (parseFloat(tPerMonth) > 0 && this.type !== 'LS') {
@@ -2255,25 +2284,10 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
 
     // Calculate DiscountAmount
-    const tDiscountHour = parseFloat(this.frm.get('details.DiscountHour')?.value || '0');
-
     if (this.frm.get('details.HasDiscount')?.value) {
-      if (this.type === 'LS') {
-        // Lump Sum mode: DiscountAmount entered directly by user — read as-is, no calculation
-        // (DiscountAmount is already set by user input, just leave it)
-      } else if (tDiscountHour > 0) {
-        // Normal/District mode: calculate from Days
-        const perDayRate = parseFloat(tPerMonth) / daysInMonth;
-        const maxDiscountDays = tNoOfGuards * tNoOfDays;
-        if (tDiscountHour > maxDiscountDays) {
-          this.frm.get('details.DiscountHour')?.setValue(maxDiscountDays);
-          this.frm.get('details.DiscountAmount')?.setValue(this.formatCurrency(Math.round(perDayRate * maxDiscountDays)));
-        } else {
-          this.frm.get('details.DiscountAmount')?.setValue(this.formatCurrency(Math.round(perDayRate * tDiscountHour)));
-        }
-      } else {
-        this.frm.get('details.DiscountAmount')?.setValue(0);
-      }
+      // DiscountAmount is entered directly by the user — keep it as-is, no auto-calculation.
+      // If the user wants discount from days, they can type the amount themselves,
+      // or type days in DiscountHour and set DiscountAmount to match.
     } else {
       this.frm.get('details.DiscountAmount')?.setValue(0);
     }
