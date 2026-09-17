@@ -376,6 +376,18 @@ export class InvoiceComponent implements AfterViewInit {
 
         this.setDatasource(d);
 
+      }, (error: any) => {
+        this.errorMessage = error || 'Failed to load clients.';
+        Swal.fire({
+          toast: true,
+          position: 'top',
+          showConfirmButton: false,
+          title: 'Error',
+          text: String(error || 'Failed to load clients.'),
+          icon: 'error',
+          showCloseButton: false,
+          timer: 4000,
+        });
       });
 
 
@@ -413,6 +425,8 @@ export class InvoiceComponent implements AfterViewInit {
     let branch = this.frm.get("branch")?.value;
 
     this.client = client;
+
+    this.frm.get('ID')?.setValue(client?.ID ?? 0);
 
     let invoicePeriod = this.returnDate(this.frm.get("invoice_period")?.value);
 
@@ -455,6 +469,10 @@ export class InvoiceComponent implements AfterViewInit {
 
     this.client = client;
 
+    this.frm.get('ID')?.setValue(client?.ID ?? 0);
+
+    this.frm.get('invoice_no')?.setValue(client?.InvoiceNo ?? '');
+
     this.service.getClientInvoiceById(client.ID).subscribe((d: any) => {
 
       console.log(d);
@@ -465,10 +483,20 @@ export class InvoiceComponent implements AfterViewInit {
 
       this.frm.patchValue(this.agreement);
 
+      this.frm.get("ID")?.setValue(d['invoice']?.ID ?? client?.ID);
+
       this.frm.get("invoice_no")?.setValue(this.agreement?.InvoiceNo);
 
       this.calculation();
 
+    }, (error: any) => {
+      const msg = typeof error === 'string' ? error : (error?.error?.error || error?.error?.message || error?.message || 'Failed to load invoice details. Please try again.');
+      Swal.fire({
+        title: 'Error',
+        text: msg,
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
     })
 
   }
@@ -781,7 +809,7 @@ export class InvoiceComponent implements AfterViewInit {
 
     data['Client'] = this.client?.Code;
 
-    data['AgreementID'] = this.agreement.ID;
+    data['AgreementID'] = this.agreement?.AgreementID ?? this.agreement?.ID;
 
     data['details'] = this.details;
 
@@ -819,16 +847,27 @@ export class InvoiceComponent implements AfterViewInit {
 
       });
 
-      this.route.navigate(['/finance/invoice']);
-
       this.frm.reset();
 
       this.details = [];
 
       this.setDatasource([]);
 
-      this.printView(d['agreement']['ID']);
+      this.printView(d['agreement']['ID'] ?? this.client?.ID);
 
+    }, (error: any) => {
+      this.errorMessage = typeof error === 'string' ? error : (error?.error?.error || error?.message || 'Failed to save invoice.');
+      Swal.fire({
+        toast: true,
+        position: 'top',
+        showConfirmButton: false,
+        title: 'Error',
+        text: this.errorMessage,
+        icon: 'error',
+        showCloseButton: false,
+        timer: 4000,
+      });
+      this.hideLoadingSpinner();
     })
 
   }
@@ -847,7 +886,9 @@ export class InvoiceComponent implements AfterViewInit {
 
     let data = this.frm.getRawValue();
 
-    if (!data['ID'] || data['ID'] === 0) {
+    let invoiceId = data['ID'] || this.client?.ID;
+
+    if (!invoiceId || invoiceId === 0) {
 
       Swal.fire({
 
@@ -873,7 +914,7 @@ export class InvoiceComponent implements AfterViewInit {
 
     }
 
-    this.service.deleteInvoice(data['ID']).subscribe((d: any) => {
+    this.service.deleteInvoice(invoiceId).subscribe((d: any) => {
 
       console.log(d);
 
@@ -907,6 +948,19 @@ export class InvoiceComponent implements AfterViewInit {
 
       this.setDatasource([]);
 
+    }, (error: any) => {
+      this.errorMessage = error || 'Failed to delete invoice.';
+      Swal.fire({
+        toast: true,
+        position: 'top',
+        showConfirmButton: false,
+        title: 'Error',
+        text: String(error || 'Failed to delete invoice.'),
+        icon: 'error',
+        showCloseButton: false,
+        timer: 4000,
+      });
+      this.hideLoadingSpinner();
     })
 
   }

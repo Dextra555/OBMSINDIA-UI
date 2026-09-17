@@ -24,9 +24,8 @@ export class AuthInterceptor implements HttpInterceptor {
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
-          // Token expired or invalid
-          this.authService.logout(); // Clear any stored data
-          this.router.navigate(['/login']); // Redirect to login
+          // Token expired or invalid — logout() clears token and redirects to login
+          this.authService.logout();
         }
         return throwError(error);
       })

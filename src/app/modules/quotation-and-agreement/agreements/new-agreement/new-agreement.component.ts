@@ -172,6 +172,7 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
   isEdit: boolean = false;
 
   isFollowCalendarManuallyChanged: boolean = false;
+  isDiscountManuallyEdited: boolean = false;
 
   detailEdit: boolean = false;
 
@@ -1193,6 +1194,7 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
   emptyDetailData() {
 
     this.isFollowCalendarManuallyChanged = false;
+    this.isDiscountManuallyEdited = false;
 
     let emptyData = {
 
@@ -2113,7 +2115,15 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
   }
 
+  onDiscountAmountManualEdit(): void {
+    // User manually edited Discounted amount — skip auto-calc from Days
+    this.isDiscountManuallyEdited = true;
+    this.DetailRowChange();
+  }
+
   onDiscountHourChange(): void {
+    // Days changed — reset manual flag so auto-calc takes over again
+    this.isDiscountManuallyEdited = false;
     // Trigger DetailRowChange to recalculate discount based on Working Days - Discount Days
     this.DetailRowChange();
   }
@@ -2285,9 +2295,17 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
     // Calculate DiscountAmount
     if (this.frm.get('details.HasDiscount')?.value) {
-      // DiscountAmount is entered directly by the user — keep it as-is, no auto-calculation.
-      // If the user wants discount from days, they can type the amount themselves,
-      // or type days in DiscountHour and set DiscountAmount to match.
+      const discountDays = parseFloat(this.frm.get('details.DiscountHour')?.value || '0');
+      if (discountDays > 0 && !this.isDiscountManuallyEdited) {
+        // Auto-calculate from Days: DiscountAmount = PerMonth / WorkingDays * DiscountDays
+        const perMonthVal = parseFloat(tPerMonth) || 0;
+        const workingDays = parseFloat(tNoOfDays) || parseFloat(this.frm.get('details.MonthDays')?.value) || daysInMonth;
+        if (perMonthVal > 0 && workingDays > 0) {
+          const autoDiscount = (perMonthVal / workingDays) * discountDays;
+          this.frm.get('details.DiscountAmount')?.setValue(this.formatCurrency(autoDiscount));
+        }
+      }
+      // If Days = 0, keep whatever is in DiscountAmount (manual entry)
     } else {
       this.frm.get('details.DiscountAmount')?.setValue(0);
     }

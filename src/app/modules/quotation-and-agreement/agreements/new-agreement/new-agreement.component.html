@@ -16,7 +16,7 @@
 
           <li class="breadcrumb-item"><a href="#">Quotation & Agreement</a></li>
 
-          <li class="breadcrumb-item"><a href="#">Agreements</a></li>
+          <li class="breadcrumb-item"><a routerLink="/quotation-and-agreement/agreements" style="cursor:pointer;">Agreements</a></li>
 
           <li class="breadcrumb-item active">{{isEdit ? 'Update' : 'Add'}} Agreements</li>
 
@@ -352,7 +352,7 @@
                 <mat-form-field appearance="outline">
 
                   <input type="text" formControlName="DiscountAmount" matInput placeholder=""
-                         autocomplete="off" (input)="DetailRowChange()">
+                         autocomplete="off" (input)="onDiscountAmountManualEdit()">
 
                 </mat-form-field>
 

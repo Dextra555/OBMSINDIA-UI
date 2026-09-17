@@ -100,7 +100,7 @@ export class PrintInvoiceComputerGeneratedComponent implements OnInit {
       },
       (error: any) => {
         this.showLoadingSpinner = false;
-        this.errorMessage = 'Failed to load invoice data. Please check the server is running and try again.';
+        this.errorMessage = error?.error?.error || error?.error?.details || error?.error?.message || 'Failed to load invoice data. Please check the server is running and try again.';
         console.error('API error loading invoice:', error);
       }
     );

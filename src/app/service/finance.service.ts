@@ -114,7 +114,7 @@ export class FinanceService {
 
   saveInvoice(body: any) {
 
-    return this.httpClient.post(this.apiUrl + 'Finance/SaveAndUpdateInvoice', body);
+    return this.httpClient.post(this.apiUrl + 'Finance/SaveAndUpdateInvoice', body).pipe(catchError(this.errorHandle));
 
   }
 

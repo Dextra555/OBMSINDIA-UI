@@ -36,7 +36,7 @@ export class AuthService {
   }
 
   logout(): void {
-    //this.clearToken();
+    this.clearToken();
     this.stopInactivityTimer();
     this.router.navigate(['/login']);
   }
