@@ -194,7 +194,9 @@ import { DeletedInvoiceDetailsComponent } from './report/finance/deleted-invoice
 import { ClientStatementComponent } from './report/finance/client-statement/client-statement.component';
 import { SupplierStatementComponent } from './report/finance/supplier-statement/supplier-statement.component';
 import { InvoiceAgeingComponent } from './report/finance/invoice-ageing/invoice-ageing.component';
+import { PaymentDueListComponent } from './report/finance/payment-due-list/payment-due-list.component';
 import { ProfitAndLossComponent } from './report/finance/profit-and-loss/profit-and-loss.component';
+import { SeparatedProfitLossComponent } from './report/finance/separated-profit-loss/separated-profit-loss.component';
 import { InvoiceReportComponent } from './report/finance/invoice-report/invoice-report.component';
 import { PrintIndianInvoiceComponent } from './report/finance/print-indian-invoice/print-indian-invoice.component';
 import { SalesInvoiceCollectionReportComponent } from './report/finance/sales-invoice-collection-report/sales-invoice-collection-report.component';
@@ -204,6 +206,7 @@ import { LoanVoucherReportComponent } from './payroll/employee-loan/loan-voucher
 import { VoucherFilterReportComponent } from './payroll/voucher-filter-report/voucher-filter-report.component';
 import { AccountingProfitAndLossComponent } from './report/accounting/accounting-profit-and-loss/accounting-profit-and-loss.component';
 import { BalanceSheetReportComponent } from './report/accounting/balance-sheet-report/balance-sheet-report.component';
+import { ProfitAndLossWithoutContraComponent } from './report/accounting/profit-and-loss-without-contra/profit-and-loss-without-contra.component';
 import { TrailBalanceReportComponent } from './report/accounting/trail-balance-report/trail-balance-report.component';
 import { BankReconciliationReportComponent } from './report/accounting/bank-reconciliation-report/bank-reconciliation-report.component';
 import { GeneralLedgerReportComponent } from './report/accounting/general-ledger-report/general-ledger-report.component';
@@ -355,7 +358,9 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     ClientStatementComponent,
     SupplierStatementComponent,
     InvoiceAgeingComponent,
+    PaymentDueListComponent,
     ProfitAndLossComponent,
+    SeparatedProfitLossComponent,
     InvoiceReportComponent,
     PrintIndianInvoiceComponent,
     SalesInvoiceCollectionReportComponent,
@@ -364,6 +369,7 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     LoanVoucherReportComponent,
     AccountingProfitAndLossComponent,
     BalanceSheetReportComponent,
+    ProfitAndLossWithoutContraComponent,
     TrailBalanceReportComponent,
     BankReconciliationReportComponent,
     GeneralLedgerReportComponent,

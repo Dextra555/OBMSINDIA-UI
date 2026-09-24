@@ -1223,6 +1223,15 @@ export class NewQuotationComponent implements OnInit, AfterViewInit {
 
     this.frm.get('details')?.patchValue(row);
 
+    // Restore DiscountHour enable/disable based on the saved HasDiscount value.
+    // emptyDetailData() / chkNormal() always leaves DiscountHour disabled after a reset,
+    // so we must explicitly re-enable it here when the row being edited has discount active.
+    if (row.HasDiscount) {
+      this.frm.get('details.DiscountHour')?.enable({ onlySelf: true });
+    } else {
+      this.frm.get('details.DiscountHour')?.disable({ onlySelf: true });
+    }
+
   }
 
 

@@ -58,12 +58,13 @@ export class PaymentsComponent implements AfterViewInit {
   paymentID: number = 0
   displayedColumns: string[] = ['BankName', 'Amount'];
   dataSource!: MatTableDataSource<IBranchAmount>;
-  displayedColumnsSupplier: string[] = ['InvoiceNo', 'PaidAmount', 'CurrentPayment', 'Balance', 'BranchName'];
+  displayedColumnsSupplier: string[] = ['InvoiceNo', 'PaidAmount', 'CurrentPayment', 'Balance', 'BranchName', 'Action'];
   dataSourceSupplier!: MatTableDataSource<ISupplierInvoice>;
   rows: FormArray = this.fb.array([]);
   supplierRows: FormArray = this.fb.array([]);
   otherList: any = [];
   isSupplierEnable = false;
+  showAddInvoiceBtn: boolean = false;
   paymentTypeDisplay = "Cheque No.";
   checklistItems = [
 
@@ -696,6 +697,7 @@ export class PaymentsComponent implements AfterViewInit {
       } else {
         this.showDataSourceTable = false;
       }
+      this.showAddInvoiceBtn = this.paymentID > 0 && !!value;
 
       d.forEach((d: ISupplierInvoice) => {
         // d.Amount = "0";
@@ -751,6 +753,45 @@ export class PaymentsComponent implements AfterViewInit {
     this.hideSpinner();
     return;
   }
+  addMoreSupplierInvoices() {
+    const supplierValue = this.frm.get('Supplier')?.value;
+    if (!supplierValue) return;
+
+    const existingInvoiceIds = new Set<string>(
+      this.supplierRows.controls.map((ctrl) => ctrl.get('InvoiceID')?.value?.toString())
+    );
+
+    this._financeService
+      .getCreditorInvoicePaymentListBySupplier(this.currentUser, 0, supplierValue)
+      .subscribe((d: any) => {
+        let addedCount = 0;
+        d.forEach((item: ISupplierInvoice) => {
+          const invoiceId = item.InvoiceID?.toString();
+          if (!existingInvoiceIds.has(invoiceId)) {
+            item.Amount = '0';
+            item.ID = 0;
+            item.PaymentID = 0;
+            this.addSupplierInvoiceAmount(item);
+            existingInvoiceIds.add(invoiceId);
+            addedCount++;
+          }
+        });
+
+        if (addedCount > 0) {
+          this.showDataSourceTable = true;
+        } else {
+          this.showMessage('No additional unpaid invoices found for this supplier.', 'info', 'Warning Message');
+        }
+      });
+  }
+
+  removeInvoiceLine(index: number): void {
+    this.supplierRows.removeAt(index);
+    if (this.supplierRows.length === 0) {
+      this.showDataSourceTable = false;
+    }
+  }
+
   handleErrors(error: string) {
     if (error != null && error != '') {
       this.hideSpinner();

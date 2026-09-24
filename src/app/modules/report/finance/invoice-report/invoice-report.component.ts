@@ -26,7 +26,7 @@ export interface PeriodicElement {
 })
 export class InvoiceReportComponent implements AfterViewInit {
   rowCheckedState: boolean[] = [];
-  displayedColumns: string[] = ['s_no', 'Name'];
+  displayedColumns: string[] = ['s_no', 'Name', 'WorkPlace'];
   dataSource = new MatTableDataSource();
   frm!: FormGroup
   currentUser: string = '';

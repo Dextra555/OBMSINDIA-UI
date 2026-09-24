@@ -764,7 +764,7 @@
                         <tr class="grand-total-row">
                             <td colspan="5"></td>
                             <td class="summary-total-label">Grand Total</td>
-                            <td class="summary-total-value">{{GrandTotal}}</td>
+                            <td class="summary-total-value" id="grandTotalCell">{{GrandTotal}}</td>
                         </tr>
                         <tr class="amount-words-row">
                             <td colspan="7">
@@ -845,6 +845,41 @@
 
         </div><!-- /.invoice-container -->
     </div><!-- /.invoice-wrapper -->
+    <script>
+        (function () {
+            // Parse Indian-formatted number string (e.g. "1,55,806" or "14,023.50") to float
+            function toNum(el) {
+                if (!el) return 0;
+                // Remove all commas, then parse
+                var val = el.textContent.trim().replace(/,/g, '');
+                return parseFloat(val) || 0;
+            }
+
+            var totalEl = document.querySelector('tr:not(.cgst-row):not(.sgst-row):not(.igst-row):not(.grand-total-row):not(.amount-words-row) .summary-total-value');
+            var cgstEl  = document.querySelector('.cgst-row .summary-total-value');
+            var sgstEl  = document.querySelector('.sgst-row .summary-total-value');
+            var igstEl  = document.querySelector('.igst-row .summary-total-value');
+            var grandEl = document.getElementById('grandTotalCell');
+
+            if (!grandEl) return;
+
+            var total = toNum(totalEl);
+            var cgst  = toNum(cgstEl);
+            var sgst  = toNum(sgstEl);
+            var igst  = toNum(igstEl);
+
+            var grandTotal = total + cgst + sgst + igst;
+
+            if (grandTotal > 0) {
+                // Format with Indian number system (e.g. 1,83,852.00)
+                var formatted = grandTotal.toLocaleString('en-IN', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2
+                });
+                grandEl.textContent = formatted;
+            }
+        })();
+    </script>
 </body>
 
 </html>

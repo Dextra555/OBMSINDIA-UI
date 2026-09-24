@@ -244,14 +244,8 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
 
 
-    this.activatedRoute.params.subscribe(params => {
-      this.ID = params['ID'];
-      
-      // Trigger edit mode if ID is present
-      if (this.ID != 0 && this.ID != undefined) {
-        this.loadAgreementForEdit(this.ID);
-      }
-    });
+    // Capture route ID synchronously via snapshot — no async subscribe needed
+    this.ID = this.activatedRoute.snapshot.params['ID'];
 
     this.frm = this.fb.group({
 
@@ -388,62 +382,36 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
 
 
-    // 1. Synchronized Loading of Master Data first
-
+    // 1. Load all master data first, then decide what to load
     this.showLoadingSpinner = true;
-
     forkJoin({
-
       master: this.service.getAgreementMaster(this.currentUser),
-
       serviceTypes: this.serviceTypeService.getAllServiceTypes(),
-
       gstConfig: this._masterService.getGSTConfigurationList()
-
     }).pipe(
-
       catchError(err => {
-
         this.handleErrors(err);
-
         return of({ master: {}, serviceTypes: [], gstConfig: [] });
-
       })
-
     ).subscribe((results: any) => {
 
       // Set Master Data
-
       this.data = results.master;
-
       this.branchList = results.master['branchList'];
-
       this.clientList = results.master['clientList'];
-
       this.serviceTypes = results.serviceTypes || [];
-
       this.gstConfigList = results.gstConfig || [];
 
-
-
-      // 2. Handle Quotation Forwarding
-
-      this.activatedRoute.queryParams.subscribe(params => {
-
-        const qId = params['quotationID'];
-
-        if (qId) {
-
-          this.loadQuotationData(qId);
-
-        } else if (this.ID == 0 || this.ID == undefined) {
-
-          this.hideLoadingSpinner();
-
-        }
-
-      });
-
+      // 2. Handle Quotation Forwarding or Edit Mode
+      const qId = this.activatedRoute.snapshot.queryParams['quotationID'];
+      if (qId) {
+        this.loadQuotationData(qId);
+      } else if (this.ID != 0 && this.ID != undefined) {
+        // Edit mode — form + master data both ready now
+        this.loadAgreementForEdit(this.ID);
+      } else {
+        this.hideLoadingSpinner();
+      }
     });
 
   }
@@ -949,14 +917,18 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
       console.log('Full backend response for agreement ID', agreementID, ':', d);
       let res = d['Result'] || d;
       console.log('Res object:', res);
-      
+
       let agreement = res['agreement'] || res['Agreement'];
       let agreementDetails = res['agreementDetails'] || res['AgreementDetails'] || res['details'] || [];
 
-      this.frm.patchValue(agreement);
-
+      // Load clients for the branch FIRST, then patch form values
+      // so the Client dropdown is populated before we set the value
       if (agreement.Branch) {
-        this.getClientsByBranchID(agreement.Branch);
+        this.getClientsByBranchID(agreement.Branch, () => {
+          this.frm.patchValue(agreement);
+        });
+      } else {
+        this.frm.patchValue(agreement);
       }
 
       this.details = agreementDetails.map((row: any) => this.mapItemDetails(row));
@@ -1365,7 +1337,7 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
     // Patch all form values AFTER disabling — patchValue does NOT re-enable disabled controls
     this.frm.get('details')?.patchValue(row);
 
-    // Post-patch adjustments for District mode
+    // Post-patch adjustments per type
     if (this.type === 'D') {
       // Force FollowCalendar off — District does not use calendar logic
       this.frm.get('details.FollowCalender')?.setValue(false);
@@ -1383,13 +1355,20 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
     } else if (this.type === 'LS') {
       this.frm.get('details.FollowCalender')?.setValue(false);
       this.isFollowCalendarManuallyChanged = true;
-      // Restore DiscountHour state based on saved HasDiscount value
-      if (row.HasDiscount) {
-        this.frm.get('details.DiscountHour')?.enable({ onlySelf: true });
-      } else {
-        this.frm.get('details.DiscountHour')?.disable({ onlySelf: true });
-      }
     }
+
+    // Restore DiscountHour enable/disable state for ALL types based on saved HasDiscount value.
+    // chkNormal() always disables DiscountHour on form reset, so we must re-enable it here
+    // if the row being edited had HasDiscount = true — otherwise the Days field stays locked.
+    if (row.HasDiscount) {
+      this.frm.get('details.DiscountHour')?.enable({ onlySelf: true });
+    } else {
+      this.frm.get('details.DiscountHour')?.disable({ onlySelf: true });
+    }
+
+    // Mark as manually edited so DetailRowChange() does not overwrite the loaded DiscountAmount
+    // with an auto-recalculated value while the user hasn't touched anything yet.
+    this.isDiscountManuallyEdited = row.HasDiscount && (parseFloat(row.DiscountAmount as any) || 0) > 0;
 
   }
 
@@ -1587,7 +1566,7 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
 
 
-  getClientsByBranchID(value: any) {
+  getClientsByBranchID(value: any, onComplete?: () => void) {
 
     this.service.getClientsByBranchID(value).subscribe((d: any) => {
 
@@ -1607,6 +1586,9 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
       this.agreementDataSource.sort = this.sort;
 
       this.agreementDataSource.paginator = this.paginator;
+
+      // Call callback after clientList is ready (used by loadAgreementForEdit)
+      if (onComplete) onComplete();
 
     });
 

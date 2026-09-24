@@ -95,6 +95,7 @@ export class InvoiceComponent implements AfterViewInit {
   errorMessage: string = '';
 
   showLoadingSpinner: boolean = false;
+  isEditMode: boolean = false;
 
 
 
@@ -269,6 +270,7 @@ export class InvoiceComponent implements AfterViewInit {
 
 
   editInvoice() {
+    this.isEditMode = true;
 
     if (!this.client || this.client?.ID == 0) {
 
@@ -422,6 +424,8 @@ export class InvoiceComponent implements AfterViewInit {
 
   getAgreement(client: any) {
 
+    this.isEditMode = false;
+
     let branch = this.frm.get("branch")?.value;
 
     this.client = client;
@@ -466,6 +470,8 @@ export class InvoiceComponent implements AfterViewInit {
 
 
   getClientInvoiceById(client: any) {
+
+    this.isEditMode = true;
 
     this.client = client;
 
@@ -837,7 +843,7 @@ export class InvoiceComponent implements AfterViewInit {
 
         title: 'Success',
 
-        text: "Invoice Saved successfully",
+        text: this.isEditMode ? "Invoice Updated successfully" : "Invoice Saved successfully",
 
         icon: 'success',
 
@@ -850,6 +856,8 @@ export class InvoiceComponent implements AfterViewInit {
       this.frm.reset();
 
       this.details = [];
+
+      this.isEditMode = false;
 
       this.setDatasource([]);
 

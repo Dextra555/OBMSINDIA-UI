@@ -252,8 +252,11 @@ import { ClientStatementComponent } from "../../modules/report/finance/client-st
 import { SupplierStatementComponent } from "../../modules/report/finance/supplier-statement/supplier-statement.component";
 
 import { InvoiceAgeingComponent } from "../../modules/report/finance/invoice-ageing/invoice-ageing.component";
+import { PaymentDueListComponent } from "../../modules/report/finance/payment-due-list/payment-due-list.component";
 
 import { ProfitAndLossComponent } from 'src/app/modules/report/finance/profit-and-loss/profit-and-loss.component';
+
+import { SeparatedProfitLossComponent } from 'src/app/modules/report/finance/separated-profit-loss/separated-profit-loss.component';
 
 import { InvoiceReportComponent } from 'src/app/modules/report/finance/invoice-report/invoice-report.component';
 
@@ -277,6 +280,8 @@ import { VoucherFilterReportComponent } from 'src/app/modules/payroll/voucher-fi
 import { AccountingProfitAndLossComponent } from 'src/app/modules/report/accounting/accounting-profit-and-loss/accounting-profit-and-loss.component';
 
 import { BalanceSheetReportComponent } from 'src/app/modules/report/accounting/balance-sheet-report/balance-sheet-report.component';
+
+import { ProfitAndLossWithoutContraComponent } from 'src/app/modules/report/accounting/profit-and-loss-without-contra/profit-and-loss-without-contra.component';
 
 import { TrailBalanceReportComponent } from 'src/app/modules/report/accounting/trail-balance-report/trail-balance-report.component';
 
@@ -702,6 +707,8 @@ const routes: Routes = [
 
   { path: 'report/finance/profit-and-loss-report', component: ProfitAndLossComponent, canActivate: [AuthGuard] },
 
+  { path: 'report/finance/separated-profit-loss-report', component: SeparatedProfitLossComponent, canActivate: [AuthGuard] },
+
   { path: 'report/finance/invoice-collection-status-report', component: InvoiceCollectionStatusReportComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/monthly-invoice-status', component: MonthlyInvoiceStatusComponent, canActivate: [AuthGuard] },
@@ -715,6 +722,8 @@ const routes: Routes = [
   { path: 'report/finance/supplier-statement', component: SupplierStatementComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/invoice-ageing', component: InvoiceAgeingComponent, canActivate: [AuthGuard] },
+
+  { path: 'report/finance/payment-due-list', component: PaymentDueListComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/print-invoice-computer-generated', component: PrintInvoiceComputerGeneratedComponent, canActivate: [AuthGuard] },
 
@@ -737,6 +746,8 @@ const routes: Routes = [
   { path: 'report/accounting/trail-balance', component: TrailBalanceReportComponent, canActivate: [AuthGuard] },
 
   { path: 'report/accounting/accounting-profit-and-loss', component: AccountingProfitAndLossComponent, canActivate: [AuthGuard] },
+
+  { path: 'report/accounting/profit-and-loss-without-contra', component: ProfitAndLossWithoutContraComponent, canActivate: [AuthGuard] },
 
   { path: 'report/accounting/bank-reconciliation', component: BankReconciliationReportComponent, canActivate: [AuthGuard] },
 

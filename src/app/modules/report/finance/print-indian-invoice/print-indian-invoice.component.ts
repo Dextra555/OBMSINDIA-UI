@@ -13,6 +13,7 @@ import { DatasharingService } from 'src/app/service/datasharing.service';
 import { MastermoduleService } from 'src/app/service/mastermodule.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 export interface PeriodicElement {
@@ -27,7 +28,7 @@ export interface PeriodicElement {
 })
 export class PrintIndianInvoiceComponent implements AfterViewInit {
   rowCheckedState: boolean[] = [];
-  displayedColumns: string[] = ['s_no', 'Name'];
+  displayedColumns: string[] = ['s_no', 'Name', 'WorkPlace'];
   dataSource = new MatTableDataSource();
   frm!: FormGroup
   currentUser: string = '';
@@ -248,16 +249,15 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
     this.totalInvoices = this.selectedBatchInvoiceIds.length;
 
     // Load the HTML template and populate with invoice data from API
-    this.loadInvoiceTemplate();
     this.generateInvoiceHtml(this.selectedBatchInvoiceIds[0]);
   }
 
-  loadInvoiceTemplate() {
+  loadInvoiceTemplate(): Promise<void> {
     const templatePath = 'assets/invoice-templates/invoice.html';
-    this.http.get(templatePath, { responseType: 'text' }).subscribe(
+    return firstValueFrom(this.http.get(templatePath, { responseType: 'text' })).then(
       (htmlTemplate: string) => {
         // Load logo and convert to base64
-        this.loadLogoBase64().then(logoBase64 => {
+        return this.loadLogoBase64().then(logoBase64 => {
           this.invoiceTemplate = htmlTemplate.replace(
             'src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="',
             `src="${logoBase64}"`
@@ -295,11 +295,16 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
     this.errorMessage = '';
 
     this.http.get(environment.baseUrl + 'Finance/GetIndianInvoiceReportData?invoiceId=' + invoiceId).subscribe(
-      (data: any) => {
+      async (data: any) => {
         this.showLoadingSpinner = false;
         if (data.error) {
           this.errorMessage = data.error;
           return;
+        }
+
+        // Wait for the template to be ready before rendering
+        if (!this.invoiceTemplate) {
+          await this.loadInvoiceTemplate();
         }
 
         const html = this.renderInvoiceHtml(data);

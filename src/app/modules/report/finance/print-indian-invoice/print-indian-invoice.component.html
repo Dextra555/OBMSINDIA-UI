@@ -54,6 +54,10 @@
                                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Client Name </th>
                                 <td mat-cell *matCellDef="let element" class="text-left"> {{element.Name}} </td>
                             </ng-container>
+                            <ng-container matColumnDef="WorkPlace">
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header> Work Place (Site) </th>
+                                <td mat-cell *matCellDef="let element" class="text-left"> {{element.WorkPlace}} </td>
+                            </ng-container>
                             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                         </table>

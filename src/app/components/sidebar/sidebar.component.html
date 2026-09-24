@@ -192,6 +192,7 @@
                 <li class="nav-item" routerLink="/report/finance/branch-payment-summary-report"><a class="nav-link">Branch Payment Summary</a></li>
                 <li class="nav-item" routerLink="/report/finance/profit-and-loss-report"><a class="nav-link">Profit And
                     Loss Summary</a></li>
+                <li class="nav-item" routerLink="/report/finance/separated-profit-loss-report"><a class="nav-link">Profit & Loss (Separated)</a></li>
                 <li class="nav-item" routerLink="/report/finance/tds-report"><a class="nav-link">TDS Report</a></li>
                 <li class="nav-item" routerLink="/report/finance/gst-statement-report"><a class="nav-link">GST Report</a></li>
               </ul>
@@ -233,6 +234,8 @@
                 <li class="nav-item"><a class="nav-link" routerLink="/report/finance/supplier-statement">Supplier
                     Statement</a></li>
                 <li class="nav-item"><a class="nav-link" routerLink="/report/finance/invoice-ageing">Invoice Ageing</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" routerLink="/report/finance/payment-due-list">Payment Due List</a>
                 </li>
               </ul>
             </div>
@@ -428,6 +431,10 @@
                 </li>
                 <li class="nav-item" [routerLink]="['report/accounting/accounting-profit-and-loss']"><a
                     class="nav-link">Profit And Loss
+                  </a>
+                </li>
+                <li class="nav-item" [routerLink]="['report/accounting/profit-and-loss-without-contra']"><a
+                    class="nav-link">Profit And Loss Statement
                   </a>
                 </li>
                 <li class="nav-item" [routerLink]="['report/accounting/bank-reconciliation']"><a class="nav-link">Bank

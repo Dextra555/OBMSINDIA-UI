@@ -131,7 +131,7 @@
             <a *ngIf="this.userAccessModel.deleteAccess == true || currentUser == 'superadmin'" class="btn wlt-c-furg-btn-secondary mr-3" (click)="deleteInvoice()"> Delete</a>
             <a *ngIf="this.userAccessModel.readAccess == true || currentUser == 'superadmin'" class="btn wlt-c-furg-btn-secondary mr-3" (click)="editInvoice()" > Edit</a>
             <button *ngIf="this.userAccessModel.createAccess == true ||this.userAccessModel.updateAccess == true || currentUser == 'superadmin'" 
-            class="btn wlt-c-furg-btn-primary" type="submit"> Save</button>
+            class="btn wlt-c-furg-btn-primary" type="submit"> {{ isEditMode ? 'Update' : 'Save' }}</button>
           </div>
         </div>
       </div>

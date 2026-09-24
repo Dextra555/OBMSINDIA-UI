@@ -3,6 +3,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { SafeResourceUrl, DomSanitizer } from '@angular/platform-browser';
 import { NavigationEnd, Router } from '@angular/router';
+import { debounceTime, Subject } from 'rxjs';
 import { BranchModel } from 'src/app/model/branchModel';
 import { ClientModel } from 'src/app/model/clientModel';
 import { UserAccessModel } from 'src/app/model/userAccesModel';
@@ -31,8 +32,14 @@ export class CheckroleReportComponent implements OnInit {
   dtAdvanceDate!: string;
   url: string = environment.baseReportUrl;
   urlSafe: SafeResourceUrl | undefined;
-  NoOfHours: number = 0.00;
+  NoOfDays: number = 0.00;
   clientName: string = '';
+  branchSearchString: string = '';
+  clientSearchString: string = '';
+  filteredBranchList: any[] = [];
+  filteredClientList: any[] = [];
+  branchSearchSubject = new Subject<string>();
+  clientSearchSubject = new Subject<string>();
 
   private formatDate(date: any) {
     const d = new Date(date);
@@ -60,6 +67,17 @@ export class CheckroleReportComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Branch search debounce
+    this.branchSearchSubject.pipe(debounceTime(3000)).subscribe(() => {
+      this.branchSearchString = '';
+      this.branchModel = [...this.filteredBranchList];
+    });
+
+    // Client search debounce
+    this.clientSearchSubject.pipe(debounceTime(3000)).subscribe(() => {
+      this.clientSearchString = '';
+      this.clientModel = [...this.filteredClientList];
+    });
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         this._dataService.scrollToTop(); // Scroll to top on route change
@@ -73,6 +91,7 @@ export class CheckroleReportComponent implements OnInit {
     }
     this.getUserAccessRights(this.currentUser, 'Pay Slip Report');
   }
+
   getUserAccessRights(userName: string, screenName: string) {
     this.showLoadingSpinner = true;
     this._masterService.getUserAccessRights(userName, screenName).subscribe(
@@ -99,6 +118,7 @@ export class CheckroleReportComponent implements OnInit {
       }
     );
   }
+
   changeAdvanceDate(type: string, event: MatDatepickerInputEvent<Date>) {
     this.checkRoleForm.value.AdvanceDate = this.formatDate(`${type}: ${event.value}`);
     let dtAdvanceDate = new Date(this.checkRoleForm.value.AdvanceDate);
@@ -106,6 +126,7 @@ export class CheckroleReportComponent implements OnInit {
       new Date(dtAdvanceDate.getFullYear(), dtAdvanceDate.getMonth() + 1, 0)
     );
   }
+
   onBranchSelectionChange(event: any) {
     let dtAdvanceDate = new Date(this.checkRoleForm.value.AdvanceDate);
     this.dtAdvanceDate = this.formatDate(
@@ -113,13 +134,15 @@ export class CheckroleReportComponent implements OnInit {
     );
     this._masterService.getClientMsterListByBranch(event.value).subscribe(
       (data) => {
-        this.clientModel = data
+        this.clientModel = data;
+        this.filteredClientList = [...this.clientModel];
       },
       (error) => {
         this.handleErrors(error);
       }
     );
   }
+
   onClientSelectionChange(event: any) {
     // Find the selected client from clientModel using event.value
     const selectedClient = this.clientModel.find(client => client.Code === event.value);
@@ -131,7 +154,7 @@ export class CheckroleReportComponent implements OnInit {
       .clientInvoiceCalculation(this.checkRoleForm.get("BranchCode")?.value, event.value, this.dtAdvanceDate)
       .subscribe({
         next: (result) => {
-          this.NoOfHours = result.NoOfHours;
+          this.NoOfDays = result.NoOfDays;
         },
         error: (err) => {
           console.error('Error fetching invoice:', err);
@@ -143,13 +166,46 @@ export class CheckroleReportComponent implements OnInit {
     this.showLoadingSpinner = true;
     this._masterService.GetBranchListByUserName(userName).subscribe(
       (data) => {
-        this.branchModel = data
+        this.branchModel = data;
+        this.filteredBranchList = [...this.branchModel];
         this.showLoadingSpinner = false;
       },
       (error) => {
         this.handleErrors(error);
       }
     );
+  }
+
+  searchDropdown(searchString: string, list: any[], key: string): any[] {
+    if (!searchString) return [...list]; // if empty, return full list
+    return list.filter(item => item[key].toLowerCase().includes(searchString.toLowerCase()));
+  }
+
+  onKeyDropdown(
+    event: KeyboardEvent,
+    searchStringProp: 'branchSearchString' | 'clientSearchString',
+    listProp: 'branchModel' | 'clientModel',
+    filteredListProp: 'filteredBranchList' | 'filteredClientList',
+    keyName: string,
+    subject: Subject<string>
+  ) {
+    const key = event.key;
+
+    this[searchStringProp] = this[searchStringProp] || '';
+
+    if (key.length === 1) {
+      this[searchStringProp] += key.toLowerCase();
+    } else if (key === 'Backspace') {
+      this[searchStringProp] = this[searchStringProp].slice(0, -1);
+    } else if (key === 'Escape') {
+      this[searchStringProp] = '';
+    }
+
+    // Apply filter immediately
+    this[listProp] = this.searchDropdown(this[searchStringProp], this[filteredListProp], keyName);
+
+    // Trigger debounce to reset after 3s of inactivity
+    subject.next(this[searchStringProp]);
   }
 
   getReportShowClick(): void {
@@ -160,10 +216,10 @@ export class CheckroleReportComponent implements OnInit {
       this.url += 'Payroll/BranchCheckRoleReport.aspx?';
     }
     this.url += "LoginID=" + this.currentUser;
-    this.url += "&Branch=" + this.checkRoleForm.get("BranchCode")?.value
-    this.url += "&Client=" + this.clientName
-    this.url += "&Period=" + this.dtAdvanceDate
-    this.url += "&NoOfHours=" + this.NoOfHours
+    this.url += "&Branch=" + this.checkRoleForm.get("BranchCode")?.value;
+    this.url += "&Client=" + (this.checkRoleForm.get("ClientCode")?.value ?? '');
+    this.url += "&Period=" + this.dtAdvanceDate;
+    this.url += "&NoOfDays=" + this.NoOfDays;
 
     this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.url);
   }
@@ -173,6 +229,7 @@ export class CheckroleReportComponent implements OnInit {
       this.hideSpinner();
     }
   };
+
   hideSpinner() {
     this.showLoadingSpinner = false;
   }

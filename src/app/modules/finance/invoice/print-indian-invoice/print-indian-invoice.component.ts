@@ -4,6 +4,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { DatasharingService } from 'src/app/service/datasharing.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-print-indian-invoice',
@@ -35,7 +36,6 @@ export class PrintIndianInvoiceComponent implements OnInit {
     }
     this._activatedRoute.queryParams.subscribe((params) => {
       if (params['invoiceId'] != undefined) {
-        this.loadInvoiceTemplate();
         this.generateInvoiceHtml(params['invoiceId']);
       }
     });
@@ -44,12 +44,12 @@ export class PrintIndianInvoiceComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  loadInvoiceTemplate() {
+  loadInvoiceTemplate(): Promise<void> {
     const templatePath = 'assets/invoice-templates/invoice.html';
-    this.http.get(templatePath, { responseType: 'text' }).subscribe(
+    return firstValueFrom(this.http.get(templatePath, { responseType: 'text' })).then(
       (htmlTemplate: string) => {
         // Load logo and convert to base64
-        this.loadLogoBase64().then(logoBase64 => {
+        return this.loadLogoBase64().then(logoBase64 => {
           this.invoiceTemplate = htmlTemplate.replace(
             'src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="',
             `src="${logoBase64}"`
@@ -87,11 +87,16 @@ export class PrintIndianInvoiceComponent implements OnInit {
     this.errorMessage = '';
 
     this.http.get(environment.baseUrl + 'Finance/GetIndianInvoiceReportData?invoiceId=' + invoiceId).subscribe(
-      (data: any) => {
+      async (data: any) => {
         this.showLoadingSpinner = false;
         if (data.error) {
           this.errorMessage = data.error;
           return;
+        }
+
+        // Wait for the template to be ready before rendering
+        if (!this.invoiceTemplate) {
+          await this.loadInvoiceTemplate();
         }
 
         const html = this.renderInvoiceHtml(data);
@@ -153,6 +158,15 @@ export class PrintIndianInvoiceComponent implements OnInit {
     const client = data.client || {};
     const totals = data.totals || {};
     const statutory = data.statutory || {};
+
+    // Recalculate grandTotal using the same Math.round logic as formatCurrency
+    // so Total + CGST + SGST displayed values always match GrandTotal
+    const isIntraStateCheck = totals.isIntraState || false;
+    const roundedSubtotal  = Math.round(parseFloat(totals.subtotal)  || 0);
+    const roundedCGST      = isIntraStateCheck ? Math.round(parseFloat(totals.cgstAmount) || 0) : 0;
+    const roundedSGST      = isIntraStateCheck ? Math.round(parseFloat(totals.sgstAmount) || 0) : 0;
+    const roundedIGST      = isIntraStateCheck ? 0 : Math.round(parseFloat(totals.igstAmount) || 0);
+    totals.grandTotal      = roundedSubtotal + roundedCGST + roundedSGST + roundedIGST;
     const declaration = data.declaration || {};
     const termsAndConditions = data.termsAndConditions || {};
     const isIntraState = totals.isIntraState || false; // Check if intra-state
