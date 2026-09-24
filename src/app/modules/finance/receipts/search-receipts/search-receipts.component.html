@@ -22,7 +22,7 @@
                         <mat-label>Branch</mat-label>
                         <mat-select formControlName="Branch">
                             <mat-option [value]="0"></mat-option>
-                            <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Name}}</mat-option>
+                            <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}}</mat-option>
                         </mat-select>
                     </mat-form-field>
                 </div>

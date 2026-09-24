@@ -789,7 +789,8 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
           return;
         }
         this.handleErrors(err);
-        Swal.fire('Error', 'Failed to save agreement details', 'error');
+        const errMsg = err?.error?.Message || err?.error?.message || err?.message || 'Failed to save agreement details';
+        Swal.fire('Error', errMsg, 'error');
       }
     });
   }

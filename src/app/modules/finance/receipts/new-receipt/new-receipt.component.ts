@@ -886,7 +886,9 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-              this.branchList = d['branchList'];
+              this.branchList = (d['branchList'] || []).sort((a: any, b: any) =>
+                (a.Code || '').localeCompare(b.Code || '')
+              );
 
 
 

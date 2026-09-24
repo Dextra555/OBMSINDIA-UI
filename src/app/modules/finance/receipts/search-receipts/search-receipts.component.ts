@@ -122,7 +122,9 @@ export class SearchReceiptsComponent implements OnInit {
               
               (results: { branchList: any; bankList: any }) => {
                 // Handle the responses
-                this.branchList = results.branchList;
+                this.branchList = (results.branchList || []).sort((a: any, b: any) =>
+                  (a.Code || '').localeCompare(b.Code || '')
+                );
                 this.bankList = results.bankList;
               },
               (error) => {
