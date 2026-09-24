@@ -234,7 +234,7 @@
 
                 <mat-form-field appearance="outline" style="width: 45px !important;">
 
-                  <input type="text" formControlName="NoOfGuards" (input)="DetailRowChange()" matInput placeholder=""
+                  <input type="text" formControlName="NoOfGuards" (input)="onNoOfGuardsChange()" matInput placeholder=""
                          [attr.readonly]="type === 'LS' ? true : null"
                          [style.background-color]="type === 'LS' ? '#e9ecef' : null"
                          autocomplete="off">
@@ -283,7 +283,7 @@
 
                 <mat-form-field appearance="outline" style="width: 45px !important;">
 
-                  <input type="text" formControlName="NoOfDays" (input)="DetailRowChange()" matInput placeholder=""
+                  <input type="text" formControlName="NoOfDays" (input)="onNoOfDaysChange()" matInput placeholder=""
                          [attr.readonly]="type === 'LS' ? true : null"
                          [style.background-color]="type === 'LS' ? '#e9ecef' : null"
                          autocomplete="off">
@@ -299,7 +299,7 @@
 
                   <mat-label>Mo.Days</mat-label>
 
-                  <input type="text" formControlName="MonthDays" (input)="DetailRowChange()" matInput
+                  <input type="text" formControlName="MonthDays" (input)="onMonthDaysChange()" matInput
                          [placeholder]="type === 'D' ? '' : '-'"
                          autocomplete="off"
                          [attr.readonly]="type !== 'D' ? true : null"

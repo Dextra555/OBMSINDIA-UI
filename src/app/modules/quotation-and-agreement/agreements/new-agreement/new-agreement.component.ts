@@ -173,6 +173,9 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
   isFollowCalendarManuallyChanged: boolean = false;
   isDiscountManuallyEdited: boolean = false;
+  /** True while editRow() is patching saved values into the form.
+   *  DetailRowChange() must NOT overwrite MonthTotal during this window. */
+  isPopulatingEditRow: boolean = false;
 
   detailEdit: boolean = false;
 
@@ -1336,6 +1339,9 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
     }
 
     // Patch all form values AFTER disabling — patchValue does NOT re-enable disabled controls
+    // Guard: while we populate the form from saved data, DetailRowChange() must not
+    // overwrite the existing MonthTotal with a freshly recalculated value.
+    this.isPopulatingEditRow = true;
     this.frm.get('details')?.patchValue(row);
 
     // Post-patch adjustments per type
@@ -1370,6 +1376,9 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
     // Mark as manually edited so DetailRowChange() does not overwrite the loaded DiscountAmount
     // with an auto-recalculated value while the user hasn't touched anything yet.
     this.isDiscountManuallyEdited = row.HasDiscount && (parseFloat(row.DiscountAmount as any) || 0) > 0;
+
+    // Re-enable normal recalculation — the form is now fully populated with saved values.
+    this.isPopulatingEditRow = false;
 
   }
 
@@ -2011,6 +2020,8 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
     // District mode: PerMonth input just triggers recalculation — no PerDay/Rate derivation needed
     if (this.type === 'D') {
+      // User explicitly changed PerMonth — allow MonthTotal to recalculate
+      this.detailEdit = false;
       this.DetailRowChange();
       return;
     }
@@ -2108,6 +2119,27 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
     // Days changed — reset manual flag so auto-calc takes over again
     this.isDiscountManuallyEdited = false;
     // Trigger DetailRowChange to recalculate discount based on Working Days - Discount Days
+    this.DetailRowChange();
+  }
+
+  /** Called when NoOfGuards input changes.
+   *  User explicitly changed a MonthTotal-driving field — allow recalculation. */
+  onNoOfGuardsChange(): void {
+    this.detailEdit = false;
+    this.DetailRowChange();
+  }
+
+  /** Called when NoOfDays (Working Days) input changes.
+   *  User explicitly changed a MonthTotal-driving field — allow recalculation. */
+  onNoOfDaysChange(): void {
+    this.detailEdit = false;
+    this.DetailRowChange();
+  }
+
+  /** Called when MonthDays input changes (District type only).
+   *  User explicitly changed a MonthTotal-driving field — allow recalculation. */
+  onMonthDaysChange(): void {
+    this.detailEdit = false;
     this.DetailRowChange();
   }
 
@@ -2220,8 +2252,16 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
       // Calculate PerDay = PerMonth / MonthDays and save it to the form field
       const perDayCalc = monthDays > 0 ? perMonth / monthDays : 0;
       this.frm.get('details.PerDay')?.setValue(this.formatCurrency(perDayCalc));
-      vMonthTotal = Math.round(perMonth / monthDays * noOfDays);
-      this.frm.get('details.MonthTotal')?.setValue(this.formatCurrency(vMonthTotal));
+      if (this.isPopulatingEditRow || this.detailEdit) {
+        // editRow() is loading a saved row, OR the user is editing an existing row
+        // (e.g. clicking Discount, changing Tax) — preserve the saved MonthTotal instead of
+        // recalculating it. Read the current form value so downstream
+        // YearTotal / Discount / Tax calculations still use the correct base.
+        vMonthTotal = parseFloat(this.frm.get('details.MonthTotal')?.value) || 0;
+      } else {
+        vMonthTotal = Math.round(perMonth / monthDays * noOfDays);
+        this.frm.get('details.MonthTotal')?.setValue(this.formatCurrency(vMonthTotal));
+      }
     } else if (parseFloat(tPerMonth) > 0 && this.type !== 'LS') {
       if (followCalendar) {
         // Follow Calendar = true: Use full month rate
@@ -2239,7 +2279,13 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
           vMonthTotal = parseFloat(tNoOfGuards) * perDayRate * parseFloat(tNoOfDays);
         }
       }
-      this.frm.get('details.MonthTotal')?.setValue(this.formatCurrency(Math.round(vMonthTotal)));
+      if (this.isPopulatingEditRow || this.detailEdit) {
+        // editRow() is loading a saved row, OR the user is editing an existing row —
+        // preserve the saved MonthTotal.
+        vMonthTotal = parseFloat(this.frm.get('details.MonthTotal')?.value) || 0;
+      } else {
+        this.frm.get('details.MonthTotal')?.setValue(this.formatCurrency(Math.round(vMonthTotal)));
+      }
     } else if (this.type == 'S') {
 
       console.log("tNoOfGuards" + tNoOfGuards);
@@ -2282,7 +2328,12 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
       if (discountDays > 0 && !this.isDiscountManuallyEdited) {
         // Auto-calculate from Days: DiscountAmount = PerMonth / WorkingDays * DiscountDays
         const perMonthVal = parseFloat(tPerMonth) || 0;
-        const workingDays = parseFloat(tNoOfDays) || parseFloat(this.frm.get('details.MonthDays')?.value) || daysInMonth;
+        // For District type the per-day rate is PerMonth / MonthDays (calendar days),
+        // which is the same divisor used for MonthTotal.  Using tNoOfDays (working days)
+        // here would inflate the per-day rate and produce an incorrect discount amount.
+        const workingDays = this.type === 'D'
+          ? (parseFloat(this.frm.get('details.MonthDays')?.value) || daysInMonth)
+          : (parseFloat(tNoOfDays) || parseFloat(this.frm.get('details.MonthDays')?.value) || daysInMonth);
         if (perMonthVal > 0 && workingDays > 0) {
           const autoDiscount = (perMonthVal / workingDays) * discountDays;
           this.frm.get('details.DiscountAmount')?.setValue(this.formatCurrency(autoDiscount));
