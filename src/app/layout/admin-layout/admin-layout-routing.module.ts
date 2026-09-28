@@ -282,6 +282,7 @@ import { AccountingProfitAndLossComponent } from 'src/app/modules/report/account
 import { BalanceSheetReportComponent } from 'src/app/modules/report/accounting/balance-sheet-report/balance-sheet-report.component';
 
 import { ProfitAndLossWithoutContraComponent } from 'src/app/modules/report/accounting/profit-and-loss-without-contra/profit-and-loss-without-contra.component';
+import { PlYearReportComponent } from 'src/app/modules/report/accounting/pl-year-report/pl-year-report.component';
 
 import { TrailBalanceReportComponent } from 'src/app/modules/report/accounting/trail-balance-report/trail-balance-report.component';
 
@@ -748,6 +749,8 @@ const routes: Routes = [
   { path: 'report/accounting/accounting-profit-and-loss', component: AccountingProfitAndLossComponent, canActivate: [AuthGuard] },
 
   { path: 'report/accounting/profit-and-loss-without-contra', component: ProfitAndLossWithoutContraComponent, canActivate: [AuthGuard] },
+
+  { path: 'report/accounting/pl-year-report', component: PlYearReportComponent, canActivate: [AuthGuard] },
 
   { path: 'report/accounting/bank-reconciliation', component: BankReconciliationReportComponent, canActivate: [AuthGuard] },
 

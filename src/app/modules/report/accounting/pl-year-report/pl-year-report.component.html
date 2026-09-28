@@ -1,0 +1,107 @@
+<div class="wlt-c-furg-content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-12 col-sm-12 col-md-5 col-lg-5">
+        <h1 class="mb-1">Report / Accounting / P&amp;L Year Report</h1>
+      </div>
+      <div class="col-12 col-sm-12 col-md-7 col-lg-7 my-1">
+        <ol class="breadcrumb float-md-right">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Report</a></li>
+          <li class="breadcrumb-item">Accounting</li>
+          <li class="breadcrumb-item active">P&amp;L Year Report</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<mat-card class="report-card">
+  <mat-card-content>
+
+    <!-- Access denied -->
+    <div *ngIf="warningMessage !== ''">
+      <mat-label style="color:red" [innerHTML]="warningMessage"></mat-label>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Year-wise P&L PDF Form                                        -->
+    <!-- ============================================================ -->
+    <div *ngIf="warningMessage === ''">
+
+      <form [formGroup]="yearForm" (ngSubmit)="generateYearPdf()">
+        <div class="payment-period-container"
+             style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+
+          <!-- From Year -->
+          <label style="font-weight: bold; white-space: nowrap; margin: 0px 5px 17px 13px;">
+            From Year:
+          </label>
+          <mat-form-field appearance="outline" style="max-width: 145px;">
+            <mat-label>From Year</mat-label>
+            <mat-select formControlName="FromYear" [panelClass]="'custom-dropdown-panel'">
+              <mat-option *ngFor="let y of yearList" [value]="y">{{ y }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- To Year -->
+          <label style="font-weight: bold; white-space: nowrap; margin: 0px 5px 17px 8px;">
+            To Year:
+          </label>
+          <mat-form-field appearance="outline" style="max-width: 145px;">
+            <mat-label>To Year</mat-label>
+            <mat-select formControlName="ToYear" [panelClass]="'custom-dropdown-panel'">
+              <mat-option *ngFor="let y of yearList" [value]="y">{{ y }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Generate PDF button -->
+          <div style="margin-bottom: 17px;">
+            <button type="submit"
+              class="btn wlt-c-furg-btn-primary m-1"
+              [disabled]="yearLoadingSpinner || excelLoadingSpinner"
+              style="min-width: 190px;">
+              <span *ngIf="!yearLoadingSpinner">📄 Generate Year-wise PDF</span>
+              <span *ngIf="yearLoadingSpinner">
+                <span class="spinner-border spinner-border-sm"
+                      role="status" aria-hidden="true"></span>
+                &nbsp;Generating…
+              </span>
+            </button>
+          </div>
+
+          <!-- Export Excel button -->
+          <div style="margin-bottom: 17px;">
+            <button type="button"
+              class="btn btn-success m-1"
+              (click)="exportExcelYear()"
+              [disabled]="excelLoadingSpinner || yearLoadingSpinner"
+              style="min-width: 190px;">
+              <span *ngIf="!excelLoadingSpinner">📊 Export Excel</span>
+              <span *ngIf="excelLoadingSpinner">
+                <span class="spinner-border spinner-border-sm"
+                      role="status" aria-hidden="true"></span>
+                &nbsp;Exporting…
+              </span>
+            </button>
+          </div>
+
+        </div>
+      </form>
+
+      <!-- Validation / error message -->
+      <div *ngIf="yearErrorMessage !== ''" style="margin-left: 13px; margin-top: 2px;">
+        <mat-label style="color: red; font-size: 12px;">{{ yearErrorMessage }}</mat-label>
+      </div>
+
+    </div>
+
+  </mat-card-content>
+</mat-card>
+
+<!-- Loading spinner -->
+<div [style.display]="showLoadingSpinner ? 'block' : 'none'"
+     style="margin-top:-10.5rem;display:block;margin-left:-6.5rem;">
+  <div class="d-flex justify-content-center">
+    <span class="loader"></span>
+  </div>
+</div>

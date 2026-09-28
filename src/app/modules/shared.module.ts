@@ -207,6 +207,7 @@ import { VoucherFilterReportComponent } from './payroll/voucher-filter-report/vo
 import { AccountingProfitAndLossComponent } from './report/accounting/accounting-profit-and-loss/accounting-profit-and-loss.component';
 import { BalanceSheetReportComponent } from './report/accounting/balance-sheet-report/balance-sheet-report.component';
 import { ProfitAndLossWithoutContraComponent } from './report/accounting/profit-and-loss-without-contra/profit-and-loss-without-contra.component';
+import { PlYearReportComponent } from './report/accounting/pl-year-report/pl-year-report.component';
 import { TrailBalanceReportComponent } from './report/accounting/trail-balance-report/trail-balance-report.component';
 import { BankReconciliationReportComponent } from './report/accounting/bank-reconciliation-report/bank-reconciliation-report.component';
 import { GeneralLedgerReportComponent } from './report/accounting/general-ledger-report/general-ledger-report.component';
@@ -370,6 +371,7 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     AccountingProfitAndLossComponent,
     BalanceSheetReportComponent,
     ProfitAndLossWithoutContraComponent,
+    PlYearReportComponent,
     TrailBalanceReportComponent,
     BankReconciliationReportComponent,
     GeneralLedgerReportComponent,

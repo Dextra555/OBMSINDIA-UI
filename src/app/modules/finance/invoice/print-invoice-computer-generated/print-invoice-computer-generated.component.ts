@@ -124,6 +124,9 @@ export class PrintInvoiceComputerGeneratedComponent implements OnInit {
       return Math.round(num).toLocaleString('en-IN');
     };
 
+    // Sum Amount column values from data rows (rounded per row, same as display)
+    let amountColumnTotal = 0;
+
     if (data.dataRows && data.dataRows.length > 0) {
       data.dataRows.forEach((row: any, index: number) => {
         const sno = (index + 1).toString();
@@ -134,7 +137,9 @@ export class PrintInvoiceComputerGeneratedComponent implements OnInit {
 
         // Use Indian formatting for rate and amount
         const rateFormatted = formatCurrency(row.rate || 0);
-        const amountFormatted = formatCurrency(row.amount || 0);
+        const rowAmount = Math.round(parseFloat(row.amount) || 0);
+        amountColumnTotal += rowAmount;
+        const amountFormatted = rowAmount.toLocaleString('en-IN');
 
         dataRowsHtml += `
         <tr>
@@ -159,15 +164,17 @@ export class PrintInvoiceComputerGeneratedComponent implements OnInit {
     const statutory = data.statutory || {};
     const declaration = data.declaration || {};
     const termsAndConditions = data.termsAndConditions || {};
-    const isIntraState = totals.isIntraState || false; // NEW: Check if intra-state
+    const isIntraState = totals.isIntraState || false; // Check if intra-state
 
-    // Recalculate grandTotal using the same Math.round logic as formatCurrency
-    // so Total + CGST + SGST displayed values always match GrandTotal
-    const roundedSubtotal  = Math.round(parseFloat(totals.subtotal)  || 0);
+    // TOTAL = sum of Amount column values (what the user sees per row)
+    // GrandTotal = TOTAL + CGST + SGST (or IGST)
+    const roundedSubtotal  = amountColumnTotal;
     const roundedCGST      = isIntraState ? Math.round(parseFloat(totals.cgstAmount) || 0) : 0;
     const roundedSGST      = isIntraState ? Math.round(parseFloat(totals.sgstAmount) || 0) : 0;
     const roundedIGST      = isIntraState ? 0 : Math.round(parseFloat(totals.igstAmount) || 0);
     totals.grandTotal      = roundedSubtotal + roundedCGST + roundedSGST + roundedIGST;
+    // Override taxableValue with the sum of displayed Amount values so TOTAL row matches column sum
+    totals.taxableValue    = roundedSubtotal;
 
     let html = this.invoiceTemplate
       // Document Type

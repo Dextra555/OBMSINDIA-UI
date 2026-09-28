@@ -21,8 +21,9 @@
     <form [formGroup]="frm" (ngSubmit)="onSubmit()">
       <div class="row" *ngIf="warningMessage === ''">
 
-        <!-- From Date -->
         <div class="payment-period-container" style="display: flex; align-items: center; gap: 8px;">
+
+          <!-- From Date -->
           <label style="font-weight: bold; white-space: nowrap; margin: 0px 5px 17px 13px;">
             From:
           </label>
@@ -50,14 +51,15 @@
           <div style="margin-bottom: 17px;">
             <button class="btn wlt-c-furg-btn-primary m-1">Show</button>
           </div>
-          <!-- Excel Export Button -->
+
+          <!-- Excel Export Button — only shows after Show is clicked -->
           <div style="margin-bottom: 17px;" *ngIf="reportUrl !== ''">
             <button type="button" class="btn btn-success m-1" (click)="exportExcel()">
               <i class="fa fa-file-excel-o"></i> Export Excel
             </button>
           </div>
-        </div>
 
+        </div>
       </div>
     </form>
 

@@ -26,6 +26,7 @@
     "bootstrap": "^4.0.0",
     "chart.js": "^3.8.0",
     "crypto-js": "^4.2.0",
+    "exceljs": "^4.4.0",
     "font-awesome": "^4.7.0",
     "html2canvas": "^1.4.1",
     "jquery": "^3.5.1",

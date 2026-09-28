@@ -1486,19 +1486,15 @@ export class PayrollModuleService {
 
       // A client-side or network error occurred. Handle it accordingly.
 
-      errorMessage = `An error occurred Cleint side: ${error.error}`;
+      errorMessage = `An error occurred (client side): ${error.error.message}`;
 
     } else {
 
       // The backend returned an unsuccessful response code.
-
-      //errorMessage = `An error occurred Server side: ${error.status}, body was: ${error.error}`;
+      const serverError = error.error?.error || error.error?.message || error.message || JSON.stringify(error.error);
+      errorMessage = `Server error (${error.status}): ${serverError}`;
 
     }
-
-    // Return an observable with a user-facing error message.
-
-    errorMessage += '\n This is the problem with service. We are notified & working on it. Please try again later..';
 
     return throwError(errorMessage);
 

@@ -22,7 +22,7 @@ export class ProfitAndLossWithoutContraComponent implements OnInit {
   warningMessage: string = '';
   showLoadingSpinner: boolean = false;
   userAccessModel!: UserAccessModel;
-  reportUrl: string = '';   // holds the raw URL for Excel export
+  reportUrl: string = '';
 
   constructor(
     public sanitizer: DomSanitizer,
@@ -37,7 +37,7 @@ export class ProfitAndLossWithoutContraComponent implements OnInit {
     });
 
     this.userAccessModel = {
-      readAccess: false,
+      readAccess:   false,
       updateAccess: false,
       deleteAccess: false,
       createAccess: false
@@ -93,15 +93,12 @@ export class ProfitAndLossWithoutContraComponent implements OnInit {
     const fromDate = this.toIsoDate(new Date(this.frm.get('FromDate')?.value));
     const toDate   = this.toIsoDate(new Date(this.frm.get('ToDate')?.value));
 
-    // Store raw URL for Excel export reuse
     this.reportUrl = `${environment.baseReportUrl}${this.currentUrl}FromDate=${fromDate}&ToDate=${toDate}`;
-
-    this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.reportUrl);
+    this.urlSafe   = this.sanitizer.bypassSecurityTrustResourceUrl(this.reportUrl);
   }
 
   exportExcel() {
     if (!this.reportUrl) return;
-    // Append format=excel — browser will download the file
     window.open(this.reportUrl + '&format=excel', '_blank');
   }
 
@@ -116,7 +113,5 @@ export class ProfitAndLossWithoutContraComponent implements OnInit {
     if (error != null && error !== '') { this.hideSpinner(); }
   }
 
-  hideSpinner() {
-    this.showLoadingSpinner = false;
-  }
+  hideSpinner() { this.showLoadingSpinner = false; }
 }

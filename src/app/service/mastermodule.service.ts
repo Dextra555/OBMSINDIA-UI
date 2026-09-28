@@ -669,4 +669,18 @@ export class MastermoduleService {
     // Return an observable with a user-facing error message.
     return throwError(errorMessage);
   }
+
+  // ── Year-wise Profit & Loss ─────────────────────────────────────────────
+  /**
+   * Returns year-wise aggregated P&L data for the range [fromYear, toYear].
+   * Calls GET Finance/GetYearlyProfitLoss.
+   * Does NOT affect the existing getList / getListWithBranch methods.
+   */
+  getYearlyProfitLoss(fromYear: number, toYear: number): Observable<any> {
+    const params = new HttpParams()
+      .set('fromYear', fromYear.toString())
+      .set('toYear',   toYear.toString());
+    return this.httpClient.get<any>(`${this.apiUrl}Finance/GetYearlyProfitLoss`, { params })
+      .pipe(catchError(this.errorHandle));
+  }
 }

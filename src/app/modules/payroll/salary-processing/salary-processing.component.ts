@@ -449,7 +449,13 @@ export class SalaryProcessingComponent implements OnInit {
 
     if (!salaryPeriod || !branchCode || !remarks || employeeType === 'None') {
 
-      this.showMessage(`Please complete all mandatory fields before processing.`, 'warning', 'Warning Message');
+      const missing = [];
+      if (!salaryPeriod) missing.push('Salary Period');
+      if (!branchCode) missing.push('Branch Code');
+      if (employeeType === 'None') missing.push('Employee Type (Guard or Staff)');
+      if (!remarks) missing.push('Remarks');
+
+      this.showMessage(`Please complete: ${missing.join(', ')}`, 'warning', 'Warning Message');
 
       return;
 
@@ -477,11 +483,7 @@ export class SalaryProcessingComponent implements OnInit {
 
     const timeStamp = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-    const taggedRemarks = `[${this.currentUser} ${dateStamp} ${timeStamp}] ${remarks}`;
-
-    const existingRemarks = this.salaryProcessingForm.get('LastRemarks')?.value || '';
-
-    remarks = existingRemarks ? `${existingRemarks}<br>${taggedRemarks}` : taggedRemarks;
+    remarks = `[${this.currentUser} ${dateStamp} ${timeStamp}] ${remarks}`;
 
 
 
