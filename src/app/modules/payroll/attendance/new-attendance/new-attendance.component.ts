@@ -347,9 +347,20 @@ export class NewAttendanceComponent implements OnInit {
     );
 
     if (this.attendancePeriod != null && this.attendancePeriod != '') {
-      this._payrollService.getEmployeeDetails(this.attendanceForm.value.BranchCode, this.attendanceForm.value.EmployeeNo).subscribe(
+      // Pass dtAdvanceDate so the backend can find the correct EmployeeHistory row
+      // (the one covering this branch during the selected attendance month).
+      this._payrollService.getEmployeeDetails(this.attendanceForm.value.BranchCode, this.attendanceForm.value.EmployeeNo, this.dtAdvanceDate).subscribe(
         (data) => {
           const employeeDetails = data[0];
+
+          // Extract Employee History effective dates for this branch + period.
+          // These are set only for transferred employees; null for employees who
+          // have always been at this branch.
+          const historyStartDate: Date | null = employeeDetails.Emp_StartDate
+            ? new Date(employeeDetails.Emp_StartDate) : null;
+          const historyEndDate: Date | null = employeeDetails.Emp_EndDate
+            ? new Date(employeeDetails.Emp_EndDate) : null;
+
           // Patch employee details
           this.attendanceForm.patchValue({
             EmployeeID: employeeDetails.EMP_ID,
@@ -474,6 +485,31 @@ export class NewAttendanceComponent implements OnInit {
                   this.dtAttendanceDate.getFullYear() === joinDate.getFullYear()) {
                 iStartDay = joinDate.getDate();
               }
+
+              // ── Employee History clamping ────────────────────────────────────────
+              // For transferred employees the backend returns Emp_StartDate (first day
+              // at this branch) and Emp_EndDate (last day at this branch, NULL = active).
+              // These override the simple join/resign clamp above when they fall inside
+              // the selected attendance month, because a transferred employee may have
+              // joined the company long ago but only started at THIS branch mid-month.
+              if (!this.currentAttendancePeriodResult?.IsCustom) {
+                if (historyStartDate &&
+                    historyStartDate.getMonth() === this.dtAttendanceDate.getMonth() &&
+                    historyStartDate.getFullYear() === this.dtAttendanceDate.getFullYear()) {
+                  // Branch effective start falls inside this attendance month —
+                  // grid must begin from that day (overrides join-date start).
+                  iStartDay = Math.max(iStartDay, historyStartDate.getDate());
+                }
+
+                if (historyEndDate &&
+                    historyEndDate.getMonth() === this.dtAttendanceDate.getMonth() &&
+                    historyEndDate.getFullYear() === this.dtAttendanceDate.getFullYear()) {
+                  // Branch effective end falls inside this attendance month —
+                  // grid must not extend beyond that day (overrides full-month end).
+                  iNoOfDays = Math.min(iNoOfDays, historyEndDate.getDate());
+                }
+              }
+              // ── End Employee History clamping ────────────────────────────────────
 
               // Handle attendance data
               if (attendanceData) {

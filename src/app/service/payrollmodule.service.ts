@@ -303,16 +303,13 @@ export class PayrollModuleService {
     }).pipe(catchError(this.errorHandle));
   }
 
-  getEmployeeDetails(branchCode: string, employeeNo: string): Observable<any> {
-
-    return this.httpClient.get<any>(this.apiUrl + 'payroll/GetEmployeeDetails', {
-
-      params: { branchCode: branchCode.toString(), employeeNo: employeeNo }
-
-    })
-
+  getEmployeeDetails(branchCode: string, employeeNo: string, attendancePeriod?: string): Observable<any> {
+    const params: any = { branchCode: branchCode.toString(), employeeNo: employeeNo };
+    if (attendancePeriod) {
+      params['attendancePeriod'] = attendancePeriod;
+    }
+    return this.httpClient.get<any>(this.apiUrl + 'payroll/GetEmployeeDetails', { params })
       .pipe(catchError(this.errorHandle));
-
   }
 
   calculateAge(birthDate: Date): Observable<any> {
