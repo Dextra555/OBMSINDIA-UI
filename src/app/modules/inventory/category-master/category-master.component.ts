@@ -118,6 +118,8 @@ export class CategoryMasterComponent implements AfterViewInit {
       value = "Debtor";
     } else if (cat == 'I') {
       value = "Investor";
+    } else if (cat == 'O') {
+      value = "Other";
     }
     return value
 
