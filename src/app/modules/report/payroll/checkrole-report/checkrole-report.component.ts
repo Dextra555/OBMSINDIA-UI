@@ -210,14 +210,16 @@ export class CheckroleReportComponent implements OnInit {
 
   getReportShowClick(): void {
     this.url = environment.baseReportUrl;
-    if (this.checkRoleForm.get("ClientCode")?.value != '' && this.checkRoleForm.get("ClientCode")?.value != undefined) {
+    const clientCode = this.checkRoleForm.get("ClientCode")?.value;
+    if (clientCode != '' && clientCode != null && clientCode != undefined && clientCode != 0) {
       this.url += 'Payroll/CheckRoleReport.aspx?';
     } else {
       this.url += 'Payroll/BranchCheckRoleReport.aspx?';
     }
     this.url += "LoginID=" + this.currentUser;
     this.url += "&Branch=" + this.checkRoleForm.get("BranchCode")?.value;
-    this.url += "&Client=" + (this.checkRoleForm.get("ClientCode")?.value ?? '');
+    // Client Name pass பண்ணணும் — Code இல்லை
+    this.url += "&Client=" + encodeURIComponent(this.clientName ?? '');
     this.url += "&Period=" + this.dtAdvanceDate;
     this.url += "&NoOfDays=" + this.NoOfDays;
 

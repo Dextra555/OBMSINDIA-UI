@@ -112,14 +112,14 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
     return `LoginID=${this.currentUser}&StartDate=${startDate}&EndDate=${endDate}&Branch=0`;
   }
 
-  /** Show button — opens the existing detail Crystal Report */
+  /** Show button — opens the India Sales Invoice Report */
   onShowDetail() {
     if (this.frm.invalid) {
       return;
     }
     const baseUrl = environment.baseReportUrl + this.currentUrl;
     this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(
-      baseUrl + 'SalesInvoiceCollectionReport.aspx?' + this.buildQueryParams()
+      baseUrl + 'SalesInvoiceReport.aspx?' + this.buildQueryParams()
     );
   }
 

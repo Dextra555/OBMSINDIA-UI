@@ -171,6 +171,7 @@ export class GstStatementReportComponent implements OnInit {
   exportToExcel() {
     if (!this.dataSource || this.dataSource.length === 0) return;
 
+    // Use actual numbers (not strings) so Excel treats them as numeric cells
     const exportData = this.dataSource.map((r: any, i: number) => ({
       'S.No': i + 1,
       'Invoice No': r.invoiceNo,
@@ -178,17 +179,50 @@ export class GstStatementReportComponent implements OnInit {
       'Client Name': r.clientName,
       'Client GSTIN': r.clientGSTIN,
       'Client State': r.clientState,
-      'Taxable Amount': Number(r.taxableAmount).toFixed(2),
+      'Taxable Amount': Number(r.taxableAmount) || 0,
       'GST Rate (%)': r.gstRateDisplay || (r.gstRate + '%'),
-      'CGST': Number(r.cgst).toFixed(2),
-      'SGST': Number(r.sgst).toFixed(2),
-      'IGST': Number(r.igst).toFixed(2),
-      'Total GST': Number(r.totalGST).toFixed(2),
-      'Total Amount': Number(r.totalAmount).toFixed(2),
+      'CGST': Number(r.cgst) || 0,
+      'SGST': Number(r.sgst) || 0,
+      'IGST': Number(r.igst) || 0,
+      'Total GST': Number(r.totalGST) || 0,
+      'Total Amount': Number(r.totalAmount) || 0,
       'Supply Type': r.isIntraState ? 'Intra-State' : 'Inter-State'
     }));
 
+    // Totals row — all numeric columns are real numbers so Excel SUM works
+    const totalsRow: any = {
+      'S.No': '',
+      'Invoice No': '',
+      'Invoice Date': '',
+      'Client Name': 'TOTAL',
+      'Client GSTIN': '',
+      'Client State': '',
+      'Taxable Amount': this.totalTaxable,
+      'GST Rate (%)': '',
+      'CGST': this.totalCGST,
+      'SGST': this.totalSGST,
+      'IGST': this.totalIGST,
+      'Total GST': this.totalGST,
+      'Total Amount': this.grandTotal,
+      'Supply Type': ''
+    };
+    exportData.push(totalsRow);
+
     const ws = XLSX.utils.json_to_sheet(exportData);
+
+    // Number format for all numeric columns in data + totals rows
+    const numericCols = ['G', 'I', 'J', 'K', 'L', 'M']; // Taxable, CGST, SGST, IGST, TotalGST, TotalAmount
+    const dataRowCount = exportData.length; // includes totals row
+    numericCols.forEach(col => {
+      for (let row = 2; row <= dataRowCount + 1; row++) {
+        const cellRef = `${col}${row}`;
+        if (ws[cellRef]) {
+          ws[cellRef].t = 'n'; // force numeric type
+          ws[cellRef].z = '#,##0.00'; // 2 decimal places with comma
+        }
+      }
+    });
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'GST Report');
     XLSX.writeFile(wb, 'GST_Report.xlsx');

@@ -476,12 +476,8 @@ export class PaymentsComponent implements AfterViewInit {
           const paymentId = response.PaymentID;
 
           this.showMessage("Payment Saved/Updated Successfully", 'success', 'Success Message');
-          if (this.paymentID > 0) {
-            this.route.navigate(['/report/finance/print-voucher-report'], { queryParams: { Category: this.catrgoryName, ASN: this.accShortName }, queryParamsHandling: 'merge' });
-          } else {
-            this.route.navigate(['/report/finance/print-voucher-report'], { queryParams: { id: paymentId, Category: this.catrgoryName, ASN: this.accShortName }, queryParamsHandling: 'merge' });
-          }
           this.frm.reset();
+          this.route.navigate(['/report/finance/print-voucher-report'], { queryParams: { id: paymentId, Category: this.catrgoryName, ASN: this.accShortName }, queryParamsHandling: 'merge' });
         }
       },
       error: (err) => {
