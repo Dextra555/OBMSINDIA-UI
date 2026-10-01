@@ -119,7 +119,7 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
     }
     const baseUrl = environment.baseReportUrl + this.currentUrl;
     this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(
-      baseUrl + 'SalesInvoiceReport.aspx?' + this.buildQueryParams()
+      baseUrl + 'SalesInvoiceCollectionReport.aspx?' + this.buildQueryParams()
     );
   }
 

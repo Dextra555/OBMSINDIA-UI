@@ -203,6 +203,24 @@ export class PlYearReportComponent implements OnInit {
       </tr>`;
     };
 
+    // ── Row builder: NET PROFIT row — green if positive, red if negative ───
+    const netProfitRow = (label: string): string => {
+      const totalRow   = getRow('Total');
+      const totalValue = totalRow ? (totalRow['NetProfit'] ?? 0) : 0;
+      const isLoss     = totalValue < 0;
+      const rowClass   = isLoss ? 'net-loss-row' : 'net-profit-row';
+      const cells = years.map(y => {
+        const row = getRow(String(y));
+        const val = row ? (row['NetProfit'] ?? 0) : 0;
+        return `<td>${fmt(val)}</td>`;
+      }).join('');
+      return `<tr class="${rowClass}">
+        <td class="particulars">${label}</td>
+        ${cells}
+        <td class="total-cell">${fmt(totalValue)}</td>
+      </tr>`;
+    };
+
     // ── Row builder: percentage cells from Summary ─────────────────────────
     const pctRow = (
       label: string,
@@ -345,9 +363,9 @@ export class PlYearReportComponent implements OnInit {
     // ══════════════════════════════════════════════════════════════════════════
     const profitRows =
       sectionHeader('3. PROFIT CALCULATION') +
-      amountRow('NET PROFIT / (LOSS)', 'NetProfit',        'net-profit-row') +
-      pctRow   ('EXPENSES %',          'ExpensesPercent',  'pct-row') +
-      pctRow   ('NET PROFIT %',        'NetProfitPercent', 'pct-row');
+      netProfitRow('NET PROFIT / (LOSS)') +
+      pctRow   ('EXPENSES %',          'ExpensesPercent',  'expenses-pct-row') +
+      pctRow   ('NET PROFIT %',        'NetProfitPercent', 'netprofit-pct-row');
 
     // ══════════════════════════════════════════════════════════════════════════
     // SECTION 4: OTHERS
@@ -552,25 +570,60 @@ export class PlYearReportComponent implements OnInit {
       color: #fff !important;
     }
 
+    /* ── Net loss row (red — when total NetProfit is negative) ── */
+    tr.net-loss-row td {
+      background: #c0392b !important;
+      color: #fff !important;
+      font-weight: bold;
+      border: 1px solid #96281b;
+    }
+    tr.net-loss-row td.particulars {
+      background: #c0392b !important;
+      color: #fff !important;
+      text-align: left;
+    }
+    tr.net-loss-row td.total-cell {
+      background: #96281b !important;
+      color: #fff !important;
+    }
+
     /* ── Net loss highlight (override when negative) ── */
     td.loss-value {
       color: #e74c3c !important;
     }
 
     /* ── Percentage rows (dark blue) ── */
-    tr.pct-row td {
-      background: #154360 !important;
+    /* ── EXPENSES % row (orange) ── */
+    tr.expenses-pct-row td {
+      background: #d35400 !important;
       color: #fff !important;
       font-weight: bold;
-      border: 1px solid #0e2f44;
+      border: 1px solid #a04000;
     }
-    tr.pct-row td.particulars {
-      background: #154360 !important;
+    tr.expenses-pct-row td.particulars {
+      background: #d35400 !important;
       color: #fff !important;
       text-align: left;
     }
-    tr.pct-row td.total-cell {
-      background: #0e2f44 !important;
+    tr.expenses-pct-row td.total-cell {
+      background: #a04000 !important;
+      color: #fff !important;
+    }
+
+    /* ── NET PROFIT % row (purple) ── */
+    tr.netprofit-pct-row td {
+      background: #6c3483 !important;
+      color: #fff !important;
+      font-weight: bold;
+      border: 1px solid #512e5f;
+    }
+    tr.netprofit-pct-row td.particulars {
+      background: #6c3483 !important;
+      color: #fff !important;
+      text-align: left;
+    }
+    tr.netprofit-pct-row td.total-cell {
+      background: #512e5f !important;
       color: #fff !important;
     }
 
@@ -763,8 +816,10 @@ export class PlYearReportComponent implements OnInit {
     const NAVY   = '2c3e50';  // header / section header bg
     const LTNAVY = '34495e';  // total row bg
     const DKNAVY = '1a252f';  // grand total cell
-    const GREEN  = '1e8449';  // net profit row
-    const DKGRN  = '196f3d';  // net profit total cell
+    const GREEN  = '1e8449';  // net profit row (positive)
+    const DKGRN  = '196f3d';  // net profit total cell (positive)
+    const RED    = 'c0392b';  // net loss row (negative)
+    const DKRED  = '96281b';  // net loss total cell (negative)
     const BLUE   = '154360';  // percentage row
     const DKBLUE = '0e2f44';  // pct total cell
     const WHITE  = 'FFFFFF';
@@ -873,8 +928,10 @@ export class PlYearReportComponent implements OnInit {
         applyFill(row, LTNAVY, WHITE, true);
         row.getCell(colCount).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + DKNAVY } };
       } else if (style === 'netprofit') {
-        applyFill(row, GREEN, WHITE, true);
-        row.getCell(colCount).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + DKGRN } };
+        const totalNetProfit = getRow('Total')?.[field] ?? 0;
+        const isLoss = parseFloat(totalNetProfit) < 0;
+        applyFill(row, isLoss ? RED : GREEN, WHITE, true);
+        row.getCell(colCount).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + (isLoss ? DKRED : DKGRN) } };
       } else if (style === 'pct') {
         applyFill(row, BLUE, WHITE, true);
         row.getCell(colCount).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + DKBLUE } };
