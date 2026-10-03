@@ -734,6 +734,18 @@ export class PayrollModuleService {
     }).pipe(catchError(this.errorHandle));
   }
 
+  getRbiBankSalaryExportTxt(dtSalaryPeriod: string, branch: string, employeeType: string): Observable<Blob> {
+    const params = new HttpParams()
+      .set('dtSalaryPeriod', encodeURIComponent(dtSalaryPeriod))
+      .set('branch', encodeURIComponent(branch))
+      .set('employeeType', encodeURIComponent(employeeType));
+
+    return this.httpClient.get(`${this.apiUrl}payroll/GetRbiBankSalaryExportTxt`, {
+      params,
+      responseType: 'blob'
+    }).pipe(catchError(this.errorHandle));
+  }
+
   getRbiBankAdvanceExport(dtSalaryPeriod: string, branch: string, employeeType: string): Observable<any[]> {
     const params = new HttpParams()
       .set('dtSalaryPeriod', encodeURIComponent(dtSalaryPeriod))
@@ -751,6 +763,18 @@ export class PayrollModuleService {
       .set('employeeType', encodeURIComponent(employeeType));
 
     return this.httpClient.get(`${this.apiUrl}payroll/GetRbiBankAdvanceExportCsv`, {
+      params,
+      responseType: 'blob'
+    }).pipe(catchError(this.errorHandle));
+  }
+
+  getRbiBankAdvanceExportTxt(dtSalaryPeriod: string, branch: string, employeeType: string): Observable<Blob> {
+    const params = new HttpParams()
+      .set('dtSalaryPeriod', encodeURIComponent(dtSalaryPeriod))
+      .set('branch', encodeURIComponent(branch))
+      .set('employeeType', encodeURIComponent(employeeType));
+
+    return this.httpClient.get(`${this.apiUrl}payroll/GetRbiBankAdvanceExportTxt`, {
       params,
       responseType: 'blob'
     }).pipe(catchError(this.errorHandle));

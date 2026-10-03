@@ -224,6 +224,49 @@ export class PfStatementReportComponent implements OnInit {
     </tr>`;
   }
 
+  exportTextFile() {
+    if (this.frm.invalid) { this.errorMessage = 'Generate a report first.'; return; }
+    this.clearMessages();
+    this.showSpinner();
+
+    const formValues = this.frm.value;
+    const month = formValues.Month.toString().padStart(2, '0');
+    const period = `${formValues.Year}-${month}`;
+
+    const payload = {
+      Parameters: {
+        branch: formValues.BranchCode,
+        client: formValues.ClientCode || '',
+        period,
+        reportType: this.selectedReportType
+      }
+    };
+
+    this.http.post(`${this._masterService.apiUrl}ComplianceReport/GetPFStatementTxt`, payload, { responseType: 'blob', observe: 'response' }).subscribe(
+      (response) => {
+        this.hideSpinner();
+        const blob = response.body!;
+        // Derive filename from Content-Disposition header if present, else build a default
+        let fileName = `PF_ECR_${formValues.BranchCode}_${new Date(formValues.Year, formValues.Month - 1, 1).toLocaleString('en-US', { month: 'short' })}${formValues.Year}.txt`;
+        const contentDisposition = response.headers.get('content-disposition');
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (match && match[1]) fileName = match[1].replace(/['"]/g, '');
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      (error) => {
+        this.hideSpinner();
+        this.errorMessage = `Failed to export text file: ${error?.message || 'Server error'}`;
+      }
+    );
+  }
+
   generateExcelFileClick() {
     if (!this.currentReportHtmlRaw) { this.errorMessage = 'Generate a report first.'; return; }
     try {

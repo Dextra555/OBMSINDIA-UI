@@ -130,6 +130,17 @@ export const environment = {
 
 
 
+  //EastWest Server configuration 
+
+  // baseUrl: 'http://175.139.216.185:8448/api/',
+
+  // baseReportUrl:'http://175.139.216.185:8449/'
+
+
+  //Local DEV Production Server configuration
+  baseUrl: 'http://124.217.236.37:64889/api/',
+  baseReportUrl: 'http://124.217.236.37:5222/'
+
 
 
   // //Local DEV Production Server configuration
@@ -144,12 +155,13 @@ export const environment = {
   // baseReportUrl: 'http://124.217.236.37:5333/'
 
 
-
-  baseUrl: 'http://124.217.236.37:64889/api/',
-  baseReportUrl: 'http://124.217.236.37:5222/'
+ 
 
 
-  //FWG Server configuration 
+  //FWG Server configuration  
+  // baseUrl: 'http://124.217.236.37:64400/api/',
+  // baseReportUrl: 'http://124.217.236.37:5333/'
+
 
   //baseUrl: 'http://124.217.236.37:8339/api/',
 

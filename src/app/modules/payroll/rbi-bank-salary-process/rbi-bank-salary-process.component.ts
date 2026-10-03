@@ -225,6 +225,29 @@ export class RbiBankSalaryProcessComponent implements OnInit {
     });
   }
 
+  onExportTxtClick(): void {
+    const branch = this.rbiBankSalaryForm.get('Branch')?.value || 'ALL';
+    const employeeType = this.rbiBankSalaryForm.get('EmployeeType')?.value || 'ALL';
+
+    this._payrollService.getRbiBankSalaryExportTxt(this.dtPeriod, branch, employeeType).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `RBI_Bank_Salary_Export_${this.dtPeriod}_${branch}_${employeeType}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        console.log('Text file exported successfully');
+      },
+      error: (err: any) => {
+        console.error('Error exporting text file:', err);
+        alert('Error exporting text file: ' + err.message);
+      }
+    });
+  }
+
   exportToExcel(data: RbiBankSalaryExport[]): void {
     // Create header row with RBI specification field names
     const headerRow = [

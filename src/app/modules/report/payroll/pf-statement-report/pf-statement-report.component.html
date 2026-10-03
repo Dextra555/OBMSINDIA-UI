@@ -94,6 +94,7 @@
     <div class="row" *ngIf="currentReportHtml && warningMessage === ''">
       <div class="col-12 text-left report-actions">
         <button class="btn wlt-c-furg-btn-secondary m-1" (click)="generateExcelFileClick()">Export to Excel</button>
+        <button class="btn wlt-c-furg-btn-secondary m-1" (click)="exportTextFile()">Export Text File</button>
         <button class="btn wlt-c-furg-btn-secondary m-1" (click)="printReport()">Print Preview</button>
       </div>
     </div>
