@@ -351,6 +351,18 @@ export class NewAttendanceComponent implements OnInit {
       // (the one covering this branch during the selected attendance month).
       this._payrollService.getEmployeeDetails(this.attendanceForm.value.BranchCode, this.attendanceForm.value.EmployeeNo, this.dtAdvanceDate).subscribe(
         (data) => {
+          // Guard: API returned an empty array (employee not found for this branch+period).
+          // This can happen if branch/period doesn't match — show a message and stop.
+          if (!data || data.length === 0) {
+            this.showMessage(
+              'Employee not found for the selected branch and period.',
+              'warning',
+              'Warning Message'
+            );
+            this.hideloadingSpinner();
+            return;
+          }
+
           const employeeDetails = data[0];
 
           // Extract Employee History effective dates for this branch + period.
@@ -446,12 +458,18 @@ export class NewAttendanceComponent implements OnInit {
                 }
               }
 
-              // Use custom period total days if available; otherwise use calendar month
+              // Use custom period total days if available; otherwise use calendar month.
+              // If an existing attendance record is being edited (attendanceData exists),
+              // always use the full month so all saved days (including days > today) are shown.
               if (this.currentAttendancePeriodResult?.IsCustom) {
                 iNoOfDays = this.currentAttendancePeriodResult.TotalDays;
                 iStartDay = 1; // getPeriodDate handles absolute index from period start
-              } else if (advanceDate.getMonth() === today.getMonth() && advanceDate.getFullYear() === today.getFullYear()) {
-                iNoOfDays = advanceDate.getDate();
+              } else if (
+                advanceDate.getMonth() === today.getMonth() &&
+                advanceDate.getFullYear() === today.getFullYear() &&
+                !attendanceData  // new record only – existing records always show full month
+              ) {
+                iNoOfDays = today.getDate();
               } else {
                 iNoOfDays = this.getDaysInMonth(advanceDate.toString());
               }
@@ -480,35 +498,19 @@ export class NewAttendanceComponent implements OnInit {
 
               // Check if the AdvanceDate is in the employee's joining month and year
               // (only for standard calendar period — custom period always starts from period start day)
-              if (!this.currentAttendancePeriodResult?.IsCustom &&
-                  this.dtAttendanceDate.getMonth() === joinDate.getMonth() &&
-                  this.dtAttendanceDate.getFullYear() === joinDate.getFullYear()) {
-                iStartDay = joinDate.getDate();
-              }
+              // NOTE: iStartDay is intentionally kept at 1 so the full month grid is always
+              // displayed (matching Malaysia behaviour).  Rows before the join date will
+              // appear blank and are not submitted to the backend.
+              // if (!this.currentAttendancePeriodResult?.IsCustom &&
+              //     this.dtAttendanceDate.getMonth() === joinDate.getMonth() &&
+              //     this.dtAttendanceDate.getFullYear() === joinDate.getFullYear()) {
+              //   iStartDay = joinDate.getDate();
+              // }
 
               // ── Employee History clamping ────────────────────────────────────────
-              // For transferred employees the backend returns Emp_StartDate (first day
-              // at this branch) and Emp_EndDate (last day at this branch, NULL = active).
-              // These override the simple join/resign clamp above when they fall inside
-              // the selected attendance month, because a transferred employee may have
-              // joined the company long ago but only started at THIS branch mid-month.
-              if (!this.currentAttendancePeriodResult?.IsCustom) {
-                if (historyStartDate &&
-                    historyStartDate.getMonth() === this.dtAttendanceDate.getMonth() &&
-                    historyStartDate.getFullYear() === this.dtAttendanceDate.getFullYear()) {
-                  // Branch effective start falls inside this attendance month —
-                  // grid must begin from that day (overrides join-date start).
-                  iStartDay = Math.max(iStartDay, historyStartDate.getDate());
-                }
-
-                if (historyEndDate &&
-                    historyEndDate.getMonth() === this.dtAttendanceDate.getMonth() &&
-                    historyEndDate.getFullYear() === this.dtAttendanceDate.getFullYear()) {
-                  // Branch effective end falls inside this attendance month —
-                  // grid must not extend beyond that day (overrides full-month end).
-                  iNoOfDays = Math.min(iNoOfDays, historyEndDate.getDate());
-                }
-              }
+              // historyStartDate / historyEndDate clamping is intentionally disabled so
+              // the full attendance period grid is always shown regardless of the
+              // employee's branch transfer date (matching Malaysia behaviour).
               // ── End Employee History clamping ────────────────────────────────────
 
               // Handle attendance data
@@ -633,13 +635,17 @@ export class NewAttendanceComponent implements OnInit {
     // For custom period: startDay offset from period start; for normal: day-of-month
     const isCustom = !!(this.currentAttendancePeriodResult?.IsCustom);
     for (let i = startDay - 1; i < count; i++) {
-      // getPeriodDate uses absolute index from period start
+      // getPeriodDate uses absolute index from period start.
+      // Normal path: use (i + 1) as day-of-month — loop starts at i = startDay-1,
+      // so (i + 1) correctly maps to the actual calendar day.
+      // Using (startDay + i) caused a double-offset: first row would land on
+      // (2*startDay - 1) instead of startDay, showing 30/31 on next-period navigation.
       const currentDate = isCustom
         ? this.getPeriodDate(i)
         : new Date(
             this.attendanceForm.value.AdvanceDate.getFullYear(),
             this.attendanceForm.value.AdvanceDate.getMonth(),
-            startDay + i
+            i + 1
           );
 
       formArray.push(this.fb.group({
@@ -672,6 +678,10 @@ export class NewAttendanceComponent implements OnInit {
     formArray.clear();
     const isCustom = !!(this.currentAttendancePeriodResult?.IsCustom);
 
+    // Track the last saved record so missing rows (days not yet in DB) can be
+    // pre-filled with the same client / shift timings as the most-recent saved day.
+    let lastKnownRecord: any = null;
+
     for (let i = iStartDay - 1; i < iNoOfDays; i++) {
       const currentDate = isCustom
         ? this.getPeriodDate(i)
@@ -688,42 +698,51 @@ export class NewAttendanceComponent implements OnInit {
           recordDate.getFullYear() === currentDate.getFullYear();
       });
 
+      // Update the "last known" tracker whenever a saved record exists
+      if (matchingRecord) {
+        lastKnownRecord = matchingRecord;
+      }
+
+      // For rows with no saved record, fall back to lastKnownRecord so the
+      // client / shift columns are pre-filled instead of appearing empty.
+      const fillRecord = matchingRecord ?? lastKnownRecord;
+
       formArray.push(this.fb.group({
         weekDay: this.getWeekday(currentDate.getDay()),
         dayField: [i + 1],
         ID: [matchingRecord?.ID || 0],
         AttendanceID: [matchingRecord?.AttendanceID || 0],
         AttendanceDate: [this.formatDate(currentDate)],
-        Client: [matchingRecord?.Client || ''],
-        Type: [this.getWorkType(matchingRecord?.Type || '')],
-        TimeStart: [matchingRecord?.TimeStart || null],
-        TimeEnd: [matchingRecord?.TimeEnd || null],
+        Client: [fillRecord?.Client || ''],
+        Type: [this.getWorkType(fillRecord?.Type || '')],
+        TimeStart: [fillRecord?.TimeStart || null],
+        TimeEnd: [fillRecord?.TimeEnd || null],
         StartTime: [
-          this.getDayOfWeek(matchingRecord?.TimeStart) === 0 ? '' : this.getDayOfWeek(matchingRecord?.TimeStart),
+          this.getDayOfWeek(fillRecord?.TimeStart) === 0 ? '' : this.getDayOfWeek(fillRecord?.TimeStart),
         ],
         EndTime: [
-          this.getDayOfWeek(matchingRecord?.TimeEnd) === 0 ? '' : this.getDayOfWeek(matchingRecord?.TimeEnd),
+          this.getDayOfWeek(fillRecord?.TimeEnd) === 0 ? '' : this.getDayOfWeek(fillRecord?.TimeEnd),
         ],
         Hours: [
-          this.getDayOfHoursEdited(matchingRecord?.TimeStart, matchingRecord?.TimeEnd) === 0
+          this.getDayOfHoursEdited(fillRecord?.TimeStart, fillRecord?.TimeEnd) === 0
             ? ''
-            : this.getDayOfHoursEdited(matchingRecord?.TimeStart, matchingRecord?.TimeEnd),
+            : this.getDayOfHoursEdited(fillRecord?.TimeStart, fillRecord?.TimeEnd),
         ],
-        OTClient: [matchingRecord?.OTClient || ''],
-        OTTimeStart: [matchingRecord?.OTTimeStart || null],
-        OTTimeEnd: [matchingRecord?.OTTimeEnd || null],
+        OTClient: [fillRecord?.OTClient || ''],
+        OTTimeStart: [fillRecord?.OTTimeStart || null],
+        OTTimeEnd: [fillRecord?.OTTimeEnd || null],
         StartTimeOT: [
-          this.getDayOfWeek(matchingRecord?.OTTimeStart) === 0
+          this.getDayOfWeek(fillRecord?.OTTimeStart) === 0
             ? ''
-            : this.getDayOfWeek(matchingRecord?.OTTimeStart),
+            : this.getDayOfWeek(fillRecord?.OTTimeStart),
         ],
         EndTimeOT: [
-          this.getDayOfWeek(matchingRecord?.OTTimeEnd) === 0 ? '' : this.getDayOfWeek(matchingRecord?.OTTimeEnd),
+          this.getDayOfWeek(fillRecord?.OTTimeEnd) === 0 ? '' : this.getDayOfWeek(fillRecord?.OTTimeEnd),
         ],
         Shift2Hours: [
-          this.getDayOfHoursEdited(matchingRecord?.OTTimeStart, matchingRecord?.OTTimeEnd) === 0
+          this.getDayOfHoursEdited(fillRecord?.OTTimeStart, fillRecord?.OTTimeEnd) === 0
             ? ''
-            : this.getDayOfHoursEdited(matchingRecord?.OTTimeStart, matchingRecord?.OTTimeEnd),
+            : this.getDayOfHoursEdited(fillRecord?.OTTimeStart, fillRecord?.OTTimeEnd),
         ],
         LastUpdate: [this.formatDate(new Date(matchingRecord?.LastUpdate)) || ''],
         LastUpdatedBy: [matchingRecord?.LastUpdatedBy || this.currentUser],
@@ -739,16 +758,15 @@ export class NewAttendanceComponent implements OnInit {
     const isCustom = !!(this.currentAttendancePeriodResult?.IsCustom);
 
     for (let i = startDay - 1; i < count; i++) {
+      // Normal path: use (i + 1) as day-of-month — same fix as addFormFields.
+      // (startDay + i) caused double-offset, showing 30/31 on next-period navigation.
       const currentDate = isCustom
         ? this.getPeriodDate(i)
-        : (() => {
-            const d = new Date(
-              this.attendanceForm.value.AdvanceDate.getFullYear(),
-              this.attendanceForm.value.AdvanceDate.getMonth(),
-              startDay + i
-            );
-            return d;
-          })();
+        : new Date(
+            this.attendanceForm.value.AdvanceDate.getFullYear(),
+            this.attendanceForm.value.AdvanceDate.getMonth(),
+            i + 1
+          );
 
       const weekDayIndex = currentDate.getDay();
       const weekDayName = this.getWeekday(weekDayIndex);
@@ -1309,12 +1327,19 @@ export class NewAttendanceComponent implements OnInit {
     const joinDate = this.attendanceForm.value.JoinDate ? new Date(this.attendanceForm.value.JoinDate) : null;
     const resignDate = this.attendanceForm.value.ResignedDate ? new Date(this.attendanceForm.value.ResignedDate) : null;
 
-    // Use custom period total days if available; otherwise calendar month
+    // Use custom period total days if available; otherwise calendar month.
+    // If an existing attendance record is being edited (attendanceDetails loaded),
+    // always use the full month so all saved days (including days > today) are shown.
+    const hasExistingRecord = this.attendanceDetails.length > 0;
     if (this.currentAttendancePeriodResult?.IsCustom) {
       iNoOfDays = this.currentAttendancePeriodResult.TotalDays;
       iStartDay = 1;
-    } else if (advanceDate.getMonth() === today.getMonth() && advanceDate.getFullYear() === today.getFullYear()) {
-      iNoOfDays = advanceDate.getDate();
+    } else if (
+      advanceDate.getMonth() === today.getMonth() &&
+      advanceDate.getFullYear() === today.getFullYear() &&
+      !hasExistingRecord  // new record only – existing records always show full month
+    ) {
+      iNoOfDays = today.getDate();
     } else {
       iNoOfDays = this.getDaysInMonth(advanceDate.toString());
     }
@@ -1340,7 +1365,7 @@ export class NewAttendanceComponent implements OnInit {
       iStartDay = joinDate.getDate();
     }
 
-    if (this.attendanceDetails.length > 0) {
+    if (hasExistingRecord) {
       this.updateStaffFormFields(this.attendanceDetails, iNoOfDays, iStartDay);
     } else {
       this.addStaffFormFields(iNoOfDays, iStartDay);
@@ -2700,8 +2725,9 @@ export class NewAttendanceComponent implements OnInit {
   handleErrors(error: string) {
     if (error != null && error != '') {
       this.errorMessage = error;
-      this.hideloadingSpinner();
     }
+    // Always hide the spinner on any error so the UI is never stuck loading.
+    this.hideloadingSpinner();
   };
 
   openBulkUploadDialog(): void {
