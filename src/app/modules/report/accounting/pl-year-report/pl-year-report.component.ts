@@ -334,7 +334,6 @@ export class PlYearReportComponent implements OnInit {
     const salesRows =
       sectionHeader('1. SALES') +
       amountRow('INVOICE SALES',  'Sales',        '', true) +
-      amountRow('OTHER RECEIPTS', 'OtherReceipts', '', true) +
       amountRow('DEBIT NOTE',     'DebitNote',    '', true) +
       amountRow('CREDIT NOTE',    'CreditNote',   '', true) +
       amountRow('TOTAL SALES',    'TotalSales',   'total-row');
@@ -1002,7 +1001,6 @@ export class PlYearReportComponent implements OnInit {
     // ── SECTION 1: SALES ──
     addSectionHeader('1. SALES');
     addAmtRow('   INVOICE SALES',  'Sales');
-    addAmtRow('   OTHER RECEIPTS', 'OtherReceipts');
     addAmtRow('   DEBIT NOTE',     'DebitNote');
     addAmtRow('   CREDIT NOTE',    'CreditNote');
     addAmtRow('TOTAL SALES',       'TotalSales', 'total');
