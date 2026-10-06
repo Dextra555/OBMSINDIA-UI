@@ -326,16 +326,18 @@ export class PlYearReportComponent implements OnInit {
 
     // ══════════════════════════════════════════════════════════════════════════
     // SECTION 1: SALES
-    //   Values: Sales, DebitNote, CreditNote, TotalSales
-    //   Source: Summary rows from API (computed by backend from DB)
-    //   Formula: TOTAL SALES = Sales + DebitNote − CreditNote
+    //   Values: Sales, OtherReceipts, DebitNote, CreditNote, TotalSales
+    //   Source: Summary rows from API
+    //   Formula: TOTAL SALES = InvoiceSales + OtherReceipts + DebitNote − CreditNote
     // ══════════════════════════════════════════════════════════════════════════
+
     const salesRows =
       sectionHeader('1. SALES') +
-      amountRow('SALES',       'Sales',      '', true) +
-      amountRow('DEBIT NOTE',  'DebitNote',  '', true) +
-      amountRow('CREDIT NOTE', 'CreditNote', '', true) +
-      amountRow('TOTAL SALES', 'TotalSales', 'total-row');
+      amountRow('INVOICE SALES',  'Sales',        '', true) +
+      amountRow('OTHER RECEIPTS', 'OtherReceipts', '', true) +
+      amountRow('DEBIT NOTE',     'DebitNote',    '', true) +
+      amountRow('CREDIT NOTE',    'CreditNote',   '', true) +
+      amountRow('TOTAL SALES',    'TotalSales',   'total-row');
 
     // ══════════════════════════════════════════════════════════════════════════
     // SECTION 2: EXPENSES
@@ -999,10 +1001,12 @@ export class PlYearReportComponent implements OnInit {
 
     // ── SECTION 1: SALES ──
     addSectionHeader('1. SALES');
-    addAmtRow('   SALES',       'Sales');
-    addAmtRow('   DEBIT NOTE',  'DebitNote');
-    addAmtRow('   CREDIT NOTE', 'CreditNote');
-    addAmtRow('TOTAL SALES',    'TotalSales', 'total');
+    addAmtRow('   INVOICE SALES',  'Sales');
+    addAmtRow('   OTHER RECEIPTS', 'OtherReceipts');
+    addAmtRow('   DEBIT NOTE',     'DebitNote');
+    addAmtRow('   CREDIT NOTE',    'CreditNote');
+    addAmtRow('TOTAL SALES',       'TotalSales', 'total');
+
     curRow++; // blank spacer
 
     // ── SECTION 2: EXPENSES ──
