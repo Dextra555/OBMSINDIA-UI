@@ -440,6 +440,13 @@ export class FinanceService {
 
   }
 
+  deletePaymentLine(id: number, currentUser: string): Observable<any> {
+    return this.httpClient.post(`${this.apiUrl}Finance/DeletePaymentLine`, {
+      id,
+      currentUser
+    });
+  }
+
   deleteReceipt(id: number, currentUser: string): Observable<any> {
 
     return this.httpClient.post(`${this.apiUrl}Finance/receipt/delete`, {

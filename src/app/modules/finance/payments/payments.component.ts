@@ -62,6 +62,7 @@ export class PaymentsComponent implements AfterViewInit {
   dataSourceSupplier!: MatTableDataSource<ISupplierInvoice>;
   rows: FormArray = this.fb.array([]);
   supplierRows: FormArray = this.fb.array([]);
+  supplierInvoiceDataSource = new BehaviorSubject<AbstractControl[]>([]);
   otherList: any = [];
   isSupplierEnable = false;
   showAddInvoiceBtn: boolean = false;
@@ -305,6 +306,7 @@ export class PaymentsComponent implements AfterViewInit {
     });
 
     this.supplierRows.push(row);
+    this.supplierInvoiceDataSource.next(this.supplierRows.controls);
   }
 
   searchPayment() {
@@ -352,10 +354,7 @@ export class PaymentsComponent implements AfterViewInit {
   }
 
   supplierInvoiceTable() {
-    const dataSource = new BehaviorSubject<AbstractControl[]>([]);
-    let d = this.frm.get('SupplierInvoice') as FormArray;
-    dataSource.next(d.controls);
-    return dataSource;
+    return this.supplierInvoiceDataSource;
   }
 
   creditorChange(value: any) {
@@ -673,9 +672,9 @@ export class PaymentsComponent implements AfterViewInit {
 
   supplierChange(value: any) {
     this.supplierRows.clear();
+    this.supplierInvoiceDataSource.next([]);
 
     const paymentId = this.paymentID > 0 ? this.paymentID : 0;
-
     let apiCall$;
 
     if (paymentId > 0) {
@@ -782,10 +781,49 @@ export class PaymentsComponent implements AfterViewInit {
   }
 
   removeInvoiceLine(index: number): void {
-    this.supplierRows.removeAt(index);
-    if (this.supplierRows.length === 0) {
-      this.showDataSourceTable = false;
-    }
+    const row = this.supplierRows.at(index);
+    const lineId = row?.get('ID')?.value;
+    const invoiceNo = row?.get('InvoiceNo')?.value || '';
+
+    Swal.fire({
+      title: 'Remove Invoice Line?',
+      text: `Are you sure you want to remove ${invoiceNo}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#c0392b',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, remove it',
+      cancelButtonText: 'No, keep it',
+      reverseButtons: false
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      const doRemove = () => {
+        this.supplierRows.removeAt(index);
+        this.supplierInvoiceDataSource.next(this.supplierRows.controls);
+        if (this.supplierRows.length === 0) {
+          this.showDataSourceTable = false;
+        }
+      };
+
+      if (lineId && Number(lineId) > 0) {
+        // Existing DB record — call DeletePaymentLine API (sets IsDeleted = true in DB)
+        this.showLoadingSpinner = true;
+        this._financeService.deletePaymentLine(Number(lineId), this.currentUser).subscribe({
+          next: () => {
+            this.hideSpinner();
+            doRemove();
+          },
+          error: (err) => {
+            this.hideSpinner();
+            this.showMessage(`Failed to delete invoice line: ${err?.error?.message || err}`, 'error', 'Error Message');
+          }
+        });
+      } else {
+        // New unsaved row — just remove from UI
+        doRemove();
+      }
+    });
   }
 
   handleErrors(error: string) {
