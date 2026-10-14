@@ -183,18 +183,27 @@
                 <li class="nav-item" routerLink="/report/finance/cheque-status-report"><a class="nav-link">Cheque
                     Status</a>
                 </li>
-                <li class="nav-item" routerLink="/report/finance/credit-note-summary-report"><a class="nav-link">Credit
-                    Note Summary</a></li>
-                <li class="nav-item" routerLink="/report/finance/credit-note-report"><a class="nav-link">Credit
-                    Note</a></li>
-                <li class="nav-item" routerLink="/report/finance/debit-note-report"><a class="nav-link">Debit
-                    Note</a></li>
+                <li class="nav-item" routerLink="/report/finance/credit-note-summary-report"><a class="nav-link">Credit Note Summary</a></li>
                 <li class="nav-item" routerLink="/report/finance/branch-payment-summary-report"><a class="nav-link">Branch Payment Summary</a></li>
                 <li class="nav-item" routerLink="/report/finance/profit-and-loss-report"><a class="nav-link">Profit And
                     Loss Summary</a></li>
                 <li class="nav-item" routerLink="/report/finance/separated-profit-loss-report"><a class="nav-link">Profit & Loss (Separated)</a></li>
                 <li class="nav-item" routerLink="/report/finance/tds-report"><a class="nav-link">TDS Report</a></li>
                 <li class="nav-item" routerLink="/report/finance/gst-statement-report"><a class="nav-link">GST Report</a></li>
+              </ul>
+            </div>
+          </li>
+          <li class="nav-item">
+            <span class="reportHeader">
+              <a class="nav-link collapsed reportHeader pl-5" data-toggle="collapse" data-parent="#accordion"
+                data-target="#Finance" aria-expanded="false" aria-controls="Master">
+                Credit / Debit Note
+              </a>
+            </span>
+            <div class="collapse" [ngClass]="{'show': isSubmenuOpen('finance')}">
+              <ul class="nav flex-column wlt-c-furg-sub-menu">
+                <li class="nav-item"><a class="nav-link" routerLink="/report/finance/credit-note-report">Credit Note Report</a></li>
+                <li class="nav-item"><a class="nav-link" routerLink="/report/finance/debit-note-report">Debit Note Report</a></li>
               </ul>
             </div>
           </li>

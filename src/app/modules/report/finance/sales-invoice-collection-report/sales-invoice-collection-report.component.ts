@@ -70,21 +70,19 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
           this.userAccessModel.deleteAccess  = data.Delete ?? false;
           this.userAccessModel.updateAccess  = data.Update ?? false;
           this.userAccessModel.createAccess  = data.Create ?? false;
+        }
 
-          const hasAccess =
-            this.currentUser === 'superadmin' ||
-            this.userAccessModel.readAccess === true ||
-            data.Read === null ||
-            data.Read === undefined;
+        const hasAccess =
+          this.currentUser === 'superadmin' ||
+          this.userAccessModel.readAccess === true;
 
-          if (hasAccess) {
-            this.warningMessage = '';
-          } else {
-            this.warningMessage = `Dear <B>${this.currentUser}</B>, <br>
+        if (hasAccess) {
+          this.warningMessage = '';
+        } else {
+          this.warningMessage = `Dear <B>${this.currentUser}</B>, <br>
               You do not have permissions to view this page. <br>
               If you feel you should have access to this page, Please contact administrator. <br>
               Thank you`;
-          }
         }
         this.hideSpinner();
       },

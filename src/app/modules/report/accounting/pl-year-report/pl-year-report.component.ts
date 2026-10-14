@@ -83,7 +83,7 @@ export class PlYearReportComponent implements OnInit {
         this.currentUser = username;
       });
     }
-    this.getUserAccessRights(this.currentUser, 'Profit And Lost');
+    this.getUserAccessRights(this.currentUser, 'P&L Year Report');
   }
 
   // ── Access rights ─────────────────────────────────────────────────────────

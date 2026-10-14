@@ -135,26 +135,53 @@ export class NewUserAccessRightsComponent implements OnInit {
 
   handleButtonClick(action: string) {
     const formArray = this.dynamicForm.get('formArray') as FormArray;
-    for (let i = 0; i < formArray.length; i++) {
-      if (action == 'View') {
+
+    if (action == 'View') {
+      // Determine toggle state based on whether ALL unused rows currently have Read=true
+      const unusedRows = Array.from({ length: formArray.length }, (_, i) => formArray.at(i) as FormGroup)
+        .filter(control => {
+          const v = control.value;
+          return !v.Read && !v.Create && !v.Update && !v.Delete;
+        });
+
+      const allUnusedRead = unusedRows.length > 0 && unusedRows.every(control => control.get('Read')?.value === true);
+
+      for (let i = 0; i < formArray.length; i++) {
         const control = formArray.at(i) as FormGroup;
-        const isChecked = control.value;
-        control.get('Read')?.patchValue(isChecked.Read === false ? true : false, { emitEvent: false });
+        const v = control.value;
+        const isUsed = v.Read || v.Create || v.Update || v.Delete;
+
+        // Skip rows that already have any permission set
+        if (isUsed) continue;
+
+        if (!allUnusedRead) {
+          control.get('Read')?.patchValue(true, { emitEvent: false });
+          control.get('Create')?.patchValue(false, { emitEvent: false });
+          control.get('Update')?.patchValue(false, { emitEvent: false });
+          control.get('Delete')?.patchValue(false, { emitEvent: false });
+        } else {
+          control.get('Read')?.patchValue(false, { emitEvent: false });
+        }
       }
+      return;
+    }
+
+    for (let i = 0; i < formArray.length; i++) {
+      const control = formArray.at(i) as FormGroup;
+      const v = control.value;
+      const isUsed = v.Read || v.Create || v.Update || v.Delete;
+
+      // Skip rows that already have any permission set
+      if (isUsed) continue;
+
       if (action == 'new') {
-        const control = formArray.at(i) as FormGroup;
-        const isChecked = control.value;
-        control.get('Create')?.patchValue(isChecked.Create === false ? true : false, { emitEvent: false });
+        control.get('Create')?.patchValue(true, { emitEvent: false });
       }
       if (action == 'update') {
-        const control = formArray.at(i) as FormGroup;
-        const isChecked = control.value;
-        control.get('Update')?.patchValue(isChecked.Update === false ? true : false, { emitEvent: false });
+        control.get('Update')?.patchValue(true, { emitEvent: false });
       }
       if (action == 'delete') {
-        const control = formArray.at(i) as FormGroup;
-        const isChecked = control.value;
-        control.get('Delete')?.patchValue(isChecked.Delete === false ? true : false, { emitEvent: false });
+        control.get('Delete')?.patchValue(true, { emitEvent: false });
       }
     }
   }

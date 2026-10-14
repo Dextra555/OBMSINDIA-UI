@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -118,7 +118,7 @@ export class NewUserBranchAccessComponent implements OnInit {
 
       // Set the form group with data and update IsAllowed from permissions
       formArray.push(this.fb.group({
-        ID: [data[i].ID ? data[i].ID : 0],
+        ID: [permission ? permission.ID : 0],
         Name: [this.userName], // Always set the Name from the current user being edited
         BranchCode: [branchCode],
         IsAllowed: [permission ? permission.IsAllowed : false], // Use the IsAllowed from permission if found, else false
