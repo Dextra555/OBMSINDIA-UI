@@ -138,8 +138,8 @@ export const environment = {
 
 
   //Local DEV Production Server configuration
-  baseUrl: 'http://124.217.236.37:64889/api/',
-  baseReportUrl: 'http://124.217.236.37:5222/'
+  // baseUrl: 'http://124.217.236.37:64889/api/',
+  // baseReportUrl: 'http://124.217.236.37:5222/'
 
 
 
@@ -148,8 +148,8 @@ export const environment = {
   // baseReportUrl: 'http://3.239.5.180:80/'
 
   // //Local DEV Production Server configuration
-  // baseUrl: 'http://124.217.236.37:64889/api/',
-  // baseReportUrl: 'http://124.217.236.37:5222/'
+  baseUrl: 'http://124.217.236.37:64889/api/',
+  baseReportUrl: 'http://124.217.236.37:5222/'
 
   // baseUrl: 'http://124.217.236.37:64400/api/',
   // baseReportUrl: 'http://124.217.236.37:5333/'
