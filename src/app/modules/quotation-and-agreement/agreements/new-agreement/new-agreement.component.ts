@@ -268,6 +268,8 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
       QuotationID: [0],
 
+      Period: [''],
+
       details: this.fb.group({
 
         ID: [0],
