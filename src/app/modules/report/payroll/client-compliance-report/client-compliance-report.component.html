@@ -223,14 +223,27 @@
         </div>
       </div>
 
+      <!-- Action buttons: Print for XXVIII, Excel+Print for others -->
       <div class="row" *ngIf="currentReportHtml && warningMessage === ''">
         <div class="col-12 text-left report-actions">
-          <button class="btn wlt-c-furg-btn-secondary m-1" (click)="generateExcelFileClick()">
-            Export to Excel
-          </button>
-          <button class="btn wlt-c-furg-btn-secondary m-1" (click)="printReport()">
-            Print Preview
-          </button>
+
+          <!-- Form XXVIII: print current slip only -->
+          <ng-container *ngIf="selectedReportType === 'form-xxviii'; else otherReportActions">
+            <button class="btn wlt-c-furg-btn-secondary m-1" (click)="printCurrentSlip()">
+              <i class="fa fa-print mr-1"></i> Print Wage Slip
+            </button>
+          </ng-container>
+
+          <!-- All other reports: Excel + Print -->
+          <ng-template #otherReportActions>
+            <button class="btn wlt-c-furg-btn-secondary m-1" (click)="generateExcelFileClick()">
+              Export to Excel
+            </button>
+            <button class="btn wlt-c-furg-btn-secondary m-1" (click)="printReport()">
+              Print Preview
+            </button>
+          </ng-template>
+
         </div>
       </div>
     </form>
@@ -242,8 +255,41 @@
       <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
     </div>
 
-    <!-- Report Display with DomSanitized HTML -->
-    <div *ngIf="currentReportHtml && warningMessage === ''" class="report-container mt-4">
+    <!-- ── Form XXVIII: per-employee navigation + single slip ── -->
+    <div *ngIf="currentReportHtml && selectedReportType === 'form-xxviii' && warningMessage === ''">
+
+      <!-- Navigation bar -->
+      <div class="xxviii-nav-bar mt-3">
+        <button class="btn btn-outline-secondary btn-sm xxviii-nav-btn"
+                (click)="formXXVIIIPrev()"
+                [disabled]="formXXVIIICurrentIndex === 0">
+          &larr; Previous
+        </button>
+
+        <span class="xxviii-nav-info">
+          <strong>{{ formXXVIIICurrentIndex + 1 }}</strong>
+          &nbsp;of&nbsp;
+          <strong>{{ formXXVIIITotal }}</strong>
+          &nbsp;&mdash;&nbsp;
+          <span class="xxviii-emp-name">{{ formXXVIIICurrentName }}</span>
+        </span>
+
+        <button class="btn btn-outline-secondary btn-sm xxviii-nav-btn"
+                (click)="formXXVIIINext()"
+                [disabled]="formXXVIIICurrentIndex === formXXVIIITotal - 1">
+          Next &rarr;
+        </button>
+      </div>
+
+      <!-- Single slip display -->
+      <div class="report-container mt-3">
+        <div [innerHTML]="currentReportHtml" class="compliance-report-display"></div>
+      </div>
+    </div>
+
+    <!-- ── All other reports ── -->
+    <div *ngIf="currentReportHtml && selectedReportType !== 'form-xxviii' && warningMessage === ''"
+         class="report-container mt-4">
       <div [innerHTML]="currentReportHtml" class="compliance-report-display"></div>
     </div>
 

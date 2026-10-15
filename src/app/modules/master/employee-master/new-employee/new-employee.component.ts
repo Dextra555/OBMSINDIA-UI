@@ -555,7 +555,7 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
-      AadhaarNumber: ['', [Validators.pattern('^[2-9]\\d{11}$')]],
+      AadhaarNumber: ['', [Validators.required, Validators.pattern('^[2-9]\\d{11}$')]],
 
 
 

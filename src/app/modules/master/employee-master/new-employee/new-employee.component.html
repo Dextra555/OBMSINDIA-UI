@@ -550,13 +550,13 @@
 
 
 
-            <mat-label>Aadhaar Number</mat-label>
+            <mat-label>Aadhaar Number *</mat-label>
 
 
 
             <input type="text" formControlName="AadhaarNumber" matInput placeholder="12-digit Aadhaar"
 
-              autocomplete="off">
+              autocomplete="off" required>
 
 
 
@@ -564,7 +564,19 @@
 
 
 
-            <mat-error *ngIf="frm.get('AadhaarNumber')?.invalid && frm.get('AadhaarNumber')?.touched">
+            <mat-error *ngIf="frm.get('AadhaarNumber')?.hasError('required') && frm.get('AadhaarNumber')?.touched">
+
+
+
+              Aadhaar Number is required
+
+
+
+            </mat-error>
+
+
+
+            <mat-error *ngIf="frm.get('AadhaarNumber')?.hasError('pattern') && frm.get('AadhaarNumber')?.touched">
 
 
 

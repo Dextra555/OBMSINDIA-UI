@@ -34,6 +34,13 @@ export class ClientComplianceReportComponent implements OnInit {
   selectedReportType: string = 'wage-register';
   complianceClients: any[] = [];
   complianceClientModel: any[] = [];
+
+  // ── Form XXVIII per-employee navigation ──────────────────────────────────
+  formXXVIIIRows: any[] = [];
+  formXXVIIICurrentIndex: number = 0;
+  formXXVIIISlipTemplate: string = '';
+  formXXVIIIMeta: any = {};
+  // ─────────────────────────────────────────────────────────────────────────
   complianceDisplayedColumns: string[] = ['sno', 'code', 'name', 'state', 'gstin', 'complianceStatus'];
 
   getComplianceBadgeClass(status: string): string {
@@ -389,6 +396,11 @@ export class ClientComplianceReportComponent implements OnInit {
     }
     this.selectedReportType = reportType;
     this.errorMessage = '';
+    // Reset XXVIII navigation state on every new report load
+    this.formXXVIIIRows = [];
+    this.formXXVIIICurrentIndex = 0;
+    this.formXXVIIISlipTemplate = '';
+    this.formXXVIIIMeta = {};
     const formValues = this.complianceForm.value;
     const monthName = this.getMonthName(formValues.Month);
     const year = formValues.Year;
@@ -429,7 +441,7 @@ export class ClientComplianceReportComponent implements OnInit {
         const resolvedClientName = this.clientModel?.find(c => c.Code === clientCode)?.Name || clientCode || 'All Clients';
 
         // Company details (contractor = OBMS own company)
-        const companyName = apiMeta['CompanyName'] || 'FreightWatch G Security Services India Pvt. Ltd.';
+        const companyName = apiMeta['CompanyName'] || 'FREIGTWATCH G SECURITY SERVICES INDIA PVT.LTD';
         const companyAddress = apiMeta['CompanyAddress'] || 'No.397 (old no.281), Anna Salai, Precision Plaza, 1st Floor, Teynampet, Chennai - 600018';
         const companyPhone = apiMeta['CompanyPhone'] || '+91 4440050684';
         const companyEmail = apiMeta['CompanyEmail'] || 'info@fwgindia.com';
@@ -451,7 +463,7 @@ export class ClientComplianceReportComponent implements OnInit {
           WorkSite: formValues.WorkSite || apiMeta['WorkSite'] || (isAP ? 'Work Site (AP)' : resolvedClientName),
           WorkSiteadresss: formValues.WorkSiteadresss || apiMeta['WorkSiteadresss'] || '',
           UnitName: formValues.UnitName || apiMeta['UnitName'] || '',
-          Establishment: establishment,
+          Establishment: reportType === 'form-xxviii' ? 'FREIGTWATCH G SECURITY SERVICES INDIA PVT.LTD' : establishment,
           // Overtime template needs these combined fields
           EstablishmentNameAndAddress: apiMeta['EstablishmentNameAndAddress'] || `${establishment}, ${resolvedBranchName}`,
           EmployerContractorNameAndAddress: apiMeta['EmployerContractorNameAndAddress'] || `${companyName}, ${companyAddress}`,
@@ -481,6 +493,59 @@ export class ClientComplianceReportComponent implements OnInit {
       }
     );
   }
+
+  // ── Form XXVIII navigation helpers ──────────────────────────────────────
+
+  get formXXVIIITotal(): number {
+    return this.formXXVIIIRows.length;
+  }
+
+  get formXXVIIICurrentName(): string {
+    if (!this.formXXVIIIRows.length) return '';
+    const r = this.formXXVIIIRows[this.formXXVIIICurrentIndex];
+    return r?.EmployeeName || '';
+  }
+
+  formXXVIIIPrev(): void {
+    if (this.formXXVIIICurrentIndex > 0) {
+      this.formXXVIIICurrentIndex--;
+      this.renderCurrentSlip();
+    }
+  }
+
+  formXXVIIINext(): void {
+    if (this.formXXVIIICurrentIndex < this.formXXVIIIRows.length - 1) {
+      this.formXXVIIICurrentIndex++;
+      this.renderCurrentSlip();
+    }
+  }
+
+  private renderCurrentSlip(): void {
+    const row = this.formXXVIIIRows[this.formXXVIIICurrentIndex];
+    const html = this.populateSlipTemplate(this.formXXVIIISlipTemplate, row, this.formXXVIIIMeta, null);
+    this.currentReportHtmlRaw = html;
+    this.currentReportHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  printCurrentSlip(): void {
+    if (!this.currentReportHtmlRaw) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.open();
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Form XXVIII Wage Slip</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        td { border: 1px solid #000; padding: 4px 6px; font-size: 12px; }
+        @media print { body { margin: 10mm; } }
+      </style>
+    </head><body>${this.currentReportHtmlRaw}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); }, 400);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   private mapReportName(reportType: string): string {
     const nameMap: { [key: string]: string } = {
@@ -517,13 +582,13 @@ export class ClientComplianceReportComponent implements OnInit {
       }
     }
 
-    // Extract Form XXVIII slip template EARLY to avoid global replacement overwriting its {{Placeholders}}
+    // Extract Form XXVIII per-employee slip template BEFORE global replacement
     let rowTemplateObj = '';
     if (reportType === 'form-xxviii') {
-      const templateMatch = filled.match(/<!-- START_WAGE_SLIP_TEMPLATE -->([\s\S]*?)<!-- END_WAGE_SLIP_TEMPLATE -->/);
+      const templateMatch = filled.match(/<!-- START_SINGLE_SLIP_TEMPLATE -->([\s\S]*?)<!-- END_SINGLE_SLIP_TEMPLATE -->/);
       rowTemplateObj = templateMatch ? templateMatch[1] : '';
-      // Remove it from the main template so global replacement doesn't touch it
-      filled = filled.replace(/<!-- START_WAGE_SLIP_TEMPLATE -->[\s\S]*?<!-- END_WAGE_SLIP_TEMPLATE -->/, '');
+      // Strip the marker block so global {{}} replacement never touches per-row placeholders
+      filled = filled.replace(/<!-- START_SINGLE_SLIP_TEMPLATE -->[\s\S]*?<!-- END_SINGLE_SLIP_TEMPLATE -->/, '');
     }
 
     // Dynamic Days Headers for Form XXVI
@@ -550,17 +615,17 @@ export class ClientComplianceReportComponent implements OnInit {
     if (reportType === 'form-xxviii') {
       const rows = this.normalizeFormXXVIIIRows(apiData, meta);
 
-      let slips = '<div class="wage-slip-card">No data available for the selected period.</div>';
+      // Store rows + template for Prev/Next navigation
+      this.formXXVIIIRows = rows;
+      this.formXXVIIICurrentIndex = 0;
+      this.formXXVIIISlipTemplate = rowTemplateObj;
+      this.formXXVIIIMeta = meta;
+
+      // Render first slip (or empty state)
       if (rows.length > 0 && rowTemplateObj) {
-        slips = rows.map((row: any, index: number) => this.populateSlipTemplate(rowTemplateObj, row, meta, apiData)).join('<div class="wage-slip-separator"></div>');
+        return this.populateSlipTemplate(rowTemplateObj, rows[0], meta, apiData);
       }
-
-      // Generate summary data for Form XXVIII
-      const summaryRows = rows.map((row: any, index: number) => this.buildSummaryRow(reportType, row, index)).join('');
-      filled = filled.replace(/{{SummaryData}}/g, summaryRows);
-
-      filled = filled.replace(/{{WageSlipsData}}/g, slips);
-      return filled;
+      return '<p style="padding:16px;color:#888;">No wage slip data found for the selected period.</p>';
     }
 
     // Build row HTML for all other forms
@@ -599,40 +664,46 @@ export class ClientComplianceReportComponent implements OnInit {
     if (!apiData?.rows) return [];
 
     return apiData.rows.map((row: any) => ({
-      EmployeeName: row.EmployeeName || row.name || '',
-      EmployeeCode: row.EmployeeCode || row.empId || '',
-      Designation: row.Designation || row.designation || '',
-      // Commercial Breakdown earnings
-      Basic: row.Basic || row.basic || 0,
-      DA: row.DA || row.da || 0,
-      HRA: row.HRA || row.hra || 0,
-      Others: row.Others || row.others || 0,
-      Bonus: row.advanceBonus || row.Bonus || row.bonus || 0,
-      LeaveWages: row.LeaveWages || row.leaveWages || 0,
-      NH: row.NH || row.nh || 0,
-      // Advance is removed from earnings - it's a deduction, not an earning
-      OT: row.OT || row.ot || 0,
-      OTAmount: row.OTAmount || row.otAmount || 0,
-      Gross: row.Gross || row.gross || 0,
-      // Commercial Breakdown percentages (for reporting)
-      cbHraPercentage: row.cbHraPercentage || 0,
-      cbLeavesPercentage: row.cbLeavesPercentage || 0,
-      cbNHPercentage: row.cbNHPercentage || 0,
-      cbAdvancePercentage: row.cbAdvancePercentage || 0,
-      cbBonusPercentage: row.cbBonusPercentage || 0,
-      cbPFPercentage: row.cbPFPercentage || 0,
-      cbESIPercentage: row.cbESIPercentage || 0,
-      cbOthersPercentage: row.cbOthersPercentage || 0,
-      // Deductions from Commercial Breakdown
-      PF: row.PF || row.pf || 0,
-      ESI: row.ESI || row.esi || 0,
-      PT: row.PT || row.pt || 0,
-      AdvanceDed: row.advance || row.AdvanceDed || row.advanceDed || 0,
-      OtherDed: row.OtherDed || row.otherDed || 0,
-      TotalDed: row.TotalDed || row.totalDeductions || 0,
-      Net: row.Net || row.net || 0,
+      EmployeeName:  row.EmployeeName  || row.name         || '',
+      EmployeeCode:  row.EmployeeCode  || row.empId         || '',
+      Designation:   row.Designation   || row.designation   || '',
+      FatherName:    row.FatherName    || row.fatherName    || '',
+      UAN:           row.UAN           || row.uan           || 'NA',
+      BankName:      row.BankName      || row.bankName      || 'NA',
+      AccountNo:     row.AccountNo     || row.bankAccount   || 'NA',
+      IFSCCode:      row.IFSCCode      || row.bankIfsc      || 'NA',
+      DateJoined:    row.DateJoined    || row.dateJoined    || '',
+      WagePeriod:    row.WagePeriod    || row.wagePeriod    || meta?.Period || '',
+      // Earnings from Commercial Breakdown
+      Basic:         row.Basic         || row.basic         || 0,
+      DA:            row.DA            || row.da            || 0,
+      HRA:           row.HRA           || row.hra           || 0,
+      Others:        row.Others        || row.others        || 0,
+      Bonus:         row.advanceBonus  || row.Bonus         || row.bonus || 0,
+      LeaveWages:    row.LeaveWages    || row.leaveWages    || 0,
+      NH:            row.NH            || row.nh            || 0,
+      OT:            row.OT            || row.ot            || 0,
+      OTAmount:      row.OTAmount      || row.otAmount      || 0,
+      Gross:         row.Gross         || row.gross         || 0,
+      // Commercial Breakdown percentages
+      cbHraPercentage:     row.cbHraPercentage     || 0,
+      cbLeavesPercentage:  row.cbLeavesPercentage  || 0,
+      cbNHPercentage:      row.cbNHPercentage       || 0,
+      cbAdvancePercentage: row.cbAdvancePercentage  || 0,
+      cbBonusPercentage:   row.cbBonusPercentage    || 0,
+      cbPFPercentage:      row.cbPFPercentage       || 0,
+      cbESIPercentage:     row.cbESIPercentage      || 0,
+      cbOthersPercentage:  row.cbOthersPercentage   || 0,
+      // Deductions
+      PF:        row.PF        || row.pf        || 0,
+      ESI:       row.ESI       || row.esi       || 0,
+      PT:        row.PT        || row.pt        || 0,
+      AdvanceDed: row.AdvanceDed || row.advance  || row.advanceDed || 0,
+      OtherDed:  row.OtherDed  || row.otherDed  || 0,
+      TotalDed:  row.TotalDed  || row.totalDeductions || 0,
+      Net:       row.Net       || row.net       || 0,
       DaysWorked: row.DaysWorked || row.daysWorked || 0,
-      SalaryDate: row.SalaryDate || meta.SalaryDate || ''
+      SalaryDate: row.SalaryDate || meta?.SalaryDate || ''
     }));
   }
 
@@ -661,53 +732,60 @@ export class ClientComplianceReportComponent implements OnInit {
   private populateSlipTemplate(template: string, row: any, meta: any, apiData: any): string {
     let filled = template;
 
-    // Replace all placeholders with actual data (handle both PascalCase and camelCase)
-    const allData = { ...row, ...meta };
-
-    // Replace specific wage slip placeholders with Commercial Breakdown data
-    const replacements: { [key: string]: any } = {
-      'Basic': row.Basic || row.basic || 0,
-      'DA': row.DA || row.da || 0,
-      'HRA': row.HRA || row.hra || 0,
-      'Others': row.Others || row.others || 0,
-      'Bonus': row.Bonus || row.bonus || 0,
-      'LeaveWages': row.LeaveWages || row.leaveWages || 0,
-      'NH': row.NH || row.nh || 0,
-      'Advance': row.Advance || row.advance || 0,
-      'OT': row.OT || row.ot || 0,
-      'OTAmount': row.OTAmount || row.otAmount || 0,
-      // Commercial Breakdown percentages (for reporting)
-      'cbHraPercentage': row.cbHraPercentage || 0,
-      'cbLeavesPercentage': row.cbLeavesPercentage || 0,
-      'cbNHPercentage': row.cbNHPercentage || 0,
-      'cbAdvancePercentage': row.cbAdvancePercentage || 0,
-      'cbBonusPercentage': row.cbBonusPercentage || 0,
-      'cbPFPercentage': row.cbPFPercentage || 0,
-      'cbESIPercentage': row.cbESIPercentage || 0,
-      'cbOthersPercentage': row.cbOthersPercentage || 0,
-      // Deductions from Commercial Breakdown
-      'PF': row.PF || row.pf || 0,
-      'ESI': row.ESI || row.esi || 0,
-      'PT': row.PT || row.pt || 0,
-      'AdvanceDed': row.AdvanceDed || row.advanceDed || 0,
-      'OtherDed': row.OtherDed || row.otherDed || 0,
-      'Gross': row.Gross || row.gross || 0,
-      'TotalDed': row.TotalDed || row.totalDeductions || 0,
-      'Net': row.Net || row.net || 0,
-      'EmployeeName': row.EmployeeName || row.name || '',
-      'EmployeeCode': row.EmployeeCode || row.empId || '',
-      'Designation': row.Designation || row.designation || '',
-      'DaysWorked': row.DaysWorked || row.daysWorked || 0,
-      'SalaryDate': row.SalaryDate || meta.SalaryDate || ''
+    // Build a flat lookup: row fields take priority, meta fills anything not on the row
+    const allData: { [key: string]: any } = {
+      // ── Meta pass-through first (Establishment, ContractorName, Period …) ─
+      ...meta,
+      // ── Employee identity — overrides meta ────────────────────────────────
+      EmployeeName:  row.EmployeeName  || '',
+      EmployeeCode:  row.EmployeeCode  || '',
+      Designation:   row.Designation   || '',
+      FatherName:    row.FatherName    || '',
+      UAN:           row.UAN           || 'NA',
+      BankName:      row.BankName      || 'NA',
+      AccountNo:     row.AccountNo     || 'NA',
+      IFSCCode:      row.IFSCCode      || 'NA',
+      DateJoined:    row.DateJoined    || '',
+      WagePeriod:    row.WagePeriod    || meta?.Period || '',
+      // ── Earnings ─────────────────────────────────────────────────────────
+      Basic:         row.Basic      || 0,
+      DA:            row.DA         || 0,
+      HRA:           row.HRA        || 0,
+      Others:        row.Others     || 0,
+      Bonus:         row.Bonus      || 0,
+      LeaveWages:    row.LeaveWages || 0,
+      NH:            row.NH         || 0,
+      OT:            row.OT         || 0,
+      OTAmount:      row.OTAmount   || 0,
+      Gross:         row.Gross      || 0,
+      // ── Deductions ───────────────────────────────────────────────────────
+      PF:            row.PF         || 0,
+      ESI:           row.ESI        || 0,
+      PT:            row.PT         || 0,
+      AdvanceDed:    row.AdvanceDed || 0,
+      OtherDed:      row.OtherDed   || 0,
+      TotalDed:      row.TotalDed   || 0,
+      Net:           row.Net        || 0,
+      // ── Misc ─────────────────────────────────────────────────────────────
+      DaysWorked:    row.DaysWorked || 0,
+      SalaryDate:    row.SalaryDate || meta?.SalaryDate || ''
+      // meta already spread above — no duplicate spread needed
     };
 
-    // Replace placeholders matching {{Key}} or {{Key || Default}}
-    filled = filled.replace(/{{\s*([\w]+)(?:\s*\|\|\s*['"]?([^'"}]+)['"]?)?\s*}}/g, (match, key, defaultValue) => {
-      if (allData[key] !== undefined && allData[key] !== null && allData[key] !== '') {
-        return allData[key];
+    // Replace {{Key}} and {{Key || Default}} placeholders
+    filled = filled.replace(
+      /{{\s*([\w]+)(?:\s*\|\|\s*['"]?([^'"}]+)['"]?)?\s*}}/g,
+      (match, key, defaultValue) => {
+        if (allData[key] !== undefined && allData[key] !== null && allData[key] !== '') {
+          return allData[key];
+        }
+        if (defaultValue !== undefined) return defaultValue;
+        const textFields = ['EmployeeName', 'EmployeeCode', 'Designation', 'FatherName',
+                            'UAN', 'BankName', 'AccountNo', 'IFSCCode', 'DateJoined',
+                            'WagePeriod', 'SalaryDate', 'Establishment'];
+        return textFields.includes(key) ? 'N/A' : '0';
       }
-      return defaultValue !== undefined ? defaultValue : (['EmployeeName', 'EmployeeCode', 'Designation', 'SalaryDate'].includes(key) ? 'N/A' : '0');
-    });
+    );
 
     return filled;
   }
