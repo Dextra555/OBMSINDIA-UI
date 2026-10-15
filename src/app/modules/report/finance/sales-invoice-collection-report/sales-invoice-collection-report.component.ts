@@ -6,6 +6,7 @@ import { MastermoduleService } from '../../../../service/mastermodule.service';
 import { Router, NavigationEnd } from '@angular/router';
 import { DatasharingService } from 'src/app/service/datasharing.service';
 import { UserAccessModel } from 'src/app/model/userAccesModel';
+import { CommonService } from '../../../../service/common.service';
 
 @Component({
   selector: 'app-sales-invoice-collection-report',
@@ -24,13 +25,15 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
   warningMessage: string = '';
   showLoadingSpinner: boolean = false;
   userAccessModel!: UserAccessModel;
+  allowedBranchCodes: string = '0';
 
   constructor(
     public sanitizer: DomSanitizer,
     private _masterService: MastermoduleService,
     private fb: FormBuilder,
     private router: Router,
-    private _dataService: DatasharingService
+    private _dataService: DatasharingService,
+    private _commonService: CommonService
   ) {
     this.frm = fb.group({
       StartDate: ['', Validators.required],
@@ -56,7 +59,10 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
     if (this.currentUser == null || this.currentUser == undefined) {
       this._dataService.getUsername().subscribe((username) => {
         this.currentUser = username;
+        this.loadAllowedBranches(this.currentUser);
       });
+    } else {
+      this.loadAllowedBranches(this.currentUser);
     }
     this.getUserAccessRights(this.currentUser, 'Sales Report');
   }
@@ -92,6 +98,22 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
     );
   }
 
+  private loadAllowedBranches(userName: string): void {
+    if (!userName || userName === 'superadmin') {
+      this.allowedBranchCodes = '0';
+      return;
+    }
+    this._commonService.getObmsBranchesPermissionByUser(userName).subscribe(
+      (data: any[]) => {
+        const codes = (data || []).filter(b => b.IsAllowed === true).map(b => b.BranchCode);
+        this.allowedBranchCodes = codes.length > 0 ? codes.join(',') : '0';
+      },
+      () => {
+        this.allowedBranchCodes = '0';
+      }
+    );
+  }
+
   returnDate(date?: any): string {
     let currentDate = new Date();
     if (date) {
@@ -107,7 +129,7 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
   private buildQueryParams(): string {
     const startDate = this.returnDate(this.frm.get('StartDate')?.value);
     const endDate   = this.returnDate(this.frm.get('EndDate')?.value);
-    return `LoginID=${this.currentUser}&StartDate=${startDate}&EndDate=${endDate}&Branch=0`;
+    return `LoginID=${this.currentUser}&StartDate=${startDate}&EndDate=${endDate}&Branch=${this.allowedBranchCodes}`;
   }
 
   /** Show button — opens the India Sales Invoice Report */
