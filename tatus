@@ -1,0 +1,26 @@
+src/app/modules/master/employee-master/new-employee/new-employee.component.html:2251: trailing whitespace.
+[32m+[m[32m                <input type="text" formControlName="PANNumber" matInput placeholder="ABCDE1234F" autocomplete="off">[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.html:2510: trailing whitespace.
+[32m+[m[32m          </div>[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:548: trailing whitespace.
+[32m+[m[32m      TDSApplicable: ['No'],[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:1043: trailing whitespace.
+[32m+[m[32m        // TDS Deduction Applicable — stored on employee, not salaryDetail[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:1044: trailing whitespace.
+[32m+[m[32m        // Handle bool (true/false), number (1/0), and string ('True'/'False') from API[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:1045: trailing whitespace.
+[32m+[m[32m        const tdsVal = employee['TDSApplicable'] ?? employee['tDSApplicable'] ?? employee['tdsApplicable'] ?? false;[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:1046: trailing whitespace.
+[32m+[m[32m        const tdsIsYes = tdsVal === true || tdsVal === 1 || tdsVal === 'true' || tdsVal === 'True' || tdsVal === '1';[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:1047: trailing whitespace.
+[32m+[m[32m        this.frm.get('TDSApplicable')?.setValue(tdsIsYes ? 'Yes' : 'No');[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:1048: trailing whitespace.
+[32m+[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:2588: trailing whitespace.
+[32m+[m[32m    data['TDSApplicable'] = this.frm.get('TDSApplicable')?.value === 'Yes';[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:2589: trailing whitespace.
+[32m+[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:2590: trailing whitespace.
+[32m+[m[41m[m
+src/app/modules/master/employee-master/new-employee/new-employee.component.ts:2591: trailing whitespace.
+[32m+[m[41m[m
