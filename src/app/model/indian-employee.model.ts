@@ -58,6 +58,9 @@ export class IndianEmployeeModel {
     BankName: string | null = null;
     UPIId: string | null = null;
 
+    /// Whether TDS deduction is applicable. false = No (default), true = Yes.
+    TDSApplicable: boolean = false;
+
     constructor(data: Partial<IndianEmployeeModel> = {}) {
         this.EMP_ID = data.EMP_ID || 0;
         this.EMP_ROLE = data.EMP_ROLE || '';
@@ -117,6 +120,7 @@ export class IndianEmployeeModel {
         this.BankIFSC = data.BankIFSC || null;
         this.BankName = data.BankName || null;
         this.UPIId = data.UPIId || null;
+        this.TDSApplicable = data.TDSApplicable || false;
     }
 }
 

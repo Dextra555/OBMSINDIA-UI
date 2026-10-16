@@ -545,6 +545,7 @@ export class NewEmployeeComponent implements OnInit {
 
       DETECTBYND55: [''],
 
+      TDSApplicable: ['No'],
 
 
 
@@ -1038,6 +1039,12 @@ export class NewEmployeeComponent implements OnInit {
 
 
         this.frm.get('DETECTBYND55')?.setValue(salaryDetail?.DETECTBYND55 == true ? "Yes" : "No");
+
+        // TDS Deduction Applicable — stored on employee, not salaryDetail
+        // Handle bool (true/false), number (1/0), and string ('True'/'False') from API
+        const tdsVal = employee['TDSApplicable'] ?? employee['tDSApplicable'] ?? employee['tdsApplicable'] ?? false;
+        const tdsIsYes = tdsVal === true || tdsVal === 1 || tdsVal === 'true' || tdsVal === 'True' || tdsVal === '1';
+        this.frm.get('TDSApplicable')?.setValue(tdsIsYes ? 'Yes' : 'No');
 
         this.frm.get('OT')?.setValue(salaryDetail?.OT || 'No');
 
@@ -2575,6 +2582,10 @@ export class NewEmployeeComponent implements OnInit {
 
 
     data['INCOMETAXDETECT'] = this.frm.get('INCOMETAXDETECT')?.value == 'Yes';
+
+
+
+    data['TDSApplicable'] = this.frm.get('TDSApplicable')?.value === 'Yes';
 
 
 

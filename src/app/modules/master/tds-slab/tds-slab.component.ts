@@ -190,7 +190,8 @@ export class TdsSlabComponent implements AfterViewInit {
 
   editTDSSlab(tdsConfig: TDSSlabConfiguration): void {
     // Navigate to edit page or open dialog
-    this._router.navigate(['/master/tds-slab/edit', tdsConfig.id]);
+    const id = (tdsConfig as any).Id ?? (tdsConfig as any).id ?? tdsConfig.id;
+    this._router.navigate(['/master/tds-slab/edit', id]);
   }
 
   addNewTDSSlab(): void {
@@ -200,7 +201,8 @@ export class TdsSlabComponent implements AfterViewInit {
 
   viewTDSSlabDetails(tdsConfig: TDSSlabConfiguration): void {
     // Navigate to details page or open dialog
-    this._router.navigate(['/master/tds-slab/details', tdsConfig.id]);
+    const id = (tdsConfig as any).Id ?? (tdsConfig as any).id ?? tdsConfig.id;
+    this._router.navigate(['/master/tds-slab/details', id]);
   }
 
   exportToExcel(): void {

@@ -2248,7 +2248,7 @@
 
 
 
-                <input type="text" formControlName="PANNumber / UAN Number" matInput placeholder="ABCDE1234F" autocomplete="off">
+                <input type="text" formControlName="PANNumber" matInput placeholder="ABCDE1234F" autocomplete="off">
 
 
 
@@ -2493,9 +2493,21 @@
 
 
           </div>
-
-
-
+          <div class="row mb-3">
+            <div class="col-6">
+              <mat-label class="mr-3"><strong>TDS Deduction Applicable</strong></mat-label>
+              <br />
+              <div class="py-2">
+                <mat-radio-group aria-label="TDS Deduction" formControlName="TDSApplicable">
+                  <mat-radio-button value="Yes">Yes</mat-radio-button>
+                  <mat-radio-button value="No">No</mat-radio-button>
+                </mat-radio-group>
+              </div>
+              <mat-hint style="font-size:0.75em;color:#666;">
+                Yes — TDS is calculated from TDS Slab Configuration and deducted from net salary.
+              </mat-hint>
+            </div>
+          </div>
         </div>
 
 
