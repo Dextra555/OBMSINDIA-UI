@@ -610,8 +610,7 @@
                             style="cursor:pointer;" class="btn wlt-c-furg-text-danger" (click)="onDeleteClick()">
                             Delete
                         </button>
-                        <button *ngIf="(this.userAccessModel.updateAccess == true || this.userAccessModel.createAccess == true 
-                        || currentUser == 'superadmin') && dynamicEditable == 'set'" class="btn wlt-c-furg-btn-primary"
+                        <button *ngIf="((attendanceForm.value.ID == 0 ? this.userAccessModel.createAccess : this.userAccessModel.updateAccess) || currentUser == 'superadmin' || currentUser == 'admin') && dynamicEditable == 'set'" class="btn wlt-c-furg-btn-primary"
                             [disabled]="attendanceForm.invalid" (click)="saveAttendance()">{{attendanceForm.value.ID ==
                             0 ? 'Save':'Update'}} </button>
                     </div>

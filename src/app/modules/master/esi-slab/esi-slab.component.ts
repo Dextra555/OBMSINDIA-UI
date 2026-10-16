@@ -145,8 +145,6 @@ export class EsiSlabComponent implements AfterViewInit {
   }
 
   onDeleteClick(id: number): void {
-    this.showLoadingSpinner = true;
-
     this.dialog
       .open(DialogConfirmationComponent, {
         data: `Are you sure want to delete this ESI configuration?`
@@ -154,20 +152,28 @@ export class EsiSlabComponent implements AfterViewInit {
       .afterClosed()
       .subscribe((result: { confirmDialog: boolean; remarks: any }) => {
         if (result.confirmDialog) {
-          // This would need to be implemented in the backend
-          Swal.fire({
-            toast: true,
-            position: 'top',
-            showConfirmButton: false,
-            title: 'Info',
-            text: 'Delete functionality needs to be implemented in backend',
-            icon: 'info',
-            showCloseButton: false,
-            timer: 3000,
-          });
-          this.showLoadingSpinner = false;
-        } else {
-          this.showLoadingSpinner = false;
+          this.showLoadingSpinner = true;
+          this._masterService.deleteESIConfigurationById(id).subscribe(
+            () => {
+              this.showLoadingSpinner = false;
+              Swal.fire({
+                toast: true,
+                position: 'top',
+                showConfirmButton: false,
+                title: 'Success',
+                text: 'ESI configuration deleted successfully',
+                icon: 'success',
+                showCloseButton: false,
+                timer: 3000,
+              });
+              this.getESIConfigurationList();
+            },
+            (error: any) => {
+              this.showLoadingSpinner = false;
+              console.error('Error deleting ESI configuration:', error);
+              Swal.fire('Error', 'Failed to delete ESI configuration. Please try again.', 'error');
+            }
+          );
         }
       });
   }

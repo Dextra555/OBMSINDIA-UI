@@ -1,0 +1,37 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Fix Save/Update button access control on master, administration, and client form components (Groups A and B from plan.md: 11 ID-based and 2 isEdit-based files). These are the foundational pages users interact with most frequently.",
+  "status": "pending",
+  "steps": [
+    "Read context.json at c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI\\.agents\\tasks\\task-fix-access-control\\context.json FIRST before touching any file.",
+    "Read plan.md at c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI\\.agents\\tasks\\plan.md for the exact broken pattern, fix, and line numbers for each file in this FEAT.",
+    "Fix master/socso-slab/new-socso-slab/new-socso-slab.component.html line 57: replace '*ngIf=\"this.userAccessModel.createAccess == true || this.userAccessModel.updateAccess == true || currentUser == \\'superadmin\\'\"' with the mode-split pattern using socsoForm.get('socso_id')?.value == 0 for new, != 0 for edit.",
+    "Fix master/sip-slab/new-sip-slab/new-sip-slab.component.html line 50: same pattern, use sipForm.get('SIP_id')?.value.",
+    "Fix master/epf-slab/new-epf-slab/new-epf-slab.component.html line 82: same pattern, use epfForm.get('epf_id')?.value.",
+    "Fix master/salary-slab/new-salary-slab/new-salary-slab.component.html line 246: use component property 'salaryID' (not a form field) as the mode detector.",
+    "Fix master/income-tax-slab/new-income-tax-slab/new-income-tax-slab.component.html lines 190+192: (a) Remove the broken *ngIf from the Cancel button (it should always show); (b) Add the correct mode-split *ngIf to the Save/Update button using incomeTaxForm.get('IT_ID')?.value.",
+    "Fix administration/bank-list/new-bank-list/new-bank-list.component.html line 40: use bankListForm.get('ID')?.value.",
+    "Fix administration/bank-master/new-bank-master/new-bank-master.component.html line 65: use bankMasterForm.get('ID')?.value.",
+    "Fix administration/user-bank-access/new-user-bank-access/new-user-bank-access.component.html line 55: use userBankAccessTitle string ('new' = create, else = update). Also update button label from 'userBankAccessForm.get(\\'ID\\')?.value == 0 ? \\'Save\\' : \\'Update\\'` to 'userBankAccessTitle == \\'new\\' ? \\'Save\\' : \\'Update\\'' for consistency.",
+    "Fix administration/user-branch-access/new-user-branch-access/new-user-branch-access.component.html line 50: use userBranchAccessTitle string.",
+    "Fix master/client-master/new-client/new-client-master.component.html line 451: use clientForm.get('Id')?.value (note: 'Id' not 'ID').",
+    "Fix payroll/misc-transctions/new-misc-transactions/new-misc-transactions.component.html line 122: use miscTransForm.get('ID')?.value.",
+    "Fix finance/legal-demand-action/new-legal-demand-action/new-legal-demand-action.component.html line 79: use isEdit boolean.",
+    "Fix master/employee-master/new-employee/new-employee.component.html line 2553: use isEdit boolean.",
+    "Run ng build --configuration=production from c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI and confirm 0 errors.",
+    "Update this FEAT file's status to 'completed' and record the build result in findings.",
+    "Commit locally: git add the 14 changed HTML files and commit with message 'fix(access): correct save/update button guards on master and admin form pages (FEAT-001)'."
+  ],
+  "acceptance_criteria": [
+    "All 14 files listed in the steps have their broken *ngIf pattern replaced.",
+    "In new-income-tax-slab: Cancel button has no *ngIf; Save/Update button has the mode-split *ngIf.",
+    "ng build --configuration=production completes with 0 errors.",
+    "No other files in src/app/modules/ are modified."
+  ],
+  "verification": [
+    "cd \"c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI\" && ng build --configuration=production"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

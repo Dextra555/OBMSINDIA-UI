@@ -2227,7 +2227,20 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
-
+    // Secondary access guard: block update if user lacks updateAccess
+    if (this.isEdit === true && !this.userAccessModel.updateAccess
+      && this.currentUser !== 'superadmin' && this.currentUser !== 'admin') {
+      Swal.fire({
+        toast: true,
+        position: 'top',
+        showConfirmButton: false,
+        title: 'Access Denied',
+        text: 'You do not have permission to update this record',
+        icon: 'error',
+        timer: 3000,
+      });
+      return;
+    }
 
 
 

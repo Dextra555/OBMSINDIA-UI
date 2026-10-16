@@ -185,7 +185,7 @@
                                                         <button class="btn wlt-c-furg-btn-gray mr-3" mat-dialog-close
                                                             (click)="clearEmployeeAdvanceDetails()"> Cancel</button>
                                                         <button
-                                                            *ngIf="(this.userAccessModel.updateAccess == true || this.userAccessModel.createAccess == true || currentUser == 'superadmin')"
+                                                            *ngIf="(isEmployeeIdValid() === false ? this.userAccessModel.createAccess : this.userAccessModel.updateAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
                                                             class="btn wlt-c-furg-btn-primary"
                                                             (click)="savebuttonClick()">
                                                             {{isEmployeeIdValid() === false ? 'Save' :

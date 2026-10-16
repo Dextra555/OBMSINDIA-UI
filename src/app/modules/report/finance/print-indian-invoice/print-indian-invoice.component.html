@@ -47,6 +47,8 @@
                                 <th mat-header-cell *matHeaderCellDef mat-sort-header class="s-no-column"> Action </th>
                                 <td mat-cell *matCellDef="let element; let i = index" class="s-no-column">
                                     <mat-checkbox [checked]="rowCheckedState[i]"
+                                        [disabled]="element.ID === 0"
+                                        [matTooltip]="element.ID === 0 ? 'Invoice not yet created' : ''"
                                         (change)="toggleRowCheckbox(i,element.ID)"></mat-checkbox>
                                 </td>
                             </ng-container>
@@ -70,7 +72,7 @@
                     <div class="text-left">
                         <div class="btn-group" role="group">
                             <button class="btn wlt-c-furg-btn-primary m-1" (click)="printIndianInvoiceClick()"
-                                [disabled]="frm.invalid"> Print Indian Invoice</button>
+                                [disabled]="frm.invalid || !hasSelectedInvoices"> Print Indian Invoice</button>
                         </div>
                     </div>
                 </div>

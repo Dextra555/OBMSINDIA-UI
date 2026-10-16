@@ -72,10 +72,10 @@
                         <button class="btn wlt-c-furg-btn-gray mr-3" mat-dialog-close
                         (click)="clearClickButton()"> Cancel</button>
                         <button
-                            *ngIf="(this.userAccessModel.updateAccess == true || this.userAccessModel.createAccess == true || currentUser == 'superadmin')"
+                            *ngIf="this.userAccessModel.deleteAccess == true || currentUser == 'superadmin' || currentUser == 'admin'"
                             class="btn wlt-c-furg-btn-danger mr-3" (click)="deleteClickButton()" [disabled]="frm.invalid"> Delete</button>
                         <button
-                            *ngIf="(this.userAccessModel.updateAccess == true || this.userAccessModel.createAccess == true || currentUser == 'superadmin')"
+                            *ngIf="this.userAccessModel.createAccess == true || currentUser == 'superadmin' || currentUser == 'admin'"
                             class="btn wlt-c-furg-btn-primary"
                             [disabled]="frm.invalid || frm.controls['Branchcode'].value === 0 || frm.controls['Branchcode'].value === undefined"
                             (click)="btnSaveandUpdateClick()">

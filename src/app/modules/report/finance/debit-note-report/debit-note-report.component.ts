@@ -53,7 +53,7 @@ export class DebitNoteReportComponent implements OnInit {
     if (!this.currentUser || this.currentUser === 'null') {
       this._dataService.getUsername().subscribe(u => this.currentUser = u);
     }
-    this.getUserAccessRights(this.currentUser, 'DebitNote');
+    this.getUserAccessRights(this.currentUser, 'Debit Note Report');
   }
 
   getUserAccessRights(userName: string, screenName: string) {

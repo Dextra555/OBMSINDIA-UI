@@ -1,0 +1,131 @@
+import { Component, OnInit } from '@angular/core';
+import { environment } from '../../../../../environments/environment';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MastermoduleService } from '../../../../service/mastermodule.service';
+import { Router, NavigationEnd } from '@angular/router';
+import { DatasharingService } from 'src/app/service/datasharing.service';
+import { UserAccessModel } from 'src/app/model/userAccesModel';
+
+@Component({
+  selector: 'app-sales-invoice-report',
+  templateUrl: './sales-invoice-report.component.html',
+  styleUrls: []
+})
+export class SalesInvoiceReportComponent implements OnInit {
+
+  url: string = environment.baseReportUrl;
+  urlSafe: SafeResourceUrl | undefined;
+  currentUrl: string = 'Finance/';
+  frm!: FormGroup;
+  currentUser: string = '';
+  errorMessage: string = '';
+  warningMessage: string = '';
+  showLoadingSpinner: boolean = false;
+  userAccessModel!: UserAccessModel;
+  allowedBranchCodes: string = '0';
+
+  constructor(
+    public sanitizer: DomSanitizer,
+    private _masterService: MastermoduleService,
+    private fb: FormBuilder,
+    private router: Router,
+    private _dataService: DatasharingService
+  ) {
+    this.frm = fb.group({
+      StartDate: ['', Validators.required],
+      EndDate: ['', Validators.required],
+    });
+
+    this.userAccessModel = {
+      readAccess: false,
+      updateAccess: false,
+      deleteAccess: false,
+      createAccess: false,
+    };
+  }
+
+  ngOnInit(): void {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this._dataService.scrollToTop();
+      }
+    });
+
+    this.currentUser = sessionStorage.getItem('username')!;
+    if (this.currentUser == null || this.currentUser == undefined) {
+      this._dataService.getUsername().subscribe((username) => {
+        this.currentUser = username;
+      });
+    }
+    this.getUserAccessRights(this.currentUser, 'Sales Invoice Report');
+  }
+
+  getUserAccessRights(userName: string, screenName: string) {
+    this.showLoadingSpinner = true;
+    this._masterService.getUserAccessRights(userName, screenName).subscribe(
+      (data) => {
+        if (data != null) {
+          this.userAccessModel.readAccess   = data.Read   ?? false;
+          this.userAccessModel.deleteAccess  = data.Delete ?? false;
+          this.userAccessModel.updateAccess  = data.Update ?? false;
+          this.userAccessModel.createAccess  = data.Create ?? false;
+        }
+
+        const hasAccess =
+          this.currentUser === 'superadmin' ||
+          this.userAccessModel.readAccess === true;
+
+        if (hasAccess) {
+          this.warningMessage = '';
+        } else {
+          this.warningMessage = `Dear <B>${this.currentUser}</B>, <br>
+              You do not have permissions to view this page. <br>
+              If you feel you should have access to this page, Please contact administrator. <br>
+              Thank you`;
+        }
+        this.hideSpinner();
+      },
+      (error) => {
+        this.handleErrors(error);
+      }
+    );
+  }
+
+  returnDate(date?: any): string {
+    let currentDate = new Date();
+    if (date) {
+      currentDate = new Date(date);
+    }
+    const year  = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day   = String(currentDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private buildQueryParams(): string {
+    const startDate = this.returnDate(this.frm.get('StartDate')?.value);
+    const endDate   = this.returnDate(this.frm.get('EndDate')?.value);
+    return `LoginID=${this.currentUser}&StartDate=${startDate}&EndDate=${endDate}&Branch=${this.allowedBranchCodes}`;
+  }
+
+  onSubmit() {
+    if (this.frm.invalid) {
+      return;
+    }
+    const baseUrl = environment.baseReportUrl + this.currentUrl;
+    this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(
+      baseUrl + 'SalesInvoiceReport.aspx?' + this.buildQueryParams()
+    );
+  }
+
+  handleErrors(error: string) {
+    if (error != null && error !== '') {
+      this.hideSpinner();
+    }
+  }
+
+  hideSpinner() {
+    this.showLoadingSpinner = false;
+  }
+}

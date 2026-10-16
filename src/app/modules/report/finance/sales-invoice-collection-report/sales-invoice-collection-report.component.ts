@@ -6,7 +6,6 @@ import { MastermoduleService } from '../../../../service/mastermodule.service';
 import { Router, NavigationEnd } from '@angular/router';
 import { DatasharingService } from 'src/app/service/datasharing.service';
 import { UserAccessModel } from 'src/app/model/userAccesModel';
-import { CommonService } from '../../../../service/common.service';
 
 @Component({
   selector: 'app-sales-invoice-collection-report',
@@ -25,6 +24,8 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
   warningMessage: string = '';
   showLoadingSpinner: boolean = false;
   userAccessModel!: UserAccessModel;
+  // Server-side branch filtering is done via LoginID lookup in the .aspx.cs files.
+  // Always pass '0' here; the report server resolves the correct branches from DB.
   allowedBranchCodes: string = '0';
 
   constructor(
@@ -32,8 +33,7 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
     private _masterService: MastermoduleService,
     private fb: FormBuilder,
     private router: Router,
-    private _dataService: DatasharingService,
-    private _commonService: CommonService
+    private _dataService: DatasharingService
   ) {
     this.frm = fb.group({
       StartDate: ['', Validators.required],
@@ -59,10 +59,7 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
     if (this.currentUser == null || this.currentUser == undefined) {
       this._dataService.getUsername().subscribe((username) => {
         this.currentUser = username;
-        this.loadAllowedBranches(this.currentUser);
       });
-    } else {
-      this.loadAllowedBranches(this.currentUser);
     }
     this.getUserAccessRights(this.currentUser, 'Sales Report');
   }
@@ -94,22 +91,6 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
       },
       (error) => {
         this.handleErrors(error);
-      }
-    );
-  }
-
-  private loadAllowedBranches(userName: string): void {
-    if (!userName || userName === 'superadmin') {
-      this.allowedBranchCodes = '0';
-      return;
-    }
-    this._commonService.getObmsBranchesPermissionByUser(userName).subscribe(
-      (data: any[]) => {
-        const codes = (data || []).filter(b => b.IsAllowed === true).map(b => b.BranchCode);
-        this.allowedBranchCodes = codes.length > 0 ? codes.join(',') : '0';
-      },
-      () => {
-        this.allowedBranchCodes = '0';
       }
     );
   }

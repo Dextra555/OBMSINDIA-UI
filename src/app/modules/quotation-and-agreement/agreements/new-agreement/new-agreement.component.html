@@ -124,7 +124,7 @@
 
             <mat-label>Period</mat-label>
 
-            <input type="text" formControlName="Period" matInput placeholder="e.g. 26-27" autocomplete="off">
+            <input type="text" formControlName="Period" matInput placeholder="" autocomplete="off">
 
           </mat-form-field>
 
@@ -742,7 +742,8 @@
 
             <button class="btn wlt-c-furg-btn-gray mr-3" type="button" (click)="cancel()"> Cancel</button>
 
-            <button class="btn wlt-c-furg-btn-primary">{{isEdit ? 'Update' : 'Save'}}</button>
+            <button *ngIf="(isEdit ? this.userAccessModel.updateAccess : this.userAccessModel.createAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
+              class="btn wlt-c-furg-btn-primary">{{isEdit ? 'Update' : 'Save'}}</button>
 
           </div>
 

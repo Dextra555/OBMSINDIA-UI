@@ -576,6 +576,26 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
 
   onSubmit() {
+    // Access control guard — secondary defense
+    const isAdmin = this.currentUser === 'superadmin' || this.currentUser === 'admin';
+    if (this.isEdit && !this.userAccessModel.updateAccess && !isAdmin) {
+      Swal.fire({
+        toast: true, position: 'top', showConfirmButton: false,
+        title: 'Access Denied',
+        text: 'You do not have permission to update this agreement.',
+        icon: 'error', showCloseButton: true, timer: 4000,
+      });
+      return;
+    }
+    if (!this.isEdit && !this.userAccessModel.createAccess && !isAdmin) {
+      Swal.fire({
+        toast: true, position: 'top', showConfirmButton: false,
+        title: 'Access Denied',
+        text: 'You do not have permission to create a new agreement.',
+        icon: 'error', showCloseButton: true, timer: 4000,
+      });
+      return;
+    }
 
     let data = this.frm.getRawValue();
 

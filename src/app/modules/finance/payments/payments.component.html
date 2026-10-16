@@ -239,7 +239,7 @@
               (click)="deleteClickButton()" [disabled]="paymentID == 0"> Delete</button>
             <button class="btn btn-print mr-3" [disabled]="paymentID == 0" (click)="onPrint()">Print</button>
             <button type="submit"
-              *ngIf="this.userAccessModel.createAccess == true ||this.userAccessModel.updateAccess == true || currentUser == 'superadmin'"
+              *ngIf="(paymentID > 0 ? this.userAccessModel.updateAccess : this.userAccessModel.createAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
               class="btn wlt-c-furg-btn-primary" [disabled]="hasInvalidPayment" (click)="onSubmit()"> {{ paymentID > 0 ?
               'Update' : 'Save' }}</button>
           </div>

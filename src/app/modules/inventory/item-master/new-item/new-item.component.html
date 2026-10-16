@@ -98,7 +98,7 @@
           <div class="text-right">
             <button class="btn wlt-c-furg-btn-gray mr-3" mat-dialog-close
             (click)="onCancelClick()"> Cancel</button>
-            <button *ngIf="this.userAccessModel.createAccess == true || this.userAccessModel.updateAccess == true || currentUser == 'superadmin'"
+            <button *ngIf="(isEdit ? this.userAccessModel.updateAccess : this.userAccessModel.createAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
             class="btn wlt-c-furg-btn-primary">  {{isEdit ? 'Update' : 'Save'}}</button>
           </div>
         </div>

@@ -119,7 +119,7 @@
                     <div class="text-right">
                         <button class="btn wlt-c-furg-btn-gray mr-3" mat-dialog-close (click)="clearMiscTransDetails()">
                             Cancel</button>
-                        <button *ngIf="(this.userAccessModel.updateAccess == true || this.userAccessModel.createAccess == true || currentUser == 'superadmin')"
+                        <button *ngIf="(miscTransForm.get('ID')?.value === 0 ? this.userAccessModel.createAccess : this.userAccessModel.updateAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
                         class="btn wlt-c-furg-btn-primary" [disabled]="miscTransForm.invalid || miscTransForm.get('BranchCode')?.value === 0"
                             (click)="savebuttonClick()"> {{miscTransForm.get('ID')?.value === 0 ? 'Save' : 'Update'
                             }}</button>

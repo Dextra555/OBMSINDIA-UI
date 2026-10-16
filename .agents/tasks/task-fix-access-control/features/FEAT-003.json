@@ -1,0 +1,37 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Fix Save/Update button access control on special-case components: recycle-bin restore pages, cheque-status, always-new pages (batch-invoice, salary-processing, employee-transfer, registration), accounting GL page, and administration cheque-master. Groups E, F, G, H, I, J, K from plan.md. Independent of FEAT-001 and FEAT-002 — no shared files.",
+  "status": "pending",
+  "steps": [
+    "Read context.json at c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI\\.agents\\tasks\\task-fix-access-control\\context.json FIRST before touching any file.",
+    "Read plan.md at c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI\\.agents\\tasks\\plan.md for the exact broken pattern and fix for each file in this FEAT.",
+    "Fix finance/invoice-recycle-bin/invoice-recycle-bin.component.html line 62: Restore is always-update — replace with 'updateAccess == true || currentUser == \\'superadmin\\' || currentUser == \\'admin\\''.",
+    "Fix finance/payments-recycle-bin/payments-recycle-bin.component.html lines 84+86: Both the outer div *ngIf and the Restore button *ngIf should use updateAccess only. Fix both occurrences.",
+    "Fix finance/cheque-status/cheque-status.component.html line 143: Deposit/Return is always-update — replace with updateAccess only.",
+    "Fix finance/finance-cheque-master/finance-cheque-master.component.html line 120: Save creates a new cheque master record (auto running number, no edit mode) — replace with createAccess only.",
+    "Fix finance/batch-invoice/batch-invoice.component.html line 67: Batch invoice always creates new records — replace with createAccess only.",
+    "Fix payroll/salary-processing/salary-processing.component.html line 133: Process always creates salary records — replace with createAccess only.",
+    "Fix master/employee-transfer/employee-transfer.component.html line 96: Employee transfer always creates a new transfer record — replace with createAccess only.",
+    "Fix user/rigistration/registration.component.html line 86: Registration always creates new users — replace with createAccess only.",
+    "Fix Accounting/acc-gl-data-list/acc-gl-data-list.component.html lines 75+78: Two separate buttons. Delete button (line 75): use updateAccess only. Save button (line 78, calls btnSaveandUpdateClick which calls addGLRecord): use createAccess only.",
+    "Fix administration/cheque-master/new-cheque-master/new-cheque-master.component.html line 58: First READ new-cheque-master.component.ts to verify whether chequeMasterForm has an ID field that can be non-zero (edit mode). If yes, apply ID-based split with chequeMasterForm.get('ID')?.value. If the form has no ID field or it is always 0, apply createAccess-only fix.",
+    "Run ng build --configuration=production from c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI and confirm 0 errors.",
+    "Update this FEAT file's status to 'completed' and record the build result and the cheque-master finding in findings.",
+    "Commit locally: git add the changed HTML files and commit with message 'fix(access): correct save/update button guards on special-case pages — recycle-bin, cheque, GL, batch, registration (FEAT-003)'."
+  ],
+  "acceptance_criteria": [
+    "Recycle-bin restore buttons (invoice and payments) use updateAccess only.",
+    "Cheque-status Deposit/Return button uses updateAccess only.",
+    "Finance-cheque-master Save, batch-invoice Save, salary-processing Process, employee-transfer Save, registration Register button all use createAccess only.",
+    "Accounting GL Delete button uses updateAccess only; GL Save button uses createAccess only.",
+    "Administration cheque-master button is fixed based on TS investigation (createAccess-only or ID-based split).",
+    "ng build --configuration=production completes with 0 errors.",
+    "No .ts files are modified (unless the cheque-master investigation reveals a missing isEdit variable that must be added — if so, document the change in findings and add it)."
+  ],
+  "verification": [
+    "cd \"c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI\" && ng build --configuration=production"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

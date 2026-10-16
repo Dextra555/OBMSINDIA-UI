@@ -243,7 +243,7 @@
           <div class="text-right">
             <button class="btn wlt-c-furg-btn-gray mr-3" mat-dialog-close (click)="clearSalaryDetails()">
               Cancel</button>
-            <button *ngIf="(this.userAccessModel.createAccess == true || this.userAccessModel.updateAccess == true || currentUser== 'superadmin')"
+            <button *ngIf="(salaryTitleStatus == 'edit' ? this.userAccessModel.updateAccess : this.userAccessModel.createAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
             class="btn wlt-c-furg-btn-primary" (click)="saveSalary()" [disabled]="salaryForm.invalid">
               Save</button>
           </div>

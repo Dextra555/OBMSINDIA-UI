@@ -57,7 +57,7 @@ export class ProfitAndLossWithoutContraComponent implements OnInit {
         this.currentUser = username;
       });
     }
-    this.getUserAccessRights(this.currentUser, 'Profit And Lost');
+    this.getUserAccessRights(this.currentUser, 'Profit And Loss Statement');
   }
 
   getUserAccessRights(userName: string, screenName: string) {

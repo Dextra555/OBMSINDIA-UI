@@ -2561,9 +2561,7 @@
 
 
             <button
-
-              *ngIf="(this.userAccessModel.createAccess == true || this.userAccessModel.updateAccess == true || currentUser == 'superadmin')"
-
+              *ngIf="(isEdit ? this.userAccessModel.updateAccess : this.userAccessModel.createAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
               class="btn wlt-c-furg-btn-primary"> {{isEdit ? 'Update' : 'Save'}}</button>
 
 

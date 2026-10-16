@@ -17,7 +17,7 @@ import { environment } from 'src/environments/environment';
 export class AccountingProfitAndLossComponent implements OnInit {
 
     url: string = environment.baseReportUrl;
-    urlSafe: SafeResourceUrl | undefined;
+    urlSafe!: SafeResourceUrl;
     currentUrl: string = "Accounting/ProfitAndLostReport.aspx?"
     frm!: FormGroup;
     branchList: any = [];
@@ -26,10 +26,12 @@ export class AccountingProfitAndLossComponent implements OnInit {
     errorMessage: string = '';
     warningMessage: string = '';
     showLoadingSpinner: boolean = false;
+    iframeVisible: boolean = false;
     userAccessModel!: UserAccessModel;
   
      constructor(public sanitizer: DomSanitizer, private _masterService: MastermoduleService, private service: InventoryService, private empService: EmployeeService, 
         private fb: FormBuilder,private router: Router, private _dataService: DatasharingService) {    
+          this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl('');
           this.frm = fb.group({
             Type: ["Monthly"],
             Branchcode: ["0",Validators.required],
@@ -57,7 +59,7 @@ export class AccountingProfitAndLossComponent implements OnInit {
             this.currentUser = username;
           });
         }
-        this.getUserAccessRights(this.currentUser, 'Profit And Lost');
+        this.getUserAccessRights(this.currentUser, 'Profit And Loss Statement');
   }
 
   getUserAccessRights(userName: string, screenName: string) {
@@ -142,6 +144,7 @@ export class AccountingProfitAndLossComponent implements OnInit {
     this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(
       `${this.url}${reportQuery}`
     );
+    this.iframeVisible = true;
   }
   
   formatDate(date: Date): string {

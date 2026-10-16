@@ -81,9 +81,9 @@
             </div>
             <div class="row">
                 <div class="col-12">
-                    <div class="text-right" *ngIf="this.userAccessModel.createAccess == true">
+                    <div class="text-right" *ngIf="this.userAccessModel.updateAccess == true || currentUser == 'superadmin' || currentUser == 'admin'">
                         <button class="btn wlt-c-furg-btn-gray mr-3" mat-dialog-close> Cancel</button>
-                        <button *ngIf="this.userAccessModel.createAccess == true || this.userAccessModel.updateAccess == true || currentUser == 'superadmin'"
+                        <button *ngIf="this.userAccessModel.updateAccess == true || currentUser == 'superadmin' || currentUser == 'admin'"
                         class="btn wlt-c-furg-btn-primary" (click)="restoreSelectedPayments()"> Restore</button>
                     </div>
                 </div>

@@ -1,0 +1,42 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Fix Save/Update button access control on finance, inventory, payroll form components (Groups C, D, L from plan.md: 11 files using ID properties and isEdit booleans). Independent of FEAT-001 — no shared files.",
+  "status": "pending",
+  "steps": [
+    "Read context.json at c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI\\.agents\\tasks\\task-fix-access-control\\context.json FIRST before touching any file.",
+    "Read plan.md at c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI\\.agents\\tasks\\plan.md for the exact broken pattern, fix, and line numbers for each file in this FEAT.",
+    "Fix finance/receipts/new-receipt/new-receipt.component.html line 304: use receiptID (0 = new, > 0 = edit).",
+    "Fix finance/payments/payments.component.html line 242: use paymentID (0 = new, > 0 = edit).",
+    "Fix finance/invoice/invoice.component.html line 133: use isEditMode boolean.",
+    "Fix inventory/utility-bills/utility-bills.component.html line 204: use invoiceID (0 = new, > 0 = edit).",
+    "Fix payroll/attendance/new-attendance/new-attendance.component.html line 613: use attendanceForm.value.ID (== 0 new, != 0 edit). IMPORTANT: preserve the existing '&& dynamicEditable == \\'set\\'' condition — wrap the mode-split in its own parentheses and AND it with dynamicEditable == 'set'.",
+    "Fix payroll/new-employee-daily-advance/new-employee-daily-advance.component.html line 145: use advanceID (0 = new, != 0 = edit).",
+    "Fix payroll/employee-monthly-advance/new-employee-monthly-advance/new-employee-monthly-advance.component.html line 188: use employeeAdvanceTitleStatus string ('new' = create, else = update). Do NOT change the button label expression (isEmployeeIdValid()) — only the *ngIf access guard changes.",
+    "Fix inventory/asset-master/new-asset/new-asset.component.html line 76: use isEdit boolean.",
+    "Fix inventory/category-master/new-catergory/new-catergory.component.html line 76: use isEdit boolean.",
+    "Fix inventory/item-master/new-item/new-item.component.html line 101: use isEdit boolean.",
+    "Fix inventory/recepient-master/new-recepient/new-recepient.component.html line 143: use isEdit boolean.",
+    "Fix inventory/supplier-master/new-supplier/new-supplier.component.html line 129: use isEdit boolean.",
+    "Fix payroll/employee-loan/new-employee-loan.component.html line 154: use isEdit boolean.",
+    "Fix payroll/employee-uniform-loan/new-employee-uniform-loan.component.html line 249: use isEdit boolean.",
+    "Fix quotation-and-agreement/agreement-termination/new-agreement-termination/new-agreement-termination.component.html line 66: use isEdit boolean.",
+    "Fix inventory/material-issue/material-issue.component.html line 174: use isEdit boolean.",
+    "Fix inventory/purchase-bills/purchase-bills.component.html line 243: use isEdit boolean.",
+    "Run ng build --configuration=production from c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI and confirm 0 errors.",
+    "Update this FEAT file's status to 'completed' and record the build result in findings.",
+    "Commit locally: git add the 18 changed HTML files and commit with message 'fix(access): correct save/update button guards on finance, inventory, payroll form pages (FEAT-002)'."
+  ],
+  "acceptance_criteria": [
+    "All 18 files listed in the steps have their broken *ngIf pattern replaced.",
+    "In new-attendance: the dynamicEditable == 'set' condition is preserved alongside the new access guard.",
+    "In employee-monthly-advance: the button label (isEmployeeIdValid()) is unchanged; only the *ngIf guard changes.",
+    "ng build --configuration=production completes with 0 errors.",
+    "No .ts files or other HTML files are modified."
+  ],
+  "verification": [
+    "cd \"c:\\Users\\admin\\Documents\\India FWG\\OBMSINDIA-UI\" && ng build --configuration=production"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

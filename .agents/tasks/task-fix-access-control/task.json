@@ -1,0 +1,7 @@
+{
+  "task_id": "task-fix-access-control",
+  "task_description": "Fix Save/Update button access control logic across all Angular HTML components in the OBMSINDIA-UI project. A user with only createAccess must not see the Update button in edit mode; a user with only updateAccess must not see the Save button in new mode.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

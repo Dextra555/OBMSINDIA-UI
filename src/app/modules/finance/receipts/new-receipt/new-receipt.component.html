@@ -301,7 +301,7 @@
               (click)="deleteClickButton()" [disabled]="receiptID== 0"> Delete</button>
             <button class="btn btn-print mr-3" [disabled]="receiptID == 0" (click)="onPrint()">Print</button>
             <button
-              *ngIf="this.userAccessModel.createAccess == true || this.userAccessModel.updateAccess == true || currentUser == 'superadmin'"
+              *ngIf="(receiptID > 0 ? this.userAccessModel.updateAccess : this.userAccessModel.createAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
               class="btn wlt-c-furg-btn-primary" (click)="onSubmit()" [disabled]="frm.invalid"> {{ receiptID > 0 ?
               'Update' : 'Save' }}</button>
           </div>

@@ -86,7 +86,7 @@
                         <button class="btn wlt-c-furg-btn-gray mr-3" mat-dialog-close
                             (click)="clearUserAccesstDetails()"> Cancel</button>
                         <button
-                            *ngIf="(this.userAccessModel.updateAccess == true || this.userAccessModel.createAccess == true || currentUser == 'superadmin' || currentUser == 'admin')"
+                            *ngIf="(userAccessTitle == 'new' ? this.userAccessModel.createAccess : this.userAccessModel.updateAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
                             class="btn wlt-c-furg-btn-primary" [disabled]="userAccessForm.invalid"
                             (click)="savebuttonClick()"> Save</button>
                     </div>

@@ -65,6 +65,6 @@
           <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
       </div>
       <br/>
-      <iframe class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
+      <iframe *ngIf="iframeVisible" class="report-wrapper fixed-height" [src]="urlSafe"></iframe>
     </mat-card-content>
   </mat-card>

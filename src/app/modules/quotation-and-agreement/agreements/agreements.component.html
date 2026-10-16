@@ -110,6 +110,7 @@
               <mat-icon aria-hidden="false" aria-label="view icon">visibility</mat-icon>
             </a>
             <a style="cursor:pointer;" class="wlt-c-furg-text-primary mr-2" matTooltip="Edit"
+              *ngIf="this.userAccessModel.updateAccess == true || currentUser == 'superadmin' || currentUser == 'admin'"
               [routerLink]="['/quotation-and-agreement/agreements/edit-agreement', row.ID]">
               <mat-icon aria-hidden="false" aria-label="edit icon">edit</mat-icon>
             </a>

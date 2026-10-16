@@ -184,6 +184,9 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
   }
 
   toggleRowCheckbox(index: number, id: string) {
+    // Only allow toggling for invoices that exist (ID > 0)
+    if (!id || parseInt(id) === 0) return;
+
     // Toggle the checkbox state
     this.rowCheckedState[index] = !this.rowCheckedState[index];
 
@@ -193,19 +196,29 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
     } else {
       this.selectedBatchInvoiceIds = this.selectedBatchInvoiceIds.filter(invoiceId => invoiceId !== id);
     }
-    // Check if all rows are selected
-    let allChecked = this.rowCheckedState.every(checked => checked);
+    // Check if all selectable rows (ID > 0) are selected
+    const selectableIndices = (this.batchInvoice || [])
+      .map((inv: any, i: number) => ({ i, id: inv.ID }))
+      .filter((x: any) => x.id > 0)
+      .map((x: any) => x.i);
+    const allChecked = selectableIndices.every((i: number) => this.rowCheckedState[i]);
     this.frm.get('checkAll')?.setValue(allChecked);
   }
 
   toggleRowCheckboxAll() {
     let state = this.frm.get('checkAll')?.value; // Get the current state of the "checkAll" checkbox
 
-    this.rowCheckedState = this.rowCheckedState.map(() => state); // Set all rows to the same state
+    // Only toggle rows that have a valid invoice (ID > 0)
+    this.rowCheckedState = this.rowCheckedState.map((_, i) => {
+      const invoice = (this.batchInvoice || [])[i];
+      return invoice && invoice.ID > 0 ? state : false;
+    });
 
     if (state) {
-      // If "checkAll" is checked, add all IDs to the selectedBatchInvoiceIds
-      this.selectedBatchInvoiceIds = (this.batchInvoice || []).map((invoice: { ID: any; }) => invoice.ID);
+      // If "checkAll" is checked, add only valid IDs (> 0) to the selectedBatchInvoiceIds
+      this.selectedBatchInvoiceIds = (this.batchInvoice || [])
+        .filter((invoice: { ID: any }) => invoice.ID > 0)
+        .map((invoice: { ID: any }) => invoice.ID);
     } else {
       // If "checkAll" is unchecked, clear the selectedBatchInvoiceIds
       this.selectedBatchInvoiceIds = [];
@@ -216,6 +229,11 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
     this.dataSource = new MatTableDataSource(d);
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
+  }
+
+  get hasSelectedInvoices(): boolean {
+    return Array.isArray(this.selectedBatchInvoiceIds) &&
+      this.selectedBatchInvoiceIds.some(id => parseInt(id as any) > 0);
   }
 
   returnDate(date?: any) {
@@ -239,10 +257,16 @@ export class PrintIndianInvoiceComponent implements AfterViewInit {
   }
 
   printIndianInvoiceClick() {
-    if (this.selectedBatchInvoiceIds.length === 0) {
+    // Filter out any IDs that are 0 (invoice not yet created)
+    const validIds = this.selectedBatchInvoiceIds.filter(id => parseInt(id as any) > 0);
+
+    if (validIds.length === 0) {
       this.errorMessage = 'Please select at least one invoice to print.';
       return;
     }
+
+    this.errorMessage = '';
+    this.selectedBatchInvoiceIds = validIds;
 
     // Initialize pagination
     this.currentInvoiceIndex = 0;

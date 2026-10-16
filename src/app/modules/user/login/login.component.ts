@@ -49,12 +49,18 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     const manualLogout = localStorage.getItem('manualLogout') === 'true';
     this.token = this.authService.getToken() || '';
-    if (this.token && !manualLogout) {
+
+    if (manualLogout) {
+      // User clicked logout — clean slate, no warning
+      this.authService.clearToken();
+      this.warningMessage = '';
+      localStorage.removeItem('manualLogout');
+    } else if (this.token) {
+      // Token exists but user didn't manually logout → session expired
       this.authService.clearToken();
       this.warningMessage = 'Your session is expired! Please login to continue...';
     } else {
       this.warningMessage = '';
-      localStorage.removeItem('manualLogout'); 
     }
   }
   validateUser() {
@@ -152,10 +158,10 @@ export class LoginComponent implements OnInit {
   private hashPassword(password: string): string {
     return CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
   }
-  handleErrors(error: string) {
-    if (error != null && error != '') {
-      this.errorMessage = error;
-      this.showLoadingSpinner = false;
+  handleErrors(error: any) {
+    this.showLoadingSpinner = false;
+    if (error != null && error !== '') {
+      this.errorMessage = typeof error === 'string' ? error : 'An error occurred. Please try again.';
     }
   };
 }

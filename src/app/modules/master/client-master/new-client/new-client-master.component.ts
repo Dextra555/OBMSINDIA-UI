@@ -546,6 +546,22 @@ export class NewClientMasterComponent implements OnInit {
       return;
     }
 
+    // Secondary access guard: block update if user lacks updateAccess
+    const isEditMode = this.clientCodeStatus === 'edit' || (this.clientForm.get('Id')?.value > 0);
+    if (isEditMode && !this.userAccessModel.updateAccess
+      && this.currentUser !== 'superadmin' && this.currentUser !== 'admin') {
+      Swal.fire({
+        toast: true,
+        position: 'top',
+        showConfirmButton: false,
+        title: 'Access Denied',
+        text: 'You do not have permission to update this record',
+        icon: 'error',
+        timer: 3000,
+      });
+      return;
+    }
+
     this.showLoadingSpinner = true;
     this.clientModel = this.clientForm.value;
 

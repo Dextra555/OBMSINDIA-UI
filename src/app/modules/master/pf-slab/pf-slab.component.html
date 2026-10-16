@@ -92,12 +92,12 @@
           <td mat-cell *matCellDef="let row" style="text-align:center;">
             <a *ngIf="(this.userAccessModel.readAccess == true)|| (currentUser == 'superadmin')" style="cursor:pointer;"
               class="wlt-c-furg-text-primary mr-2" matTooltip="Edit" [routerLink]="['/master/pf-slab/new-pf-slab']"
-              [queryParams]="{ id: row.id }">
+              [queryParams]="{ id: row.Id ?? row.id }">
               <mat-icon aria-hidden="false" aria-label="edit icon">edit</mat-icon>
             </a>
             <a *ngIf="this.userAccessModel.deleteAccess == true || (currentUser == 'superadmin')"
               style="cursor:pointer;" class="wlt-c-furg-text-danger" matTooltip="Delete"
-              (click)="onDeleteClick(row.id)">
+              (click)="onDeleteClick(row.Id ?? row.id)">
               <mat-icon aria-hidden="false" aria-label="trash icon">delete_outline</mat-icon>
             </a>
           </td>

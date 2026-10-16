@@ -263,6 +263,7 @@ import { InvoiceReportComponent } from 'src/app/modules/report/finance/invoice-r
 import { PrintIndianInvoiceComponent } from 'src/app/modules/report/finance/print-indian-invoice/print-indian-invoice.component';
 
 import { SalesInvoiceCollectionReportComponent } from 'src/app/modules/report/finance/sales-invoice-collection-report/sales-invoice-collection-report.component';
+import { SalesInvoiceReportComponent } from 'src/app/modules/report/finance/sales-invoice-report/sales-invoice-report.component';
 
 import { SearchReceiptsComponent } from 'src/app/modules/finance/receipts/search-receipts/search-receipts.component';
 
@@ -319,8 +320,10 @@ import { ReceiptVoucherReportComponent } from 'src/app/modules/finance/receipts/
 import { EmployeeHistoryComponent } from 'src/app/modules/master/employee-history/employee-history.component';
 
 import { PfSlabComponent } from '../../modules/master/pf-slab/pf-slab.component';
+import { NewPfSlabComponent } from '../../modules/master/pf-slab/new-pf-slab/new-pf-slab.component';
 
 import { EsiSlabComponent } from '../../modules/master/esi-slab/esi-slab.component';
+import { NewEsiSlabComponent } from '../../modules/master/esi-slab/new-esi-slab/new-esi-slab.component';
 
 import { TdsSlabComponent } from '../../modules/master/tds-slab/tds-slab.component';
 
@@ -402,7 +405,11 @@ const routes: Routes = [
 
   { path: 'master/pf-slab', component: PfSlabComponent, canActivate: [AuthGuard] },
 
+  { path: 'master/pf-slab/new-pf-slab', component: NewPfSlabComponent, canActivate: [AuthGuard] },
+
   { path: 'master/esi-slab', component: EsiSlabComponent, canActivate: [AuthGuard] },
+  { path: 'master/esi-slab/new-esi-slab', component: NewEsiSlabComponent, canActivate: [AuthGuard] },
+  { path: 'master/esi-slab/edit-esi-slab/:id', component: NewEsiSlabComponent, canActivate: [AuthGuard] },
 
   { path: 'master/tds-slab', component: TdsSlabComponent, canActivate: [AuthGuard] },
 
@@ -718,6 +725,8 @@ const routes: Routes = [
 
   { path: 'report/finance/sales-invoice-collection-report', component: SalesInvoiceCollectionReportComponent, canActivate: [AuthGuard] },
 
+  { path: 'report/finance/sales-invoice-report', component: SalesInvoiceReportComponent, canActivate: [AuthGuard] },
+
   { path: 'report/finance/client-statement', component: ClientStatementComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/supplier-statement', component: SupplierStatementComponent, canActivate: [AuthGuard] },
@@ -727,8 +736,6 @@ const routes: Routes = [
   { path: 'report/finance/payment-due-list', component: PaymentDueListComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/print-invoice-computer-generated', component: PrintInvoiceComputerGeneratedComponent, canActivate: [AuthGuard] },
-
-  { path: 'report/finance/print-indian-invoice', component: PrintIndianInvoiceComponent, canActivate: [AuthGuard] },
 
   { path: 'report/finance/print-voucher-report', component: PrintVoucherReportComponent, canActivate: [AuthGuard] },
 

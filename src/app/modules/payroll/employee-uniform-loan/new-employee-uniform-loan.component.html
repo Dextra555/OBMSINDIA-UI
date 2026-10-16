@@ -246,7 +246,7 @@
                             *ngIf="this.userAccessModel.deleteAccess == true || currentUser == 'superadmin'"
                             (click)="onDeleteClick()"> Delete</button>
                         <button
-                            *ngIf="(this.userAccessModel.updateAccess == true || this.userAccessModel.createAccess == true || currentUser == 'superadmin')"
+                            *ngIf="(advanceID === 0 ? this.userAccessModel.createAccess : this.userAccessModel.updateAccess) || currentUser == 'superadmin' || currentUser == 'admin'"
                             class="btn wlt-c-furg-btn-primary" [disabled]="employeeUniformLoanForm.invalid"
                             (click)="savebuttonClick()"> {{advanceID == 0 ? 'Save':
                             'Update'}}</button>

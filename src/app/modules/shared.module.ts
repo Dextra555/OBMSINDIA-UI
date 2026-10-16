@@ -56,7 +56,9 @@ import { LeaveSlabComponent } from './master/leave-slab/leave-slab.component';
 import { SocsoSlabComponent } from './master/socso-slab/socso-slab.component';
 import { NewSocsoSlabComponent } from './master/socso-slab/new-socso-slab/new-socso-slab.component';
 import { PfSlabComponent } from './master/pf-slab/pf-slab.component';
+import { NewPfSlabComponent } from './master/pf-slab/new-pf-slab/new-pf-slab.component';
 import { EsiSlabComponent } from './master/esi-slab/esi-slab.component';
+import { NewEsiSlabComponent } from './master/esi-slab/new-esi-slab/new-esi-slab.component';
 import { TdsSlabComponent } from './master/tds-slab/tds-slab.component';
 import { GstSlabComponent } from './master/gst-slab/gst-slab.component';
 import { SalarySlabComponent } from './master/salary-slab/salary-slab.component';
@@ -200,6 +202,7 @@ import { SeparatedProfitLossComponent } from './report/finance/separated-profit-
 import { InvoiceReportComponent } from './report/finance/invoice-report/invoice-report.component';
 import { PrintIndianInvoiceComponent } from './report/finance/print-indian-invoice/print-indian-invoice.component';
 import { SalesInvoiceCollectionReportComponent } from './report/finance/sales-invoice-collection-report/sales-invoice-collection-report.component';
+import { SalesInvoiceReportComponent } from './report/finance/sales-invoice-report/sales-invoice-report.component';
 import { UniformLoanReportComponent } from './payroll/employee-uniform-loan/uniform-loan-report/uniform-loan-report.component';
 import { DailyAdvanceVoucherReportComponent } from './payroll/new-employee-daily-advance/daily-advance-voucher-report/daily-advance-voucher-report.component';
 import { LoanVoucherReportComponent } from './payroll/employee-loan/loan-voucher-report/loan-voucher-report.component';
@@ -365,6 +368,7 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     InvoiceReportComponent,
     PrintIndianInvoiceComponent,
     SalesInvoiceCollectionReportComponent,
+    SalesInvoiceReportComponent,
     UniformLoanReportComponent,
     DailyAdvanceVoucherReportComponent,
     LoanVoucherReportComponent,
@@ -381,7 +385,9 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     ReceiptVoucherReportComponent,
     EmployeeHistoryComponent,
     PfSlabComponent,
+    NewPfSlabComponent,
     EsiSlabComponent,
+    NewEsiSlabComponent,
     TdsSlabComponent,
     GstSlabComponent,
     ServiceTypeComponent,
@@ -471,7 +477,9 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     NgApexchartsModule,
     MatTreeModule,
     PfSlabComponent,
+    NewPfSlabComponent,
     EsiSlabComponent,
+    NewEsiSlabComponent,
     TdsSlabComponent,
     GstSlabComponent,
     ServiceTypeComponent,

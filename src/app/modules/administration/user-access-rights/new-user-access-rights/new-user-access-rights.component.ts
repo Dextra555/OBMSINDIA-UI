@@ -105,11 +105,33 @@ export class NewUserAccessRightsComponent implements OnInit {
     this._masterService.getUserAccessRights(userName, screenName).subscribe(
       (data) => {
         if (data != null) {
-          this.userAccessModel.readAccess = data.Read
+          this.userAccessModel.readAccess = data.Read;
           this.userAccessModel.deleteAccess = data.Delete;
           this.userAccessModel.updateAccess = data.Update;
           this.userAccessModel.createAccess = data.Create;
+
+          // admin / superadmin-க்கு எப்போதும் full access
+          if (this.currentUser === 'admin' || this.currentUser === 'superadmin') {
+            this.showLoadingSpinner = false;
+            return;
+          }
+
+          // "User" type-க்கு: Read (View) AND Create (New) இரண்டும் true இருந்தால் மட்டுமே access.
+          // ஒன்று மட்டும் இருந்தால் (View மட்டும் / New மட்டும்) access கொடுக்கக்கூடாது.
+          const hasViewAndNew =
+            this.userAccessModel.readAccess === true &&
+            this.userAccessModel.createAccess === true;
+
+          if (!hasViewAndNew) {
+            this._router.navigate(['/administration/user-access-rights']);
+          }
+        } else {
+          // DB-ல் record இல்லை என்றாலும் access இல்லை
+          if (this.currentUser !== 'admin' && this.currentUser !== 'superadmin') {
+            this._router.navigate(['/administration/user-access-rights']);
+          }
         }
+        this.showLoadingSpinner = false;
       },
       (error) => {
         this.handleErrors(error);
@@ -133,56 +155,20 @@ export class NewUserAccessRightsComponent implements OnInit {
     }
   }
 
-  handleButtonClick(action: string) {
+  handleButtonClick(action: 'View' | 'new' | 'update' | 'delete') {
     const formArray = this.dynamicForm.get('formArray') as FormArray;
+    const permissionByAction: Record<typeof action, 'Read' | 'Create' | 'Update' | 'Delete'> = {
+      View: 'Read',
+      new: 'Create',
+      update: 'Update',
+      delete: 'Delete',
+    };
+    const permission = permissionByAction[action];
+    const controls = formArray.controls as FormGroup[];
+    const shouldSelect = !controls.every(control => control.get(permission)?.value === true);
 
-    if (action == 'View') {
-      // Determine toggle state based on whether ALL unused rows currently have Read=true
-      const unusedRows = Array.from({ length: formArray.length }, (_, i) => formArray.at(i) as FormGroup)
-        .filter(control => {
-          const v = control.value;
-          return !v.Read && !v.Create && !v.Update && !v.Delete;
-        });
-
-      const allUnusedRead = unusedRows.length > 0 && unusedRows.every(control => control.get('Read')?.value === true);
-
-      for (let i = 0; i < formArray.length; i++) {
-        const control = formArray.at(i) as FormGroup;
-        const v = control.value;
-        const isUsed = v.Read || v.Create || v.Update || v.Delete;
-
-        // Skip rows that already have any permission set
-        if (isUsed) continue;
-
-        if (!allUnusedRead) {
-          control.get('Read')?.patchValue(true, { emitEvent: false });
-          control.get('Create')?.patchValue(false, { emitEvent: false });
-          control.get('Update')?.patchValue(false, { emitEvent: false });
-          control.get('Delete')?.patchValue(false, { emitEvent: false });
-        } else {
-          control.get('Read')?.patchValue(false, { emitEvent: false });
-        }
-      }
-      return;
-    }
-
-    for (let i = 0; i < formArray.length; i++) {
-      const control = formArray.at(i) as FormGroup;
-      const v = control.value;
-      const isUsed = v.Read || v.Create || v.Update || v.Delete;
-
-      // Skip rows that already have any permission set
-      if (isUsed) continue;
-
-      if (action == 'new') {
-        control.get('Create')?.patchValue(true, { emitEvent: false });
-      }
-      if (action == 'update') {
-        control.get('Update')?.patchValue(true, { emitEvent: false });
-      }
-      if (action == 'delete') {
-        control.get('Delete')?.patchValue(true, { emitEvent: false });
-      }
+    for (const control of controls) {
+      control.get(permission)?.patchValue(shouldSelect, { emitEvent: false });
     }
   }
   onCategoryChange() {

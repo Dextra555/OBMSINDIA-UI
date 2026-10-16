@@ -53,7 +53,7 @@ export class CreditNoteReportComponent implements OnInit {
     if (!this.currentUser || this.currentUser === 'null') {
       this._dataService.getUsername().subscribe(u => this.currentUser = u);
     }
-    this.getUserAccessRights(this.currentUser, 'CreditNote');
+    this.getUserAccessRights(this.currentUser, 'Credit Note Report');
   }
 
   getUserAccessRights(userName: string, screenName: string) {

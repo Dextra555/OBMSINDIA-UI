@@ -411,8 +411,8 @@ export class MastermoduleService {
     return this.httpClient.get<ESIConfiguration[]>(`${this.apiUrl}statutory/esi-configuration`).pipe(catchError(this.errorHandle));
   }
 
-  saveAndUpdateESIConfiguration(esiDetails: ESIConfiguration): Observable<any> {
-    return this.httpClient.post<any[]>(`${this.apiUrl}statutory/saveAndUpdateESIConfiguration`,
+  saveESIConfiguration(esiDetails: ESIConfiguration): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiUrl}statutory/esi-configuration`,
       JSON.stringify(esiDetails),
       {
         headers: new HttpHeaders({
@@ -421,9 +421,25 @@ export class MastermoduleService {
       }).pipe(catchError(this.errorHandle));
   }
 
+  updateESIConfiguration(id: number, esiDetails: ESIConfiguration): Observable<any> {
+    return this.httpClient.put<any>(`${this.apiUrl}statutory/esi-configuration/${id}`,
+      JSON.stringify(esiDetails),
+      {
+        headers: new HttpHeaders({
+          'Content-type': 'application/json; charset=UTF-8'
+        })
+      }).pipe(catchError(this.errorHandle));
+  }
+
+  // @deprecated — use saveESIConfiguration / updateESIConfiguration instead
+  saveAndUpdateESIConfiguration(esiDetails: ESIConfiguration): Observable<any> {
+    return esiDetails.id > 0
+      ? this.updateESIConfiguration(esiDetails.id, esiDetails)
+      : this.saveESIConfiguration(esiDetails);
+  }
+
   deleteESIConfigurationById(id: number): Observable<any> {
-    const params = { params: new HttpParams({ fromString: "?Id=" + id }) };
-    return this.httpClient.delete(`${this.apiUrl}statutory/DeleteESIConfigurationById`, params).pipe(catchError(this.errorHandle));
+    return this.httpClient.delete(`${this.apiUrl}statutory/esi-configuration/${id}`).pipe(catchError(this.errorHandle));
   }
 
   // Professional Tax Configuration
