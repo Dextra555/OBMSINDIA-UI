@@ -27,6 +27,8 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
   // Server-side branch filtering is done via LoginID lookup in the .aspx.cs files.
   // Always pass '0' here; the report server resolves the correct branches from DB.
   allowedBranchCodes: string = '0';
+  // Tracks which report is currently shown: 'detail' | 'summary' | null
+  activeReport: 'detail' | 'summary' | null = null;
 
   constructor(
     public sanitizer: DomSanitizer,
@@ -118,6 +120,7 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
     if (this.frm.invalid) {
       return;
     }
+    this.activeReport = 'detail';
     const baseUrl = environment.baseReportUrl + this.currentUrl;
     this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(
       baseUrl + 'SalesInvoiceCollectionReport.aspx?' + this.buildQueryParams()
@@ -129,10 +132,31 @@ export class SalesInvoiceCollectionReportComponent implements OnInit {
     if (this.frm.invalid) {
       return;
     }
+    this.activeReport = 'summary';
     const baseUrl = environment.baseReportUrl + this.currentUrl;
     this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(
       baseUrl + 'SalesInvoiceCollectionSummaryReport.aspx?' + this.buildQueryParams()
     );
+  }
+
+  /** Print button — downloads the currently-shown report as a PDF.
+   *
+   *  Routes to the dedicated Print pages (no Crystal viewer control) so that
+   *  the ASP.NET page lifecycle cannot interfere with the binary response.
+   *  The server sets Content-Disposition: attachment, so the browser
+   *  triggers a file-save dialog instead of navigating.
+   */
+  downloadPdf() {
+    if (!this.activeReport) return;
+
+    const baseUrl = environment.baseReportUrl + this.currentUrl;
+    const params  = this.buildQueryParams();
+
+    const page = this.activeReport === 'summary'
+      ? 'SalesInvoiceCollectionSummaryPrint.aspx'
+      : 'SalesInvoiceCollectionPrint.aspx';
+
+    window.open(baseUrl + page + '?' + params, '_blank');
   }
 
   // Keep onSubmit as an alias for detail (used if form ngSubmit is ever re-wired)

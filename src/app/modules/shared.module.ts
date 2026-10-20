@@ -61,6 +61,7 @@ import { EsiSlabComponent } from './master/esi-slab/esi-slab.component';
 import { NewEsiSlabComponent } from './master/esi-slab/new-esi-slab/new-esi-slab.component';
 import { TdsSlabComponent } from './master/tds-slab/tds-slab.component';
 import { GstSlabComponent } from './master/gst-slab/gst-slab.component';
+import { NewGstSlabComponent } from './master/gst-slab/new-gst-slab/new-gst-slab.component';
 import { SalarySlabComponent } from './master/salary-slab/salary-slab.component';
 import { ServiceTypeComponent } from './master/service-type/service-type.component';
 import { NewServiceTypeComponent } from './master/service-type/new-service-type/new-service-type.component';
@@ -390,6 +391,7 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     NewEsiSlabComponent,
     TdsSlabComponent,
     GstSlabComponent,
+    NewGstSlabComponent,
     ServiceTypeComponent,
     NewServiceTypeComponent,
     ViewServiceTypeComponent,
@@ -482,6 +484,7 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     NewEsiSlabComponent,
     TdsSlabComponent,
     GstSlabComponent,
+    NewGstSlabComponent,
     ServiceTypeComponent,
     NewServiceTypeComponent,
     RegistrationComponent,

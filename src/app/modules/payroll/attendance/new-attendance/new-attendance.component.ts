@@ -984,8 +984,10 @@ export class NewAttendanceComponent implements OnInit {
     }).subscribe(
       ({ employeeList, salaryProcessStatus, nameList }) => {
         // Handle successful response
-        this.employeeListModel = employeeList;
-        this.filteredEmployeeList = [...employeeList];
+        this.employeeListModel = employeeList.sort((a: any, b: any) =>
+          (a.EMP_NAME ?? '').localeCompare(b.EMP_NAME ?? '')
+        );
+        this.filteredEmployeeList = [...this.employeeListModel];
         this.salaryProcessStatus = salaryProcessStatus;
         this.nameList = nameList;
         this.hideloadingSpinner();

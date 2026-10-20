@@ -46,6 +46,10 @@
               [disabled]="frm.invalid" (click)="onShowDetail()">Show</button>
             <button type="button" class="btn wlt-c-furg-btn-secondary"
               [disabled]="frm.invalid" (click)="onShowSummary()">Summary by Month</button>
+            <button type="button" class="btn wlt-c-furg-btn-primary"
+              *ngIf="urlSafe" (click)="downloadPdf()">
+              <i class="fa fa-print" aria-hidden="true"></i> Print
+            </button>
           </div>
 
         </div>

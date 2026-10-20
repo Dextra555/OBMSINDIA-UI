@@ -122,9 +122,17 @@
 
           <mat-form-field appearance="outline">
 
-            <mat-label>Period</mat-label>
+            <mat-label> Period</mat-label>
 
-            <input type="text" formControlName="Period" matInput placeholder="" autocomplete="off">
+            <input type="text" formControlName="Period" matInput [matDatepicker]="picker2"
+
+                   placeholder="" autocomplete="off">
+
+            <mat-datepicker-toggle matSuffix [for]="picker2">
+
+            </mat-datepicker-toggle>
+
+            <mat-datepicker #picker2></mat-datepicker>
 
           </mat-form-field>
 

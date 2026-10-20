@@ -328,6 +328,7 @@ import { NewEsiSlabComponent } from '../../modules/master/esi-slab/new-esi-slab/
 import { TdsSlabComponent } from '../../modules/master/tds-slab/tds-slab.component';
 
 import { GstSlabComponent } from "../../modules/master/gst-slab/gst-slab.component";
+import { NewGstSlabComponent } from "../../modules/master/gst-slab/new-gst-slab/new-gst-slab.component";
 
 import { ServiceTypeComponent } from "../../modules/master/service-type/service-type.component";
 
@@ -414,6 +415,10 @@ const routes: Routes = [
   { path: 'master/tds-slab', component: TdsSlabComponent, canActivate: [AuthGuard] },
 
   { path: 'master/gst-slab', component: GstSlabComponent, canActivate: [AuthGuard] },
+
+  { path: 'master/gst-slab/add', component: NewGstSlabComponent, canActivate: [AuthGuard] },
+
+  { path: 'master/gst-slab/edit/:id', component: NewGstSlabComponent, canActivate: [AuthGuard] },
 
   { path: 'master/professional-tax-slab', component: ProfessionalTaxSlabComponent, canActivate: [AuthGuard] },
 
