@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatTableModule } from '@angular/material/table';
+import { MatRadioModule } from '@angular/material/radio';
 import { TitleCasePipe } from '@angular/common';
 
 @NgModule({
@@ -33,7 +34,8 @@ import { TitleCasePipe } from '@angular/common';
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatTableModule
+    MatTableModule,
+    MatRadioModule
   ],
   providers: [
     TitleCasePipe

@@ -66,6 +66,36 @@ export class UtilityBillsComponent implements AfterViewInit {
   showLoadingSpinner: boolean = false;
   invoiceID = 0;
 
+  // Computed display-only value: Amount total + GST - TDS
+  get baseTotal(): number {
+    return this.details.reduce((sum, d: any) => sum + (Number(d['Amount']) || 0), 0);
+  }
+
+  get netPayable(): number {
+    const gstAmount = Number(this.frm.get('GSTAmount')?.value) || 0;
+    const tdsAmount = Number(this.frm.get('TDSAmount')?.value) || 0;
+    return this.baseTotal + gstAmount - tdsAmount;
+  }
+
+  // Auto-calculate GST Amount when GST % changes
+  onGSTPercentageChange(): void {
+    const pct   = Number(this.frm.get('GSTPercentage')?.value) || 0;
+    const total = this.baseTotal;
+    this.frm.get('GSTAmount')?.setValue(
+      pct > 0 ? parseFloat((total * pct / 100).toFixed(2)) : 0,
+      { emitEvent: false }
+    );
+  }
+
+  // Auto-calculate TDS Amount when TDS % changes
+  onTDSPercentageChange(): void {
+    const pct   = Number(this.frm.get('TDSPercentage')?.value) || 0;
+    const total = this.baseTotal;
+    this.frm.get('TDSAmount')?.setValue(
+      pct > 0 ? parseFloat((total * pct / 100).toFixed(2)) : 0,
+      { emitEvent: false }
+    );
+  }
   constructor(private fb: FormBuilder, public dialog: MatDialog, private _liveAnnouncer: LiveAnnouncer,
     commonService: CommonService, private service: InventoryService, private route: Router,
     private _dataService: DatasharingService, private _masterService: MastermoduleService) {
@@ -95,7 +125,10 @@ export class UtilityBillsComponent implements AfterViewInit {
       InvoiceNo: [''],
       InvoiceDate: [''],
       PaymentDate: [''],
-      details: this.fb.group({
+      GSTPercentage: [0],
+      GSTAmount: [0],
+      TDSPercentage: [0],
+      TDSAmount: [0],      details: this.fb.group({
         ID: [0],
         InvoicePeriodFrom: [''],
         InvoicePeriodTo: [''],
@@ -121,6 +154,12 @@ export class UtilityBillsComponent implements AfterViewInit {
       this.frm.patchValue(this.returnResult);
       this.frm.get('Supplier')?.setValue(result.Supplier.toString());
       this.frm.get('ItemCategory')?.setValue(result.ItemCategory.toString());
+
+      // Restore GST / TDS values on edit
+      this.frm.get('GSTPercentage')?.setValue(result.GSTPercentage ?? 0);
+      this.frm.get('GSTAmount')?.setValue(result.GSTAmount ?? 0);
+      this.frm.get('TDSPercentage')?.setValue(result.TDSPercentage ?? 0);
+      this.frm.get('TDSAmount')?.setValue(result.TDSAmount ?? 0);
 
       this.categoryChange();
 
@@ -336,6 +375,12 @@ export class UtilityBillsComponent implements AfterViewInit {
     data['PaymentDate'] = this.returnDate(this.frm.get('PaymentDate')?.value);
     data['LastUpdatedBy'] = this.currentUser;
 
+    // GST / TDS — send percentage + amount as-is (amount already auto-calculated or manually overridden)
+    data['GSTPercentage'] = Number(this.frm.get('GSTPercentage')?.value) || 0;
+    data['GSTAmount']     = Number(this.frm.get('GSTAmount')?.value)     || 0;
+    data['TDSPercentage'] = Number(this.frm.get('TDSPercentage')?.value) || 0;
+    data['TDSAmount']     = Number(this.frm.get('TDSAmount')?.value)     || 0;
+
     let msg = "";
     this.service.saveUtility(data).subscribe((d: any) => {
       this._dataService.setSelectedInvoice([]);
@@ -350,6 +395,11 @@ export class UtilityBillsComponent implements AfterViewInit {
       this.detailDataSource();
       this.route.navigate(['/inventory/utility-bills']);
     })
+  }
+
+  onCancel() {
+    this._dataService.setSelectedInvoice([]);
+    this.route.navigate(['/inventory/utility-bills']);
   }
 
   deleteButtonClick() {

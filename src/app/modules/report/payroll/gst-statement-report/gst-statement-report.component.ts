@@ -7,34 +7,63 @@ import { MastermoduleService } from 'src/app/service/mastermodule.service';
 import { UserAccessModel } from 'src/app/model/userAccesModel';
 import * as XLSX from 'xlsx';
 
+export type GSTMode = 'in' | 'out' | 'payroll';
+
 @Component({
   selector: 'app-gst-statement-report',
   templateUrl: './gst-statement-report.component.html',
   styleUrls: ['./gst-statement-report.component.css']
 })
 export class GstStatementReportComponent implements OnInit {
+
   frm!: FormGroup;
   currentUser: string = '';
-  branchList: any = [];
-  clientList: any = [];
+  branchList: any[] = [];
+  clientList: any[] = [];
   dataSource: any[] = [];
   rateSummary: any[] = [];
-  displayedColumns: string[] = [
+
+  mode: GSTMode = 'in';
+
+  // ── Column sets per mode ──────────────────────────────────────────────────
+  columnsIn: string[] = [
     'SNo', 'InvoiceNo', 'InvoiceDate', 'ClientName', 'ClientGSTIN',
     'ClientState', 'TaxableAmount', 'GSTRate', 'CGST', 'SGST', 'IGST',
     'TotalGST', 'TotalAmount', 'SupplyType'
   ];
+  columnsOut: string[] = [
+    'SNo', 'InvoiceDate', 'InvoiceNo', 'Branch', 'SupplierName',
+    'InvoiceTotal', 'GSTPercentage', 'GSTAmount'
+  ];
+  columnsPayroll: string[] = [
+    'SNo', 'Period', 'EmpCode', 'EmpName', 'Branch', 'GrossPay', 'PTax'
+  ];
+
+  get displayedColumns(): string[] {
+    if (this.mode === 'out')     return this.columnsOut;
+    if (this.mode === 'payroll') return this.columnsPayroll;
+    return this.columnsIn;
+  }
+
+  // ── Totals ────────────────────────────────────────────────────────────────
+  // IN
+  totalTaxable:  number = 0;
+  totalCGST:     number = 0;
+  totalSGST:     number = 0;
+  totalIGST:     number = 0;
+  totalGST:      number = 0;
+  grandTotal:    number = 0;
+  // OUT
+  totalInvoiceTotal: number = 0;
+  totalOutGST:       number = 0;
+  // PAYROLL
+  totalGrossPay:  number = 0;
+  totalPTax:      number = 0;
+
   userAccessModel!: UserAccessModel;
   warningMessage: string = '';
-  errorMessage: string = '';
+  errorMessage:   string = '';
   showLoadingSpinner: boolean = false;
-
-  totalTaxable: number = 0;
-  totalCGST: number = 0;
-  totalSGST: number = 0;
-  totalIGST: number = 0;
-  totalGST: number = 0;
-  grandTotal: number = 0;
 
   constructor(
     private fb: FormBuilder,
@@ -44,14 +73,14 @@ export class GstStatementReportComponent implements OnInit {
     private router: Router
   ) {
     this.frm = this.fb.group({
-      Branch: [''],
-      Client: [''],
+      Branch:    [''],
+      Client:    [''],
       StartDate: ['', Validators.required],
-      EndDate: ['', Validators.required],
+      EndDate:   ['', Validators.required],
     });
 
     this.userAccessModel = {
-      readAccess: false,
+      readAccess:   false,
       updateAccess: false,
       deleteAccess: false,
       createAccess: false,
@@ -66,25 +95,24 @@ export class GstStatementReportComponent implements OnInit {
     });
 
     this.currentUser = sessionStorage.getItem('username')!;
-    if (this.currentUser == null || this.currentUser == undefined) {
-      this._dataService.getUsername().subscribe((username) => {
-        this.currentUser = username;
-      });
+    if (!this.currentUser) {
+      this._dataService.getUsername().subscribe(u => { this.currentUser = u; });
     }
     this.getUserAccessRights(this.currentUser, 'GST Statement Report');
   }
 
+  // ── Access rights ─────────────────────────────────────────────────────────
   getUserAccessRights(userName: string, screenName: string) {
     this.showLoadingSpinner = true;
     this._masterService.getUserAccessRights(userName, screenName).subscribe(
-      (data) => {
-        if (data != null) {
-          this.userAccessModel.readAccess = data.Read;
+      data => {
+        if (data) {
+          this.userAccessModel.readAccess   = data.Read;
           this.userAccessModel.deleteAccess = data.Delete;
           this.userAccessModel.updateAccess = data.Update;
           this.userAccessModel.createAccess = data.Create;
 
-          if (this.userAccessModel.readAccess === true || this.currentUser == 'superadmin' || this.currentUser == 'admin') {
+          if (this.userAccessModel.readAccess || this.currentUser === 'superadmin' || this.currentUser === 'admin') {
             this.warningMessage = '';
             this._masterService.GetBranchListByUserName(this.currentUser).subscribe((d: any) => {
               this.branchList = d;
@@ -92,152 +120,206 @@ export class GstStatementReportComponent implements OnInit {
           } else {
             this.warningMessage = `Dear <B>${this.currentUser}</B>, <br>
               You do not have permissions to view this page. <br>
-              If you feel you should have access to this page, Please contact administrator. <br>
-              Thank you`;
+              If you feel you should have access, please contact your administrator.`;
           }
         }
         this.hideSpinner();
       },
-      (error) => {
-        this.handleErrors(error);
-      }
+      error => { this.handleErrors(error); }
     );
   }
 
-  returnDate(date?: any): string {
-    let currentDate = new Date();
-    if (date) {
-      currentDate = new Date(date);
+  // ── Mode change ───────────────────────────────────────────────────────────
+  onModeChange(newMode: GSTMode) {
+    this.mode = newMode;
+    this.dataSource  = [];
+    this.rateSummary = [];
+    this.errorMessage = '';
+    this.resetTotals();
+    if (newMode !== 'in') {
+      this.clientList = [];
+      this.frm.patchValue({ Client: '' });
     }
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   }
 
+  // ── Branch change ─────────────────────────────────────────────────────────
   branchChange(branchCode: string) {
     this.clientList = [];
     this.frm.patchValue({ Client: '' });
-
-    if (branchCode) {
+    if (branchCode && this.mode === 'in') {
       this._masterService.getClientMsterListByBranch(branchCode).subscribe((d: any) => {
         this.clientList = d;
       });
     }
   }
 
+  // ── Search ────────────────────────────────────────────────────────────────
   onSearch() {
-    if (this.frm.invalid) {
-      return;
-    }
+    if (this.frm.invalid) { return; }
+
     this.showLoadingSpinner = true;
-    this.errorMessage = '';
+    this.errorMessage  = '';
+    this.dataSource    = [];
+    this.rateSummary   = [];
+    this.resetTotals();
+
     const startDate = this.returnDate(this.frm.get('StartDate')?.value);
-    const endDate = this.returnDate(this.frm.get('EndDate')?.value);
-    const branch = this.frm.get('Branch')?.value || '';
-    const client = this.frm.get('Client')?.value || '';
+    const endDate   = this.returnDate(this.frm.get('EndDate')?.value);
+    const branch    = this.frm.get('Branch')?.value || '';
+    const client    = this.frm.get('Client')?.value || '';
 
-    const payload = {
-      Parameters: {
-        fromDate: startDate,
-        toDate: endDate,
-        branch: branch,
-        client: client
-      }
-    };
+    const params = { Parameters: { fromDate: startDate, toDate: endDate, branch, client } };
 
-    this.http.post<any>(`${this._masterService.apiUrl}ComplianceReport/GetGSTStatement`, payload).subscribe({
-      next: (data: any) => {
-        this.dataSource = data?.rows || [];
-        this.rateSummary = data?.totals?.RateSummary || [];
-        this.calculateTotals();
-        this.hideSpinner();
-      },
-      error: (err) => {
-        this.handleErrors(err);
-      }
-    });
+    if (this.mode === 'in') {
+      this.http.post<any>(`${this._masterService.apiUrl}ComplianceReport/GetGSTStatement`, params).subscribe({
+        next: data => {
+          this.dataSource  = data?.rows    || [];
+          this.rateSummary = data?.totals?.RateSummary || [];
+          this.calcTotalsIn();
+          this.hideSpinner();
+        },
+        error: err => { this.handleErrors(err); }
+      });
+    } else if (this.mode === 'out') {
+      this.http.post<any>(`${this._masterService.apiUrl}ComplianceReport/GetOutGSTReport`, params).subscribe({
+        next: data => {
+          this.dataSource = data?.rows || [];
+          this.calcTotalsOut();
+          this.hideSpinner();
+        },
+        error: err => { this.handleErrors(err); }
+      });
+    } else {
+      this.http.post<any>(`${this._masterService.apiUrl}ComplianceReport/GetPayrollGSTReport`, params).subscribe({
+        next: data => {
+          this.dataSource = data?.rows || [];
+          this.calcTotalsPayroll();
+          this.hideSpinner();
+        },
+        error: err => { this.handleErrors(err); }
+      });
+    }
   }
 
-  calculateTotals() {
-    this.totalTaxable = this.dataSource.reduce((sum, r) => sum + (Number(r.taxableAmount) || 0), 0);
-    this.totalCGST = this.dataSource.reduce((sum, r) => sum + (Number(r.cgst) || 0), 0);
-    this.totalSGST = this.dataSource.reduce((sum, r) => sum + (Number(r.sgst) || 0), 0);
-    this.totalIGST = this.dataSource.reduce((sum, r) => sum + (Number(r.igst) || 0), 0);
-    this.totalGST = this.dataSource.reduce((sum, r) => sum + (Number(r.totalGST) || 0), 0);
-    this.grandTotal = this.dataSource.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
+  // ── Totals ────────────────────────────────────────────────────────────────
+  resetTotals() {
+    this.totalTaxable     = 0; this.totalCGST    = 0; this.totalSGST  = 0;
+    this.totalIGST        = 0; this.totalGST     = 0; this.grandTotal = 0;
+    this.totalInvoiceTotal = 0; this.totalOutGST = 0;
+    this.totalGrossPay    = 0; this.totalPTax    = 0;
   }
 
+  calcTotalsIn() {
+    this.totalTaxable = this.dataSource.reduce((s, r) => s + (Number(r.taxableAmount) || 0), 0);
+    this.totalCGST    = this.dataSource.reduce((s, r) => s + (Number(r.cgst)          || 0), 0);
+    this.totalSGST    = this.dataSource.reduce((s, r) => s + (Number(r.sgst)          || 0), 0);
+    this.totalIGST    = this.dataSource.reduce((s, r) => s + (Number(r.igst)          || 0), 0);
+    this.totalGST     = this.dataSource.reduce((s, r) => s + (Number(r.totalGST)      || 0), 0);
+    this.grandTotal   = this.dataSource.reduce((s, r) => s + (Number(r.totalAmount)   || 0), 0);
+  }
+
+  calcTotalsOut() {
+    this.totalInvoiceTotal = this.dataSource.reduce((s, r) => s + (Number(r.invoiceTotal) || 0), 0);
+    this.totalOutGST       = this.dataSource.reduce((s, r) => s + (Number(r.gstAmount)   || 0), 0);
+  }
+
+  calcTotalsPayroll() {
+    this.totalGrossPay = this.dataSource.reduce((s, r) => s + (Number(r.grossPay) || 0), 0);
+    this.totalPTax     = this.dataSource.reduce((s, r) => s + (Number(r.ptax)     || 0), 0);
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────────
   exportToExcel() {
-    if (!this.dataSource || this.dataSource.length === 0) return;
+    if (!this.dataSource?.length) { return; }
 
-    // Use actual numbers (not strings) so Excel treats them as numeric cells
-    const exportData = this.dataSource.map((r: any, i: number) => ({
-      'S.No': i + 1,
-      'Invoice No': r.invoiceNo,
-      'Invoice Date': r.invoiceDate,
-      'Client Name': r.clientName,
-      'Client GSTIN': r.clientGSTIN,
-      'Client State': r.clientState,
-      'Taxable Amount': Number(r.taxableAmount) || 0,
-      'GST Rate (%)': r.gstRateDisplay || (r.gstRate + '%'),
-      'CGST': Number(r.cgst) || 0,
-      'SGST': Number(r.sgst) || 0,
-      'IGST': Number(r.igst) || 0,
-      'Total GST': Number(r.totalGST) || 0,
-      'Total Amount': Number(r.totalAmount) || 0,
-      'Supply Type': r.isIntraState ? 'Intra-State' : 'Inter-State'
-    }));
+    let exportData: any[];
+    let sheetName: string;
+    let fileName: string;
 
-    // Totals row — all numeric columns are real numbers so Excel SUM works
-    const totalsRow: any = {
-      'S.No': '',
-      'Invoice No': '',
-      'Invoice Date': '',
-      'Client Name': 'TOTAL',
-      'Client GSTIN': '',
-      'Client State': '',
-      'Taxable Amount': this.totalTaxable,
-      'GST Rate (%)': '',
-      'CGST': this.totalCGST,
-      'SGST': this.totalSGST,
-      'IGST': this.totalIGST,
-      'Total GST': this.totalGST,
-      'Total Amount': this.grandTotal,
-      'Supply Type': ''
-    };
-    exportData.push(totalsRow);
+    if (this.mode === 'in') {
+      sheetName  = 'GST In Report';
+      fileName   = 'GST_In_Report.xlsx';
+      exportData = this.dataSource.map((r: any, i: number) => ({
+        'S.No':           i + 1,
+        'Invoice No':     r.invoiceNo,
+        'Invoice Date':   r.invoiceDate,
+        'Client Name':    r.clientName,
+        'Client GSTIN':   r.clientGSTIN,
+        'Client State':   r.clientState,
+        'Taxable Amount': Number(r.taxableAmount) || 0,
+        'GST Rate (%)':   r.gstRateDisplay || (r.gstRate + '%'),
+        'CGST':           Number(r.cgst)        || 0,
+        'SGST':           Number(r.sgst)        || 0,
+        'IGST':           Number(r.igst)        || 0,
+        'Total GST':      Number(r.totalGST)    || 0,
+        'Total Amount':   Number(r.totalAmount) || 0,
+        'Supply Type':    r.isIntraState ? 'Intra-State' : 'Inter-State',
+      }));
+      exportData.push({
+        'S.No': '', 'Invoice No': '', 'Invoice Date': '', 'Client Name': 'TOTAL',
+        'Client GSTIN': '', 'Client State': '',
+        'Taxable Amount': this.totalTaxable,
+        'GST Rate (%)': '', 'CGST': this.totalCGST, 'SGST': this.totalSGST,
+        'IGST': this.totalIGST, 'Total GST': this.totalGST,
+        'Total Amount': this.grandTotal, 'Supply Type': ''
+      });
+    } else if (this.mode === 'out') {
+      sheetName  = 'GST Out Report';
+      fileName   = 'GST_Out_Report.xlsx';
+      exportData = this.dataSource.map((r: any, i: number) => ({
+        'S.No':           i + 1,
+        'Invoice Date':   r.invoiceDate,
+        'Invoice No':     r.invoiceNo,
+        'Branch':         r.branch,
+        'Supplier':       r.supplierName,
+        'Invoice Total':  Number(r.invoiceTotal)  || 0,
+        'GST %':          Number(r.gstPercentage) || 0,
+        'GST Amount':     Number(r.gstAmount)     || 0,
+      }));
+      exportData.push({
+        'S.No': '', 'Invoice Date': '', 'Invoice No': '', 'Branch': '', 'Supplier': 'TOTAL',
+        'Invoice Total': this.totalInvoiceTotal,
+        'GST %': '', 'GST Amount': this.totalOutGST
+      });
+    } else {
+      sheetName  = 'Professional Tax Report';
+      fileName   = 'GST_PTax_Report.xlsx';
+      exportData = this.dataSource.map((r: any, i: number) => ({
+        'S.No':       i + 1,
+        'Period':     r.period,
+        'Emp Code':   r.empCode,
+        'Emp Name':   r.empName,
+        'Branch':     r.branch,
+        'Gross Pay':  Number(r.grossPay) || 0,
+        'P.Tax':      Number(r.ptax)     || 0,
+      }));
+      exportData.push({
+        'S.No': '', 'Period': '', 'Emp Code': '', 'Emp Name': 'TOTAL', 'Branch': '',
+        'Gross Pay': this.totalGrossPay, 'P.Tax': this.totalPTax
+      });
+    }
 
     const ws = XLSX.utils.json_to_sheet(exportData);
-
-    // Number format for all numeric columns in data + totals rows
-    const numericCols = ['G', 'I', 'J', 'K', 'L', 'M']; // Taxable, CGST, SGST, IGST, TotalGST, TotalAmount
-    const dataRowCount = exportData.length; // includes totals row
-    numericCols.forEach(col => {
-      for (let row = 2; row <= dataRowCount + 1; row++) {
-        const cellRef = `${col}${row}`;
-        if (ws[cellRef]) {
-          ws[cellRef].t = 'n'; // force numeric type
-          ws[cellRef].z = '#,##0.00'; // 2 decimal places with comma
-        }
-      }
-    });
-
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'GST Report');
-    XLSX.writeFile(wb, 'GST_Report.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, fileName);
   }
 
-  onPrint() {
-    window.print();
+  onPrint() { window.print(); }
+
+  // ── Utilities ─────────────────────────────────────────────────────────────
+  returnDate(date?: any): string {
+    const d = date ? new Date(date) : new Date();
+    const y  = d.getFullYear();
+    const m  = String(d.getMonth() + 1).padStart(2, '0');
+    const dy = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dy}`;
   }
 
-  handleErrors(error: any) {
+  handleErrors(_error: any) {
     this.errorMessage = 'Error loading data. Please try again.';
     this.hideSpinner();
   }
 
-  hideSpinner() {
-    this.showLoadingSpinner = false;
-  }
+  hideSpinner() { this.showLoadingSpinner = false; }
 }

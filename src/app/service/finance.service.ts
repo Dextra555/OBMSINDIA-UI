@@ -807,6 +807,24 @@ export class FinanceService {
 
   }
 
+  getTDSReportOut(startDate: string, endDate: string, branch: string): Observable<any[]> {
+    const params = new HttpParams()
+      .set('startDate', startDate)
+      .set('endDate', endDate)
+      .set('branch', branch);
+    return this.httpClient.get<any[]>(`${this.apiUrl}Finance/GetOutTDSReport`, { params })
+      .pipe(catchError(this.errorHandle));
+  }
+
+  getTDSReportPayroll(startDate: string, endDate: string, branch: string): Observable<any[]> {
+    const params = new HttpParams()
+      .set('startDate', startDate)
+      .set('endDate', endDate)
+      .set('branch', branch);
+    return this.httpClient.get<any[]>(`${this.apiUrl}Finance/GetPayrollTDSReport`, { params })
+      .pipe(catchError(this.errorHandle));
+  }
+
   generateCreditNoteNo(branch: string, date: string): Observable<any> {
     return this.httpClient.get(`${this.apiUrl}CreditDebitNote/GenerateCreditNoteNo`, {
       params: { branch, date },

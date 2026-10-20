@@ -130,9 +130,9 @@
               </tr>
               <tr class="mat-row">
                 <th class="mat-cell">
-                  <span class="btn wlt-c-furg-btn-primary mr-3" mat-dialog-close
+                  <span class="btn wlt-c-furg-btn-primary mr-3"
                     (click)="addItemDetails('add')">Add</span>
-                  <span class="btn wlt-c-furg-btn-secondary mr-3" mat-dialog-close
+                  <span class="btn wlt-c-furg-btn-secondary mr-3"
                     (click)="addItemDetails('update')">Update</span>
                 </th>
                 <th colspan="8">
@@ -194,10 +194,96 @@
           </div>
         </div>
       </div>
+      <!-- ── GST / TDS Section ────────────────────────────────────────────── -->
+      <div class="row mt-3">
+        <div class="col-12 col-sm-12 col-md-12 col-lg-12 wlt-c-furg-profile">
+          <h2><span>GST &amp; TDS</span></h2>
+        </div>
+      </div>
+      <div class="row">
+
+        <!-- GST % -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>GST %</mat-label>
+            <input type="number" formControlName="GSTPercentage" matInput
+                   placeholder="0.00" autocomplete="off" min="0" max="100"
+                   (change)="onGSTPercentageChange()">
+          </mat-form-field>
+        </div>
+
+        <!-- GST Amount (auto-calculated, manually editable) -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>GST Amount (₹)</mat-label>
+            <input type="number" formControlName="GSTAmount" matInput
+                   placeholder="0.00" autocomplete="off" min="0">
+          </mat-form-field>
+        </div>
+
+        <!-- spacer -->
+        <div class="col-12 col-sm-12 col-md-12 col-lg-1"></div>
+
+        <!-- TDS % -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>TDS %</mat-label>
+            <input type="number" formControlName="TDSPercentage" matInput
+                   placeholder="0.00" autocomplete="off" min="0" max="100"
+                   (change)="onTDSPercentageChange()">
+          </mat-form-field>
+        </div>
+
+        <!-- TDS Amount (auto-calculated, manually editable) -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>TDS Amount (₹)</mat-label>
+            <input type="number" formControlName="TDSAmount" matInput
+                   placeholder="0.00" autocomplete="off" min="0">
+          </mat-form-field>
+        </div>
+
+      </div>
+
+      <!-- Net Payable summary card -->
+      <div class="row mb-2"
+           *ngIf="details.length > 0">
+        <div class="col-12 col-sm-12 col-md-6 col-lg-4">
+          <div style="background:#f5f5f5; border:1px solid #ddd; border-radius:6px; padding:10px 16px;">
+
+            <div class="d-flex justify-content-between">
+              <span class="text-muted" style="font-size:13px;">Base Amount (Total)</span>
+              <span>₹ {{ baseTotal | number:'1.2-2' }}</span>
+            </div>
+            <div class="d-flex justify-content-between"
+                 *ngIf="(frm.get('GSTAmount')?.value || 0) > 0">
+              <span class="text-muted" style="font-size:13px;">
+                + GST ({{ frm.get('GSTPercentage')?.value || 0 }}%)
+              </span>
+              <span>₹ {{ (frm.get('GSTAmount')?.value || 0) | number:'1.2-2' }}</span>
+            </div>
+            <div class="d-flex justify-content-between"
+                 *ngIf="(frm.get('TDSAmount')?.value || 0) > 0">
+              <span class="text-muted" style="font-size:13px;">
+                − TDS ({{ frm.get('TDSPercentage')?.value || 0 }}%)
+              </span>
+              <span>₹ {{ (frm.get('TDSAmount')?.value || 0) | number:'1.2-2' }}</span>
+            </div>
+            <hr style="margin:6px 0;">
+            <div class="d-flex justify-content-between">
+              <strong style="font-size:14px;">Net Payable</strong>
+              <strong style="font-size:15px; color:#1565c0;">₹ {{ netPayable | number:'1.2-2' }}</strong>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <!-- ── End GST / TDS Section ──────────────────────────────────────── -->
+
       <div class="row mt-4">
         <div class="col-12">
           <div class="text-right">
-            <button class="btn wlt-c-furg-btn-gray mr-2" mat-dialog-close> Cancel</button>
+            <button class="btn wlt-c-furg-btn-gray mr-2" (click)="onCancel()"> Cancel</button>
             <button *ngIf="this.userAccessModel.deleteAccess == true  || currentUser =='superadmin'"
               class="btn wlt-c-furg-btn-danger mr-2" (click)="deleteButtonClick()" [disabled]="invoiceID <= 0"> Delete</button>
             <button

@@ -36,6 +36,9 @@ export interface ISupplierInvoice {
   Balance: string;
   BranchUserName: string;
   Supplier: string;
+  GSTAmount: string;
+  TDSAmount: string;
+  NetPayable: string;
 }
 
 
@@ -58,7 +61,7 @@ export class PaymentsComponent implements AfterViewInit {
   paymentID: number = 0
   displayedColumns: string[] = ['BankName', 'Amount'];
   dataSource!: MatTableDataSource<IBranchAmount>;
-  displayedColumnsSupplier: string[] = ['InvoiceNo', 'PaidAmount', 'CurrentPayment', 'Balance', 'BranchName', 'Action'];
+  displayedColumnsSupplier: string[] = ['InvoiceNo', 'NetPayable', 'PaidAmount', 'CurrentPayment', 'Balance', 'BranchName', 'Action'];
   dataSourceSupplier!: MatTableDataSource<ISupplierInvoice>;
   rows: FormArray = this.fb.array([]);
   supplierRows: FormArray = this.fb.array([]);
@@ -281,28 +284,37 @@ export class PaymentsComponent implements AfterViewInit {
 
   addSupplierInvoiceAmount(d?: ISupplierInvoice) {
     // Parse values and fix 2 decimals
-    const total = d?.Total != null ? Number(Number(d.Total).toFixed(2)) : null;
-    const paid = d?.PaidAmount != null ? Number(Number(d.PaidAmount).toFixed(2)) : null;
-    const amount = d?.Amount != null ? Number(Number(d.Amount).toFixed(2)) : null;
+    const total      = d?.Total      != null ? Number(Number(d.Total).toFixed(2))      : null;
+    const paid       = d?.PaidAmount != null ? Number(Number(d.PaidAmount).toFixed(2)) : null;
+    const amount     = d?.Amount     != null ? Number(Number(d.Amount).toFixed(2))     : null;
+    const gstAmount  = d?.GSTAmount  != null ? Number(Number(d.GSTAmount).toFixed(2))  : 0;
+    const tdsAmount  = d?.TDSAmount  != null ? Number(Number(d.TDSAmount).toFixed(2))  : 0;
 
+    // Net Payable = Total + GST - TDS  (use API value when available, fallback to computed)
+    const netPayable = d?.NetPayable != null
+      ? Number(Number(d.NetPayable).toFixed(2))
+      : (total !== null ? Number((total + gstAmount - tdsAmount).toFixed(2)) : null);
+
+    // Balance = NetPayable - PaidAmount  (what is still outstanding)
     const balance =
-      total !== null && paid !== null
-        ? Number((total - paid).toFixed(2))
+      netPayable !== null && paid !== null
+        ? Number((netPayable - paid).toFixed(2))
         : null;
 
     const row = this.fb.group({
-      ID: [d?.ID],
-      PaymentID: [d?.PaymentID],
-      Code: [d?.Code ?? null],
-      Name: [d?.Name ?? null],
-      InvoiceID: [d?.InvoiceID ?? null],
-      InvoiceNo: [d?.InvoiceNo ?? null],
-      Total: [total],
-      Amount: [this.paymentID === 0 ? null : amount],
-      PaidAmount: [paid],
+      ID:           [d?.ID],
+      PaymentID:    [d?.PaymentID],
+      Code:         [d?.Code         ?? null],
+      Name:         [d?.Name         ?? null],
+      InvoiceID:    [d?.InvoiceID    ?? null],
+      InvoiceNo:    [d?.InvoiceNo    ?? null],
+      Total:        [total],
+      NetPayable:   [netPayable],
+      Amount:       [this.paymentID === 0 ? null : amount],
+      PaidAmount:   [paid],
       BranchUserName: [d?.BranchUserName ?? null],
-      Balance: [balance],
-      Supplier: [d?.Supplier ?? null]
+      Balance:      [balance],
+      Supplier:     [d?.Supplier     ?? null]
     });
 
     this.supplierRows.push(row);
@@ -717,11 +729,11 @@ export class PaymentsComponent implements AfterViewInit {
 
     setTimeout(() => {
       this.hasInvalidPayment = invoiceArray.controls.some(ctrl => {
-        const current = +ctrl.get('Amount')?.value || 0;
-        const balance = +ctrl.get('Balance')?.value || 0;
+        const current    = +ctrl.get('Amount')?.value    || 0;
+        const balance    = +ctrl.get('Balance')?.value   || 0;
         const paidAmount = +ctrl.get('PaidAmount')?.value || 0;
 
-        // 🔑 Take the highest of Balance or PaidAmount
+        // Use the highest of Balance or PaidAmount as the ceiling
         const maxAllowed = Math.max(balance, paidAmount);
 
         return current > maxAllowed;

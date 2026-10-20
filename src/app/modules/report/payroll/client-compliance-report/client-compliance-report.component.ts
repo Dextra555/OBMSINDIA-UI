@@ -698,6 +698,7 @@ export class ClientComplianceReportComponent implements OnInit {
       PF:        row.PF        || row.pf        || 0,
       ESI:       row.ESI       || row.esi       || 0,
       PT:        row.PT        || row.pt        || 0,
+      TDS:       row.TDS       || row.tds       || 0,
       AdvanceDed: row.AdvanceDed || row.advance  || row.advanceDed || 0,
       OtherDed:  row.OtherDed  || row.otherDed  || 0,
       TotalDed:  row.TotalDed  || row.totalDeductions || 0,
@@ -762,6 +763,7 @@ export class ClientComplianceReportComponent implements OnInit {
       PF:            row.PF         || 0,
       ESI:           row.ESI        || 0,
       PT:            row.PT         || 0,
+      TDS:           row.TDS        || 0,
       AdvanceDed:    row.AdvanceDed || 0,
       OtherDed:      row.OtherDed   || 0,
       TotalDed:      row.TotalDed   || 0,
@@ -782,8 +784,7 @@ export class ClientComplianceReportComponent implements OnInit {
         if (defaultValue !== undefined) return defaultValue;
         const textFields = ['EmployeeName', 'EmployeeCode', 'Designation', 'FatherName',
                             'UAN', 'BankName', 'AccountNo', 'IFSCCode', 'DateJoined',
-                            'WagePeriod', 'SalaryDate', 'Establishment'];
-        return textFields.includes(key) ? 'N/A' : '0';
+                            'WagePeriod', 'SalaryDate', 'Establishment'];        return textFields.includes(key) ? 'N/A' : '0';
       }
     );
 

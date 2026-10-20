@@ -16,8 +16,24 @@
 
 <mat-card>
   <mat-card-content>
+
+    <!-- ── Mode selector ──────────────────────────────────────────────────── -->
+    <div class="row mb-3" *ngIf="warningMessage === ''">
+      <div class="col-12">
+        <mat-label class="mr-3"><strong>TDS Type</strong></mat-label>
+        <mat-radio-group [value]="mode" (change)="onModeChange($event.value)" aria-label="TDS Report Mode">
+          <mat-radio-button value="in"      class="mr-4">In — Client TDS Received</mat-radio-button>
+          <mat-radio-button value="out"     class="mr-4">Out — Supplier TDS Deducted</mat-radio-button>
+          <mat-radio-button value="payroll"            >Payroll — Employee TDS Deducted</mat-radio-button>
+        </mat-radio-group>
+      </div>
+    </div>
+
+    <!-- ── Filter form ────────────────────────────────────────────────────── -->
     <form [formGroup]="frm" (ngSubmit)="onSearch()">
       <div class="row" *ngIf="warningMessage === ''">
+
+        <!-- Start Date -->
         <div class="col-12 col-sm-12 col-md-3 col-lg-3">
           <mat-form-field appearance="outline">
             <mat-label>Start Date</mat-label>
@@ -26,6 +42,8 @@
             <mat-datepicker #picker1></mat-datepicker>
           </mat-form-field>
         </div>
+
+        <!-- End Date -->
         <div class="col-12 col-sm-12 col-md-3 col-lg-3">
           <mat-form-field appearance="outline">
             <mat-label>End Date</mat-label>
@@ -34,16 +52,21 @@
             <mat-datepicker #picker2></mat-datepicker>
           </mat-form-field>
         </div>
+
+        <!-- Branch (all modes) -->
         <div class="col-12 col-sm-12 col-md-3 col-lg-3">
           <mat-form-field appearance="outline">
             <mat-label>Branch</mat-label>
-            <mat-select formControlName="Branch" [panelClass]="'custom-dropdown-panel'" (selectionChange)="branchChange($event.value)">
+            <mat-select formControlName="Branch" [panelClass]="'custom-dropdown-panel'"
+                        (selectionChange)="branchChange($event.value)">
               <mat-option value="">All Branches</mat-option>
               <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}} - {{d.Name}}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
-        <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+
+        <!-- Client — IN mode only -->
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3" *ngIf="mode === 'in'">
           <mat-form-field appearance="outline">
             <mat-label>Client</mat-label>
             <mat-select formControlName="Client" [panelClass]="'custom-dropdown-panel'">
@@ -52,19 +75,28 @@
             </mat-select>
           </mat-form-field>
         </div>
+
+        <!-- Buttons -->
         <div class="col-12 col-sm-12 col-md-3 col-lg-3 d-flex align-items-center">
           <div class="btn-group" role="group">
             <button type="submit" class="btn wlt-c-furg-btn-primary m-1" [disabled]="frm.invalid">
               <i class="fas fa-search"></i> Search
             </button>
-            <button type="button" class="btn wlt-c-furg-btn-gray m-1" (click)="exportToExcel()" [disabled]="dataSource.length === 0">
+            <button type="button" class="btn wlt-c-furg-btn-gray m-1"
+                    (click)="exportToExcel()" [disabled]="dataSource.length === 0">
               <i class="fas fa-file-excel"></i> Export
+            </button>
+            <button type="button" class="btn wlt-c-furg-btn-secondary m-1 print-hide"
+                    (click)="onPrint()" [disabled]="dataSource.length === 0">
+              <i class="fas fa-print"></i> Print
             </button>
           </div>
         </div>
+
       </div>
     </form>
 
+    <!-- ── Messages ───────────────────────────────────────────────────────── -->
     <div *ngIf="warningMessage !== ''">
       <mat-label style="color:red" [innerHTML]="warningMessage"></mat-label>
     </div>
@@ -72,21 +104,30 @@
       <mat-label style="color:red" [innerHTML]="errorMessage"></mat-label>
     </div>
 
-    <ng-container *ngIf="dataSource.length > 0">
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         IN MODE — Client TDS Received
+    ════════════════════════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="mode === 'in' && dataSource.length > 0">
       <div class="row mt-3 mb-2 print-hide">
-        <div class="col-6 col-sm-6 col-md-6 col-lg-6">
+        <div class="col-6 col-sm-6 col-md-4 col-lg-4">
           <div class="summary-card">
             <div class="summary-label">Total Receipt Amount</div>
             <div class="summary-value">{{ totalReceiptAmount | number:'1.2-2' }}</div>
           </div>
         </div>
-        <div class="col-6 col-sm-6 col-md-6 col-lg-6">
+        <div class="col-6 col-sm-6 col-md-4 col-lg-4">
           <div class="summary-card hq-card">
             <div class="summary-label">Total TDS Amount</div>
             <div class="summary-value">{{ totalHQAmount | number:'1.2-2' }}</div>
           </div>
         </div>
+        <div class="col-6 col-sm-6 col-md-4 col-lg-4">
+          <div class="summary-card">
+            <div class="summary-label">Total Branch Collection</div>
+            <div class="summary-value">{{ totalBranchCollection | number:'1.2-2' }}</div>
+          </div>
         </div>
+      </div>
 
       <div class="table-responsive mt-2">
         <table mat-table [dataSource]="dataSource" class="wlt-table table-striped w-100">
@@ -145,22 +186,173 @@
             <td mat-footer-cell *matFooterCellDef class="text-right"><strong>{{ totalBranchCollection | number:'1.2-2' }}</strong></td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          <tr mat-footer-row *matFooterRowDef="displayedColumns"></tr>
+          <tr mat-header-row *matHeaderRowDef="columnsIn"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnsIn;"></tr>
+          <tr mat-footer-row *matFooterRowDef="columnsIn"></tr>
         </table>
       </div>
     </ng-container>
 
-    <div *ngIf="dataSource.length === 0 && !showLoadingSpinner && warningMessage === ''" class="text-center mt-4 text-muted">
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         OUT MODE — Supplier TDS Deducted
+    ════════════════════════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="mode === 'out' && dataSource.length > 0">
+      <div class="row mt-3 mb-2 print-hide">
+        <div class="col-6 col-sm-6 col-md-4 col-lg-4">
+          <div class="summary-card">
+            <div class="summary-label">Total Invoice Amount</div>
+            <div class="summary-value">{{ totalInvoiceTotal | number:'1.2-2' }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-sm-6 col-md-4 col-lg-4">
+          <div class="summary-card hq-card">
+            <div class="summary-label">Total TDS Deducted</div>
+            <div class="summary-value">{{ totalOutTDS | number:'1.2-2' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive mt-2">
+        <table mat-table [dataSource]="dataSource" class="wlt-table table-striped w-100">
+
+          <ng-container matColumnDef="SNo">
+            <th mat-header-cell *matHeaderCellDef style="width:50px;">S.No</th>
+            <td mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</td>
+            <td mat-footer-cell *matFooterCellDef><strong>Total</strong></td>
+          </ng-container>
+
+          <ng-container matColumnDef="InvoiceDate">
+            <th mat-header-cell *matHeaderCellDef>Invoice Date</th>
+            <td mat-cell *matCellDef="let element">{{ element.InvoiceDate | date:'dd-MMM-yyyy' }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="InvoiceNo">
+            <th mat-header-cell *matHeaderCellDef>Invoice No</th>
+            <td mat-cell *matCellDef="let element">{{ element.InvoiceNo }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="Branch">
+            <th mat-header-cell *matHeaderCellDef>Branch</th>
+            <td mat-cell *matCellDef="let element">{{ element.Branch }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="SupplierName">
+            <th mat-header-cell *matHeaderCellDef>Supplier</th>
+            <td mat-cell *matCellDef="let element">{{ element.SupplierName }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="Total">
+            <th mat-header-cell *matHeaderCellDef class="text-right">Invoice Total</th>
+            <td mat-cell *matCellDef="let element" class="text-right">{{ element.Total | number:'1.2-2' }}</td>
+            <td mat-footer-cell *matFooterCellDef class="text-right"><strong>{{ totalInvoiceTotal | number:'1.2-2' }}</strong></td>
+          </ng-container>
+
+          <ng-container matColumnDef="TDSPercentage">
+            <th mat-header-cell *matHeaderCellDef class="text-right">TDS %</th>
+            <td mat-cell *matCellDef="let element" class="text-right">{{ element.TDSPercentage }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="TDSAmount">
+            <th mat-header-cell *matHeaderCellDef class="text-right">TDS Amount</th>
+            <td mat-cell *matCellDef="let element" class="text-right">{{ element.TDSAmount | number:'1.2-2' }}</td>
+            <td mat-footer-cell *matFooterCellDef class="text-right"><strong>{{ totalOutTDS | number:'1.2-2' }}</strong></td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnsOut"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnsOut;"></tr>
+          <tr mat-footer-row *matFooterRowDef="columnsOut"></tr>
+        </table>
+      </div>
+    </ng-container>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         PAYROLL MODE — Employee Salary TDS
+    ════════════════════════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="mode === 'payroll' && dataSource.length > 0">
+      <div class="row mt-3 mb-2 print-hide">
+        <div class="col-6 col-sm-6 col-md-4 col-lg-4">
+          <div class="summary-card">
+            <div class="summary-label">Total Gross Pay</div>
+            <div class="summary-value">{{ totalGrossPay | number:'1.2-2' }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-sm-6 col-md-4 col-lg-4">
+          <div class="summary-card hq-card">
+            <div class="summary-label">Total TDS Deducted</div>
+            <div class="summary-value">{{ totalPayrollTDS | number:'1.2-2' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive mt-2">
+        <table mat-table [dataSource]="dataSource" class="wlt-table table-striped w-100">
+
+          <ng-container matColumnDef="SNo">
+            <th mat-header-cell *matHeaderCellDef style="width:50px;">S.No</th>
+            <td mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</td>
+            <td mat-footer-cell *matFooterCellDef><strong>Total</strong></td>
+          </ng-container>
+
+          <ng-container matColumnDef="Period">
+            <th mat-header-cell *matHeaderCellDef>Salary Month</th>
+            <td mat-cell *matCellDef="let element">{{ element.Period | date:'MMM-yyyy' }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="EmpCode">
+            <th mat-header-cell *matHeaderCellDef>Emp Code</th>
+            <td mat-cell *matCellDef="let element">{{ element.EmpCode }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="EmpName">
+            <th mat-header-cell *matHeaderCellDef>Employee Name</th>
+            <td mat-cell *matCellDef="let element">{{ element.EmpName }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="Branch">
+            <th mat-header-cell *matHeaderCellDef>Branch</th>
+            <td mat-cell *matCellDef="let element">{{ element.Branch }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="GrossPay">
+            <th mat-header-cell *matHeaderCellDef class="text-right">Gross Pay</th>
+            <td mat-cell *matCellDef="let element" class="text-right">{{ element.GrossPay | number:'1.2-2' }}</td>
+            <td mat-footer-cell *matFooterCellDef class="text-right"><strong>{{ totalGrossPay | number:'1.2-2' }}</strong></td>
+          </ng-container>
+
+          <ng-container matColumnDef="TDS">
+            <th mat-header-cell *matHeaderCellDef class="text-right">TDS Amount</th>
+            <td mat-cell *matCellDef="let element" class="text-right">{{ element.TDS | number:'1.2-2' }}</td>
+            <td mat-footer-cell *matFooterCellDef class="text-right"><strong>{{ totalPayrollTDS | number:'1.2-2' }}</strong></td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnsPayroll"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnsPayroll;"></tr>
+          <tr mat-footer-row *matFooterRowDef="columnsPayroll"></tr>
+        </table>
+      </div>
+    </ng-container>
+
+    <!-- ── Empty state ────────────────────────────────────────────────────── -->
+    <div *ngIf="dataSource.length === 0 && !showLoadingSpinner && warningMessage === ''"
+         class="text-center mt-4 text-muted">
       No records found. Please select a date range and click Search.
     </div>
 
   </mat-card-content>
 </mat-card>
 
+<!-- Loading spinner -->
 <div [style.display]="showLoadingSpinner ? 'block' : 'none'"
-  style="margin-top: -20.5rem; display: block; margin-left: -6.5rem;">
+     style="margin-top: -20.5rem; display: block; margin-left: -6.5rem;">
   <div class="d-flex justify-content-center">
     <span class="loader"></span>
   </div>
