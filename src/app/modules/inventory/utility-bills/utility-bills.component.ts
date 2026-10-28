@@ -41,13 +41,11 @@ export interface IItemDetails {
   styleUrls: ['./utility-bills.component.css']
 })
 export class UtilityBillsComponent implements AfterViewInit {
-  @ViewChild(MatPaginator)
-  paginator!: MatPaginator;
-  @ViewChild(MatSort)
-  sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
   displayedColumns: string[] = ['InvoicePeriodFrom', 'InvoicePeriodTo', 'Amount', 'Note', 'action'];
-  // dataSource = new MatTableDataSource(ELEMENT_DATA);
-  frm!: FormGroup
+  frm!: FormGroup;
   details: IItemDetails[] = [];
   branchList: any = [];
   supplierList: any = [];
@@ -66,53 +64,121 @@ export class UtilityBillsComponent implements AfterViewInit {
   showLoadingSpinner: boolean = false;
   invoiceID = 0;
 
-  // Computed display-only value: Amount total + GST - TDS
+  // ── Convenience getter ─────────────────────────────────────────────────────
+  get isInterState(): boolean {
+    return this.frm.get('TransactionType')?.value === 'E';
+  }
+
+  // ── Auto-detect intra/inter from branch state vs supplier state ────────────
+  private detectTransactionType(): void {
+    const branchCode   = this.frm.get('Branch')?.value;
+    const supplierId   = this.frm.get('Supplier')?.value;
+
+    if (!branchCode || !supplierId) return;
+
+    const branch   = this.branchList.find((b: any) => b.Code === branchCode);
+    const supplier = this.supplierList.find((s: any) => s.Id?.toString() === supplierId?.toString());
+
+    if (!branch || !supplier) return;
+
+    const branchState   = (branch.State   ?? '').trim().toLowerCase();
+    const supplierState = (supplier.State ?? '').trim().toLowerCase();
+
+    if (!branchState || !supplierState) return; // can't determine — leave as-is
+
+    const txType = branchState === supplierState ? 'I' : 'E';
+    this.frm.get('TransactionType')?.setValue(txType, { emitEvent: false });
+
+    // Clear stale GST amounts when type is determined
+    if (txType === 'I') {
+      this.frm.patchValue({ IGSTPercentage: 0, IGSTAmount: 0 }, { emitEvent: false });
+    } else {
+      this.frm.patchValue({
+        CGSTPercentage: 0, CGSTAmount: 0,
+        SGSTPercentage: 0, SGSTAmount: 0
+      }, { emitEvent: false });
+    }
+  }
+
+  // ── Computed totals ────────────────────────────────────────────────────────
   get baseTotal(): number {
     return this.details.reduce((sum, d: any) => sum + (Number(d['Amount']) || 0), 0);
   }
 
+  /** Total GST for Net Payable — IGST when inter-state, CGST+SGST when intra-state */
+  get totalGSTAmount(): number {
+    if (this.isInterState) {
+      return Number(this.frm.get('IGSTAmount')?.value) || 0;
+    }
+    return (Number(this.frm.get('CGSTAmount')?.value) || 0)
+         + (Number(this.frm.get('SGSTAmount')?.value) || 0);
+  }
+
   get netPayable(): number {
-    const gstAmount = Number(this.frm.get('GSTAmount')?.value) || 0;
     const tdsAmount = Number(this.frm.get('TDSAmount')?.value) || 0;
-    return this.baseTotal + gstAmount - tdsAmount;
+    return this.baseTotal + this.totalGSTAmount - tdsAmount;
   }
 
-  // Auto-calculate GST Amount when GST % changes
-  onGSTPercentageChange(): void {
-    const pct   = Number(this.frm.get('GSTPercentage')?.value) || 0;
-    const total = this.baseTotal;
-    this.frm.get('GSTAmount')?.setValue(
-      pct > 0 ? parseFloat((total * pct / 100).toFixed(2)) : 0,
+  // ── GST type toggle (called internally only — no longer on HTML) ──────────
+  private onTransactionTypeChange(): void {
+    // Clear all GST fields when switching type to avoid stale values
+    this.frm.patchValue({
+      CGSTPercentage: 0, CGSTAmount: 0,
+      SGSTPercentage: 0, SGSTAmount: 0,
+      IGSTPercentage: 0, IGSTAmount: 0,
+    }, { emitEvent: false });
+  }
+
+  // ── CGST auto-calculate ────────────────────────────────────────────────────
+  onCGSTPercentageChange(): void {
+    const pct = Number(this.frm.get('CGSTPercentage')?.value) || 0;
+    this.frm.get('CGSTAmount')?.setValue(
+      pct > 0 ? parseFloat((this.baseTotal * pct / 100).toFixed(2)) : 0,
       { emitEvent: false }
     );
   }
 
-  // Auto-calculate TDS Amount when TDS % changes
+  // ── SGST auto-calculate ────────────────────────────────────────────────────
+  onSGSTPercentageChange(): void {
+    const pct = Number(this.frm.get('SGSTPercentage')?.value) || 0;
+    this.frm.get('SGSTAmount')?.setValue(
+      pct > 0 ? parseFloat((this.baseTotal * pct / 100).toFixed(2)) : 0,
+      { emitEvent: false }
+    );
+  }
+
+  // ── IGST auto-calculate ────────────────────────────────────────────────────
+  onIGSTPercentageChange(): void {
+    const pct = Number(this.frm.get('IGSTPercentage')?.value) || 0;
+    this.frm.get('IGSTAmount')?.setValue(
+      pct > 0 ? parseFloat((this.baseTotal * pct / 100).toFixed(2)) : 0,
+      { emitEvent: false }
+    );
+  }
+
+  // ── TDS auto-calculate ─────────────────────────────────────────────────────
   onTDSPercentageChange(): void {
-    const pct   = Number(this.frm.get('TDSPercentage')?.value) || 0;
-    const total = this.baseTotal;
+    const pct = Number(this.frm.get('TDSPercentage')?.value) || 0;
     this.frm.get('TDSAmount')?.setValue(
-      pct > 0 ? parseFloat((total * pct / 100).toFixed(2)) : 0,
+      pct > 0 ? parseFloat((this.baseTotal * pct / 100).toFixed(2)) : 0,
       { emitEvent: false }
     );
   }
+
   constructor(private fb: FormBuilder, public dialog: MatDialog, private _liveAnnouncer: LiveAnnouncer,
     commonService: CommonService, private service: InventoryService, private route: Router,
     private _dataService: DatasharingService, private _masterService: MastermoduleService) {
+
     this.userAccessModel = {
-      readAccess: false,
-      updateAccess: false,
-      deleteAccess: false,
-      createAccess: false,
-    }
+      readAccess: false, updateAccess: false,
+      deleteAccess: false, createAccess: false,
+    };
 
     this.user = commonService.getLocalUser();
 
     this.currentUser = sessionStorage.getItem('username')!;
     if (this.currentUser == 'null' || this.currentUser == undefined) {
-      this._dataService.getUsername().subscribe((username) => {
-        this.currentUser = username;
-      });
+      this._dataService.getUsername().subscribe((username) => { this.currentUser = username; });
     }
     this.getUserAccessRights(this.currentUser, 'Utility Bills');
 
@@ -125,10 +191,20 @@ export class UtilityBillsComponent implements AfterViewInit {
       InvoiceNo: [''],
       InvoiceDate: [''],
       PaymentDate: [''],
-      GSTPercentage: [0],
-      GSTAmount: [0],
+      // 'I' = Intra-state (CGST+SGST), 'E' = Inter-state (IGST)
+      TransactionType: ['I'],
+      // Intra-state
+      CGSTPercentage: [0],
+      CGSTAmount: [0],
+      SGSTPercentage: [0],
+      SGSTAmount: [0],
+      // Inter-state
+      IGSTPercentage: [0],
+      IGSTAmount: [0],
+      // TDS
       TDSPercentage: [0],
-      TDSAmount: [0],      details: this.fb.group({
+      TDSAmount: [0],
+      details: this.fb.group({
         ID: [0],
         InvoicePeriodFrom: [''],
         InvoicePeriodTo: [''],
@@ -137,12 +213,10 @@ export class UtilityBillsComponent implements AfterViewInit {
         index: [-1],
         SerialNo: [0]
       })
-    })
+    });
   }
 
-  ngAfterViewInit() {
-
-  }
+  ngAfterViewInit() { }
 
   ngOnInit() {
     this._dataService.getSelectedInvoice().subscribe((result: any) => {
@@ -155,51 +229,77 @@ export class UtilityBillsComponent implements AfterViewInit {
       this.frm.get('Supplier')?.setValue(result.Supplier.toString());
       this.frm.get('ItemCategory')?.setValue(result.ItemCategory.toString());
 
-      // Restore GST / TDS values on edit
-      this.frm.get('GSTPercentage')?.setValue(result.GSTPercentage ?? 0);
-      this.frm.get('GSTAmount')?.setValue(result.GSTAmount ?? 0);
+      // ── Restore transaction type ─────────────────────────────────────────
+      const txType = result.TransactionType ?? 'I';
+      this.frm.get('TransactionType')?.setValue(txType);
+
+      // ── Restore GST fields ───────────────────────────────────────────────
+      const igstAmt = result.IGSTAmount ?? 0;
+      const cgstAmt = result.CGSTAmount ?? 0;
+      const sgstAmt = result.SGSTAmount ?? 0;
+
+      if (txType === 'E') {
+        // Inter-state record
+        if (igstAmt === 0 && (result.GSTAmount ?? 0) > 0) {
+          // Legacy record (no IGST columns yet) — treat full GSTAmount as IGST
+          this.frm.get('IGSTPercentage')?.setValue(result.GSTPercentage ?? 0);
+          this.frm.get('IGSTAmount')?.setValue(result.GSTAmount ?? 0);
+        } else {
+          this.frm.get('IGSTPercentage')?.setValue(result.IGSTPercentage ?? 0);
+          this.frm.get('IGSTAmount')?.setValue(igstAmt);
+        }
+        this.frm.patchValue({ CGSTPercentage: 0, CGSTAmount: 0, SGSTPercentage: 0, SGSTAmount: 0 });
+      } else {
+        // Intra-state record
+        if (cgstAmt === 0 && sgstAmt === 0 && (result.GSTAmount ?? 0) > 0) {
+          // Legacy record — split old GSTAmount 50/50
+          const half    = parseFloat(((result.GSTAmount ?? 0) / 2).toFixed(2));
+          const halfPct = parseFloat(((result.GSTPercentage ?? 0) / 2).toFixed(2));
+          this.frm.patchValue({ CGSTPercentage: halfPct, CGSTAmount: half,
+                                 SGSTPercentage: halfPct, SGSTAmount: half });
+        } else {
+          this.frm.patchValue({
+            CGSTPercentage: result.CGSTPercentage ?? 0, CGSTAmount: cgstAmt,
+            SGSTPercentage: result.SGSTPercentage ?? 0, SGSTAmount: sgstAmt,
+          });
+        }
+        this.frm.patchValue({ IGSTPercentage: 0, IGSTAmount: 0 });
+      }
+
       this.frm.get('TDSPercentage')?.setValue(result.TDSPercentage ?? 0);
       this.frm.get('TDSAmount')?.setValue(result.TDSAmount ?? 0);
 
       this.categoryChange();
-
     });
   }
 
   onInvoiceDateSelected(event: any): void {
     const selectedDate = event.value;
     const invoicePeriodFromControl = this.frm.get('details.InvoicePeriodFrom');
-    const invoicePeriodToControl = this.frm.get('details.InvoicePeriodTo');
+    const invoicePeriodToControl   = this.frm.get('details.InvoicePeriodTo');
     if (selectedDate) {
-      // Example: Maybe check if it's before the PaymentDate
       const paymentDate = this.frm.get('PaymentDate')?.value;
-
       if (invoicePeriodFromControl && this.returnDate(selectedDate) <= this.returnDate(paymentDate)) {
-        if (invoicePeriodFromControl) {
-          invoicePeriodFromControl.setValue(this.returnDate(selectedDate));
-        }
+        invoicePeriodFromControl.setValue(this.returnDate(selectedDate));
       } else if (invoicePeriodFromControl) {
-        invoicePeriodFromControl.setValue(this.returnDate(selectedDate))
+        invoicePeriodFromControl.setValue(this.returnDate(selectedDate));
         this.frm.get('PaymentDate')?.setValue(null);
-        invoicePeriodToControl?.setValue("");
+        invoicePeriodToControl?.setValue('');
         this.showMessage(`Payment date cannot be earlier than the Invoice date.`, 'warning', 'Warning Message');
       }
     }
   }
+
   onPaymentDateSelected(event: any): void {
     const selectedDate = event.value;
     const invoicePeriodToControl = this.frm.get('details.InvoicePeriodTo');
-
     if (selectedDate) {
       const invoiceDate = this.frm.get('InvoiceDate')?.value;
       if (invoiceDate && this.returnDate(selectedDate) >= this.returnDate(invoiceDate)) {
-        // Payment date is on or after Invoice date - This is likely the valid case
-        if (invoicePeriodToControl) {
-          invoicePeriodToControl.setValue(this.returnDate(selectedDate));
-        }
+        invoicePeriodToControl?.setValue(this.returnDate(selectedDate));
       } else if (invoiceDate) {
         this.frm.get('PaymentDate')?.setValue(null);
-        invoicePeriodToControl?.setValue("");
+        invoicePeriodToControl?.setValue('');
         this.showMessage(`Payment date cannot be earlier than the Invoice date.`, 'warning', 'Warning Message');
       }
     }
@@ -210,18 +310,18 @@ export class UtilityBillsComponent implements AfterViewInit {
       (data) => {
         if (data != null) {
           this.showLoadingSpinner = true;
-          this.userAccessModel.readAccess = data.Read
+          this.userAccessModel.readAccess   = data.Read;
           this.userAccessModel.deleteAccess = data.Delete;
           this.userAccessModel.updateAccess = data.Update;
           this.userAccessModel.createAccess = data.Create;
 
           if (this.userAccessModel.readAccess === true || this.currentUser == 'superadmin') {
             this.warningMessage = '';
-            this.service.getUtilityMaster("U", "", this.currentUser).subscribe((d: any) => {
-              this.branchList = d['branchList'];
+            this.service.getUtilityMaster("U,O", "", this.currentUser).subscribe((d: any) => {
+              this.branchList   = d['branchList'];
               this.supplierList = d['supplierList'];
               this.categoryList = d['categoryList'];
-            })
+            });
             this.hideLoadingSpinner();
           } else {
             this.warningMessage = `Dear <B>${this.currentUser}</B>, <br>
@@ -231,11 +331,8 @@ export class UtilityBillsComponent implements AfterViewInit {
             this.hideLoadingSpinner();
           }
         }
-
       },
-      (error) => {
-        this.handleErrors(error);
-      }
+      (error) => { this.handleErrors(error); }
     );
   }
 
@@ -243,74 +340,66 @@ export class UtilityBillsComponent implements AfterViewInit {
     this.route.navigate(['/finance/utility-search']);
   }
 
+  onBranchChange(): void {
+    this.detectTransactionType();
+  }
 
   categoryChange() {
     this.service.GetPaytoByCategory(this.frm.get('ItemCategory')?.value).subscribe((d: any) => {
       this.payList = [...d['List1'], ...d['List2']];
-    }, () => {
-    }, () => {
-      let id = this.frm.get("ID")?.value;
+    }, () => { }, () => {
+      const id = this.frm.get('ID')?.value;
       if (id != 0) {
         this.isEdit = true;
-        this.frm.get("RecID")?.setValue(this.returnResult['RecID'].toString());
+        this.frm.get('RecID')?.setValue(this.returnResult['RecID'].toString());
         this.service.GetUtilityDetailsByID(id).subscribe((d: any) => {
-          d.map((d: any) => {
-            d['InvoicePeriodFrom'] = this.returnDate(d['InvoicePeriodFrom']);
-            d['InvoicePeriodTo'] = this.returnDate(d['InvoicePeriodTo']);
-          })
+          d.map((row: any) => {
+            row['InvoicePeriodFrom'] = this.returnDate(row['InvoicePeriodFrom']);
+            row['InvoicePeriodTo']   = this.returnDate(row['InvoicePeriodTo']);
+          });
           this.details = [...d];
           this.detailDataSource();
-        })
+        });
       }
-    })
+    });
   }
 
   detailDataSource() {
     this.dataSource = new MatTableDataSource(this.details);
-    this.dataSource.sort = this.sort;
+    this.dataSource.sort      = this.sort;
     this.dataSource.paginator = this.paginator;
   }
 
   addItemDetails(action: string) {
     this.errorDescription = '';
-    let frmData = this.frm.getRawValue();
-    let details = frmData['details'];
+    const frmData = this.frm.getRawValue();
+    const details = frmData['details'];
 
-    if (details['InvoicePeriodFrom'] == "" || details['InvoicePeriodTo'] == "" || details['Amount'] == "") {
-      this.errorDescription = "please fill the field";
+    if (!details['InvoicePeriodFrom'] || !details['InvoicePeriodTo'] || details['Amount'] === '' || details['Amount'] == null) {
+      this.errorDescription = 'please fill the field';
       return;
     }
 
     details['InvoicePeriodFrom'] = this.returnDate(this.frm.get('details.InvoicePeriodFrom')?.value);
-    details['InvoicePeriodTo'] = this.returnDate(this.frm.get('details.InvoicePeriodTo')?.value);
+    details['InvoicePeriodTo']   = this.returnDate(this.frm.get('details.InvoicePeriodTo')?.value);
 
-    if (action == 'add') {
+    if (action === 'add') {
       details['ID'] = 0;
       this.details.push(details);
-    } else if (details['index'] >= 0 && action == 'update') {
+    } else if (details['index'] >= 0 && action === 'update') {
       this.details[details['index']] = details;
     }
 
     this.detailDataSource();
-
-
     this.emptyDetailData();
     this.detailEdit = false;
   }
 
   emptyDetailData() {
-    let emptyData = {
-      ID: 0,
-      InvoicePeriodFrom: '',
-      InvoicePeriodTo: '',
-      Amount: 0,
-      Note: "",
-      index: -1,
-      SerialNo: 0
-    }
-
-
-    this.frm.get('details')?.setValue(emptyData);
+    this.frm.get('details')?.setValue({
+      ID: 0, InvoicePeriodFrom: '', InvoicePeriodTo: '',
+      Amount: 0, Note: '', index: -1, SerialNo: 0
+    });
   }
 
   editRow(row: IItemDetails, index: any) {
@@ -321,8 +410,7 @@ export class UtilityBillsComponent implements AfterViewInit {
 
   deleteRow(row: IItemDetails, index: any) {
     if (row.ID != 0) {
-      this.service.DeleteUtilityDetailById(row.ID + "").subscribe((d: any) => {
-      })
+      this.service.DeleteUtilityDetailById(row.ID + '').subscribe(() => { });
     }
     this.details.splice(index, 1);
     this.detailDataSource();
@@ -330,71 +418,63 @@ export class UtilityBillsComponent implements AfterViewInit {
 
   supplierChange(event: any) {
     this.frm.get('RecID')?.setValue(event.value);
+    this.detectTransactionType();
   }
 
-  returnDate(date?: any) {
-    let currentDate = new Date();
-    if (date) {
-      currentDate = new Date(date);
-    }
-
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Month is zero-based
-    const day = String(currentDate.getDate()).padStart(2, '0');
-
+  returnDate(date?: any): string {
+    const d = date ? new Date(date) : new Date();
+    const year  = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day   = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 
   onSubmit() {
+    if (this.frm.invalid) return;
 
-    if (this.frm.invalid) {
-      return
-    }
+    const data = this.frm.getRawValue();
 
-    let data = this.frm.getRawValue();
-
-    this.details.map((d: any) => {
-      d['InvoicePeriodFrom'] = this.returnDate(d['InvoicePeriodFrom']);
-      d['InvoicePeriodTo'] = this.returnDate(d['InvoicePeriodTo']);
-    });
-
-    let total = 0;
     this.details.forEach((d: any, index) => {
-      d['SerialNo'] = index + 1;
-      d['LastUpdatedBy'] = this.currentUser;
-      const amount = d['Amount'] != null ? Number(d['Amount']) : 0;
-      total += amount;
+      d['InvoicePeriodFrom'] = this.returnDate(d['InvoicePeriodFrom']);
+      d['InvoicePeriodTo']   = this.returnDate(d['InvoicePeriodTo']);
+      d['SerialNo']          = index + 1;
+      d['LastUpdatedBy']     = this.currentUser;
     });
 
-
-    data['Total'] = total;
-    data['details'] = this.details;
-
-    data['InvoiceType'] = "U";
-    data['InvoiceDate'] = this.returnDate(this.frm.get('InvoiceDate')?.value);
-    data['PaymentDate'] = this.returnDate(this.frm.get('PaymentDate')?.value);
+    data['Total']    = this.details.reduce((s: number, d: any) => s + (Number(d['Amount']) || 0), 0);
+    data['details']  = this.details;
+    data['InvoiceType']   = 'U';
+    data['InvoiceDate']   = this.returnDate(this.frm.get('InvoiceDate')?.value);
+    data['PaymentDate']   = this.returnDate(this.frm.get('PaymentDate')?.value);
     data['LastUpdatedBy'] = this.currentUser;
 
-    // GST / TDS — send percentage + amount as-is (amount already auto-calculated or manually overridden)
-    data['GSTPercentage'] = Number(this.frm.get('GSTPercentage')?.value) || 0;
-    data['GSTAmount']     = Number(this.frm.get('GSTAmount')?.value)     || 0;
+    // Transaction type
+    data['TransactionType'] = this.frm.get('TransactionType')?.value ?? 'I';
+
+    // CGST / SGST (intra-state)
+    data['CGSTPercentage'] = Number(this.frm.get('CGSTPercentage')?.value) || 0;
+    data['CGSTAmount']     = Number(this.frm.get('CGSTAmount')?.value)     || 0;
+    data['SGSTPercentage'] = Number(this.frm.get('SGSTPercentage')?.value) || 0;
+    data['SGSTAmount']     = Number(this.frm.get('SGSTAmount')?.value)     || 0;
+
+    // IGST (inter-state)
+    data['IGSTPercentage'] = Number(this.frm.get('IGSTPercentage')?.value) || 0;
+    data['IGSTAmount']     = Number(this.frm.get('IGSTAmount')?.value)     || 0;
+
+    // TDS
     data['TDSPercentage'] = Number(this.frm.get('TDSPercentage')?.value) || 0;
     data['TDSAmount']     = Number(this.frm.get('TDSAmount')?.value)     || 0;
 
-    let msg = "";
-    this.service.saveUtility(data).subscribe((d: any) => {
+    this.service.saveUtility(data).subscribe(() => {
       this._dataService.setSelectedInvoice([]);
-      if (this.isEdit) {
-        msg = 'Successfully Updated Expenses Details';
-      } else {
-        msg = 'Successfully Saved Expenses Details';
-      }
-      this.showMessage(msg, 'success', 'Success Message')
+      const msg = this.isEdit ? 'Successfully Updated Expenses Details'
+                              : 'Successfully Saved Expenses Details';
+      this.showMessage(msg, 'success', 'Success Message');
       this.frm.reset();
       this.details = [];
       this.detailDataSource();
       this.route.navigate(['/inventory/utility-bills']);
-    })
+    });
   }
 
   onCancel() {
@@ -404,10 +484,7 @@ export class UtilityBillsComponent implements AfterViewInit {
 
   deleteButtonClick() {
     this.showLoadingSpinner = true;
-    this.dialog
-      .open(DialogConfirmationComponent, {
-        data: `Are you sure want to delete this expense?`
-      })
+    this.dialog.open(DialogConfirmationComponent, { data: `Are you sure want to delete this expense?` })
       .afterClosed()
       .subscribe((result: { confirmDialog: boolean; remarks: any }) => {
         if (result.confirmDialog) {
@@ -415,68 +492,46 @@ export class UtilityBillsComponent implements AfterViewInit {
             this.service.isCreditorInvoice(this.invoiceID).subscribe({
               next: (isAvailable: boolean) => {
                 if (isAvailable) {
-                  // If invoice available, then get final invoice date
-                  forkJoin({
-                    finalInvoiceDate: this.service.deleteExpensesById(this.invoiceID, this.currentUser)
-                  }).subscribe({
-                    next: (results: any) => {
-                      if (results) {
+                  forkJoin({ done: this.service.deleteExpensesById(this.invoiceID, this.currentUser) })
+                    .subscribe({
+                      next: () => {
                         this._dataService.setSelectedInvoice([]);
                         this.route.navigateByUrl('/', { skipLocationChange: true }).then(() => {
                           this.route.navigate(['/inventory/utility-bills']);
                         });
                         this.showMessage(`Expenses Bill details are deleted successfully.`, 'success', 'Success Message');
-                      }
-                    },
-                    error: (err: any) => {
-                      console.error('Error getting Utility Bill details date', err);
-                    }
-                  });
+                      },
+                      error: (err: any) => { console.error('Delete error', err); }
+                    });
                 } else {
-                  this.showMessage(`Expenses Bill Payment Exist.Please Check.`, 'warning', 'Warning Message');
+                  this.showMessage(`Expenses Bill Payment Exist. Please Check.`, 'warning', 'Warning Message');
                 }
               },
-              error: (err: any) => {
-                console.error('Error checking invoice availability', err);
-              }
+              error: (err: any) => { console.error('Check error', err); }
             });
-          }
-          else {
+          } else {
             this.hideLoadingSpinner();
           }
-
         } else {
           this.hideLoadingSpinner();
         }
-      })
+      });
   }
 
   private showMessage(message: string, icon: 'success' | 'warning' | 'info' | 'error' = 'info',
     title: 'Success Message' | 'Warning Message' | 'Error Message'): void {
     Swal.fire({
-      toast: true,
-      position: 'top',
-      showConfirmButton: false,
-      title: title,
-      text: message,
-      icon: icon, // Dynamically set the icon based on the parameter
-      showCloseButton: false,
-      timer: 5000,
-      width: '600px',
-      customClass: {
-        popup: 'swal-top-offset'
-      }
+      toast: true, position: 'top', showConfirmButton: false,
+      title, text: message, icon,
+      showCloseButton: false, timer: 5000, width: '600px',
+      customClass: { popup: 'swal-top-offset' }
     });
     this.hideLoadingSpinner();
-    return;
   }
+
   handleErrors(error: string) {
-    if (error != null && error != '') {
-      this.errorMessage = error;
-      this.hideLoadingSpinner();
-    }
+    if (error) { this.errorMessage = error; this.hideLoadingSpinner(); }
   }
-  hideLoadingSpinner() {
-    this.showLoadingSpinner = false
-  }
+
+  hideLoadingSpinner() { this.showLoadingSpinner = false; }
 }

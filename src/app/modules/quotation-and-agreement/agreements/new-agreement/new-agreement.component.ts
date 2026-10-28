@@ -270,6 +270,8 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
       Period: [null],
 
+      ToPeriod: [null],
+
       details: this.fb.group({
 
         ID: [0],

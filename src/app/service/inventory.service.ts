@@ -115,8 +115,11 @@ export class InventoryService {
   }
 
   getUtilityMaster(invCat: string, supplierCat: string, userId: string): Observable<any> {
-    const params = { params: new HttpParams({ fromString: "?invCat=" + invCat + "&supplierCat=" + supplierCat + "&userID=" + userId }) };
-    return this.httpClient.get<any>(this.apiUrl + 'Inventory/GetUtilityMasterList', params
+    const params = new HttpParams()
+      .set('invCat', invCat)
+      .set('supplierCat', supplierCat)
+      .set('userID', userId);
+    return this.httpClient.get<any>(this.apiUrl + 'Inventory/GetUtilityMasterList', { params }
     ).pipe(catchError(this.errorHandle));
   }
 

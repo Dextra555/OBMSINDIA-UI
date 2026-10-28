@@ -27,13 +27,14 @@ export class GstStatementReportComponent implements OnInit {
 
   // ── Column sets per mode ──────────────────────────────────────────────────
   columnsIn: string[] = [
-    'SNo', 'InvoiceNo', 'InvoiceDate', 'ClientName', 'ClientGSTIN',
-    'ClientState', 'TaxableAmount', 'GSTRate', 'CGST', 'SGST', 'IGST',
-    'TotalGST', 'TotalAmount', 'SupplyType'
+    'SNo', 'InvoiceDate', 'InvoiceNo', 'ClientName', 'ClientGSTIN',
+    'ClientState', 'TaxableAmount', 'GSTRate', 'SupplyType',
+    'CGST', 'SGST', 'IGST', 'TotalGST', 'TotalAmount'
   ];
   columnsOut: string[] = [
-    'SNo', 'InvoiceDate', 'InvoiceNo', 'Branch', 'SupplierName',
-    'InvoiceTotal', 'GSTPercentage', 'GSTAmount'
+    'SNo', 'InvoiceDate', 'InvoiceNo', 'SupplierName', 'Branch',
+    'InvoiceTotal', 'GSTRate', 'SupplyType',
+    'CGST', 'SGST', 'IGST', 'TotalGST', 'TDSAmount', 'NetPayable'
   ];
   columnsPayroll: string[] = [
     'SNo', 'Period', 'EmpCode', 'EmpName', 'Branch', 'GrossPay', 'PTax'
@@ -56,6 +57,11 @@ export class GstStatementReportComponent implements OnInit {
   // OUT
   totalInvoiceTotal: number = 0;
   totalOutGST:       number = 0;
+  totalOutCGST:      number = 0;
+  totalOutSGST:      number = 0;
+  totalOutIGST:      number = 0;
+  totalOutTDS:       number = 0;
+  totalOutNetPayable:number = 0;
   // PAYROLL
   totalGrossPay:  number = 0;
   totalPTax:      number = 0;
@@ -206,6 +212,8 @@ export class GstStatementReportComponent implements OnInit {
     this.totalTaxable     = 0; this.totalCGST    = 0; this.totalSGST  = 0;
     this.totalIGST        = 0; this.totalGST     = 0; this.grandTotal = 0;
     this.totalInvoiceTotal = 0; this.totalOutGST = 0;
+    this.totalOutCGST = 0; this.totalOutSGST = 0; this.totalOutIGST = 0;
+    this.totalOutTDS = 0; this.totalOutNetPayable = 0;
     this.totalGrossPay    = 0; this.totalPTax    = 0;
   }
 
@@ -219,8 +227,13 @@ export class GstStatementReportComponent implements OnInit {
   }
 
   calcTotalsOut() {
-    this.totalInvoiceTotal = this.dataSource.reduce((s, r) => s + (Number(r.invoiceTotal) || 0), 0);
-    this.totalOutGST       = this.dataSource.reduce((s, r) => s + (Number(r.gstAmount)   || 0), 0);
+    this.totalInvoiceTotal  = this.dataSource.reduce((s, r) => s + (Number(r.invoiceTotal)  || 0), 0);
+    this.totalOutCGST       = this.dataSource.reduce((s, r) => s + (Number(r.cgstAmount)    || 0), 0);
+    this.totalOutSGST       = this.dataSource.reduce((s, r) => s + (Number(r.sgstAmount)    || 0), 0);
+    this.totalOutIGST       = this.dataSource.reduce((s, r) => s + (Number(r.igstAmount)    || 0), 0);
+    this.totalOutGST        = this.dataSource.reduce((s, r) => s + (Number(r.totalGST)      || 0), 0);
+    this.totalOutTDS        = this.dataSource.reduce((s, r) => s + (Number(r.tdsAmount)     || 0), 0);
+    this.totalOutNetPayable = this.dataSource.reduce((s, r) => s + (Number(r.netPayable)    || 0), 0);
   }
 
   calcTotalsPayroll() {
@@ -272,14 +285,28 @@ export class GstStatementReportComponent implements OnInit {
         'Invoice No':     r.invoiceNo,
         'Branch':         r.branch,
         'Supplier':       r.supplierName,
-        'Invoice Total':  Number(r.invoiceTotal)  || 0,
-        'GST %':          Number(r.gstPercentage) || 0,
-        'GST Amount':     Number(r.gstAmount)     || 0,
+        'Invoice Total':  Number(r.invoiceTotal)   || 0,
+        'Type':           r.transactionType,
+        'CGST %':         Number(r.cgstPercentage) || 0,
+        'CGST Amount':    Number(r.cgstAmount)     || 0,
+        'SGST %':         Number(r.sgstPercentage) || 0,
+        'SGST Amount':    Number(r.sgstAmount)     || 0,
+        'IGST %':         Number(r.igstPercentage) || 0,
+        'IGST Amount':    Number(r.igstAmount)     || 0,
+        'Total GST':      Number(r.totalGST)       || 0,
+        'TDS Amount':     Number(r.tdsAmount)      || 0,
+        'Net Payable':    Number(r.netPayable)     || 0,
       }));
       exportData.push({
         'S.No': '', 'Invoice Date': '', 'Invoice No': '', 'Branch': '', 'Supplier': 'TOTAL',
         'Invoice Total': this.totalInvoiceTotal,
-        'GST %': '', 'GST Amount': this.totalOutGST
+        'Type': '',
+        'CGST %': '', 'CGST Amount': this.totalOutCGST,
+        'SGST %': '', 'SGST Amount': this.totalOutSGST,
+        'IGST %': '', 'IGST Amount': this.totalOutIGST,
+        'Total GST': this.totalOutGST,
+        'TDS Amount': this.totalOutTDS,
+        'Net Payable': this.totalOutNetPayable
       });
     } else {
       sheetName  = 'Professional Tax Report';

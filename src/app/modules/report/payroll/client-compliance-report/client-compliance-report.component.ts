@@ -118,12 +118,27 @@ export class ClientComplianceReportComponent implements OnInit {
   }
 
   loadComplianceReportTemplates() {
-    const reportTypes = ['form-xvii', 'form-xxvi', 'form-xxvii', 'form-xxviii', 'form-xxix', 'overtime', 'ap-form-xvi', 'ap-form-xvii', 'ap-form-xx', 'ap-form-xxi', 'ap-form-xxii', 'ap-form-xxiii', 'ap-form-xxix'];
-    reportTypes.forEach(type => {
-      const path = `assets/report-templates/client-compliance/${type}.html`;
+    // Map: reportType key (used by showReport) → template file name
+    const reportTypeToFile: { [key: string]: string } = {
+      'form-xvii':    'form-xvii',
+      'form-xxvi':    'form-xxvi',
+      'form-xxvii':   'form-xxvii',
+      'form-xxviii':  'form-xxviii',
+      'form-xxix':    'form-xxix',
+      'form-overtime':'overtime',       // key='form-overtime', file='overtime.html'
+      'ap-form-xvi':  'ap-form-xvi',
+      'ap-form-xvii': 'ap-form-xvii',
+      'ap-form-xx':   'ap-form-xx',
+      'ap-form-xxi':  'ap-form-xxi',
+      'ap-form-xxii': 'ap-form-xxii',
+      'ap-form-xxiii':'ap-form-xxiii',
+      'ap-form-xxix': 'ap-form-xxix',
+    };
+    Object.entries(reportTypeToFile).forEach(([type, fileName]) => {
+      const path = `assets/report-templates/client-compliance/${fileName}.html`;
       this.http.get(path, { responseType: 'text' }).subscribe(
         (htmlTemplate: string) => { this.reportTemplates[type] = htmlTemplate; },
-        (error) => { console.warn(`Could not load template for ${type}`, error); }
+        (error) => { console.warn(`Could not load template for ${type} (${fileName}.html)`, error); }
       );
     });
   }
@@ -158,6 +173,10 @@ export class ClientComplianceReportComponent implements OnInit {
 
   onBranchSelectionChange(event: any) {
     const branchCode = this.complianceForm.get('BranchCode')?.value;
+    this.complianceForm.get('ClientCode')?.reset('');
+    this.complianceClientModel = [];
+    this.currentReportHtml = null;
+    this.currentReportHtmlRaw = '';
     if (branchCode) {
       this.getClientListByBranch(branchCode);
     }
@@ -167,7 +186,7 @@ export class ClientComplianceReportComponent implements OnInit {
     this._masterService.getClientMsterListByBranch(branchCode).subscribe(
       (data: ClientModel[]) => {
         this.complianceClients = data;
-        this.complianceClientModel = data.filter(c => c.ClientComplianceStatus === 'compliance_client');
+        this.complianceClientModel = data.filter(c => c.Status !== 'Inactive');
       },
       (error: any) => {
         this.handleErrors(error);
@@ -180,7 +199,7 @@ export class ClientComplianceReportComponent implements OnInit {
       (data: ClientModel[]) => {
         this.clientModel = data;
         this.complianceClients = data;
-        this.complianceClientModel = data.filter(c => c.ClientComplianceStatus === 'compliance_client');
+        this.complianceClientModel = data.filter(c => c.Status !== 'Inactive');
       },
       (error: any) => {
         this.handleErrors(error);
@@ -338,17 +357,93 @@ export class ClientComplianceReportComponent implements OnInit {
       this.errorMessage = '';
       const parser = new DOMParser();
       const doc = parser.parseFromString(this.currentReportHtmlRaw, 'text/html');
-      const tables = Array.from(doc.querySelectorAll('table'));
 
-      if (!tables.length) {
+      // ── Remove <style> and <script> tags so their text is never collected ──
+      doc.querySelectorAll('style, script').forEach(el => el.remove());
+
+      // ── Identify the main data table (report-table class) vs header tables ──
+      // Header tables (like header-details) sit inside .form-header.
+      // Data tables (.report-table) are the ones we export as rows.
+      const allTables = Array.from(doc.querySelectorAll('table'));
+      const dataTables = allTables.filter(t =>
+        t.classList.contains('report-table') ||
+        t.classList.contains('register-wages') ||
+        t.classList.contains('overtime-table') ||
+        t.closest('.form-header') === null
+      ).filter(t => t.closest('.form-header') === null); // exclude tables inside header
+
+      // Fallback: if no data table found by class, use the last table
+      const exportTables = dataTables.length > 0 ? dataTables : [allTables[allTables.length - 1]];
+
+      if (!exportTables.length) {
         this.errorMessage = 'No table found in report to export.';
         return;
       }
 
+      // ── Collect header text from .form-header (divs only, skip inner tables) ──
+      const headerRows: string[][] = [];
+
+      const collectDivText = (el: Element): void => {
+        const tag = el.tagName.toLowerCase();
+        // Skip tables (header-details tables handled separately below)
+        if (tag === 'table') return;
+        const children = Array.from(el.children).filter(c => c.tagName.toLowerCase() !== 'table');
+        if (children.length === 0) {
+          const text = el.textContent?.trim();
+          if (text) headerRows.push([text]);
+          return;
+        }
+        children.forEach(child => collectDivText(child));
+      };
+
+      // Collect title lines from .form-header div children (skip inner tables)
+      const formHeader = doc.querySelector('.form-header');
+      if (formHeader) {
+        Array.from(formHeader.children).forEach(child => {
+          if (child.tagName.toLowerCase() !== 'table') {
+            collectDivText(child);
+          }
+        });
+
+        // Collect header-details table rows as structured rows
+        const headerTable = formHeader.querySelector('table');
+        if (headerTable) {
+          Array.from(headerTable.querySelectorAll('tr')).forEach(tr => {
+            const cells = Array.from(tr.querySelectorAll('th, td'));
+            const row = cells.map(c => c.textContent?.trim() ?? '');
+            if (row.some(c => c !== '')) headerRows.push(row);
+          });
+        }
+      }
+
+      // Collect any non-table divs between .form-header and the first export table
+      let sibling = formHeader ? formHeader.nextElementSibling : doc.body.firstElementChild;
+      while (sibling && !exportTables.includes(sibling as HTMLTableElement)) {
+        if (sibling.tagName.toLowerCase() !== 'table') {
+          collectDivText(sibling);
+        }
+        sibling = sibling.nextElementSibling;
+      }
+
+      // ── Build Excel workbook ──
       const workbook = XLSX.utils.book_new();
-      tables.forEach((table, index) => {
-        const worksheet = XLSX.utils.table_to_sheet(table as HTMLTableElement);
-        const sheetName = `Report${index + 1}`;
+
+      exportTables.forEach((table, index) => {
+        const wsData: string[][] = [];
+
+        // Prepend header rows
+        headerRows.forEach(row => wsData.push(row));
+        if (headerRows.length > 0) wsData.push([]); // blank separator
+
+        // Table rows → cells (thead + tbody + tfoot)
+        Array.from(table.querySelectorAll('tr')).forEach(tr => {
+          const cells = Array.from(tr.querySelectorAll('th, td'));
+          const row = cells.map(c => c.textContent?.trim() ?? '');
+          if (row.some(c => c !== '')) wsData.push(row);
+        });
+
+        const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+        const sheetName = exportTables.length === 1 ? 'Report' : `Report${index + 1}`;
         XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
       });
 
@@ -410,7 +505,24 @@ export class ClientComplianceReportComponent implements OnInit {
 
     const baseTemplate = this.reportTemplates[reportType];
     if (!baseTemplate) {
-      this.errorMessage = `Template '${reportType}' not loaded yet. Please wait and try again.`;
+      // Map reportType keys to actual file names (some differ, e.g. 'form-overtime' → 'overtime.html')
+      const templateFileMap: { [key: string]: string } = {
+        'form-overtime': 'overtime',
+      };
+      const fileName = templateFileMap[reportType] || reportType;
+      this.showLoadingSpinner = true;
+      this.http.get(`assets/report-templates/client-compliance/${fileName}.html`, { responseType: 'text' }).subscribe(
+        (htmlTemplate: string) => {
+          this.reportTemplates[reportType] = htmlTemplate;
+          this.showLoadingSpinner = false;
+          this.showReport(reportType);
+        },
+        (error: any) => {
+          this.showLoadingSpinner = false;
+          this.errorMessage = `Could not load the '${this.formatReportType(reportType)}' report template. Please try again.`;
+          console.error(`Could not load template for ${reportType} (${fileName}.html)`, error);
+        }
+      );
       return;
     }
 
@@ -629,16 +741,16 @@ export class ClientComplianceReportComponent implements OnInit {
     }
 
     // Build row HTML for all other forms
-    let rowHtml = '<tr><td colspan="99">No records found</td></tr>';
+    let rowHtml = '';
     if (apiData?.rows && apiData.rows.length > 0) {
       rowHtml = apiData.rows.map((row: any, index: number) => this.buildRowHtml(reportType, row, index, globalData)).join('');
+    } else {
+      rowHtml = '<tr><td colspan="20" style="text-align:center;padding:10px;color:#888;">No records found for the selected period.</td></tr>';
     }
-    filled = filled.replace(/{{DataRows}}/g, rowHtml);
 
-    // Handle OvertimeData specifically for overtime register
-    if (reportType === 'form-overtime') {
-      filled = filled.replace(/{{OvertimeData}}/g, rowHtml);
-    }
+    // Replace all data placeholders (DataRows and OvertimeData both map to rowHtml)
+    filled = filled.replace(/{{DataRows}}/g, rowHtml);
+    filled = filled.replace(/{{OvertimeData}}/g, rowHtml);
 
     if (apiData?.summary) {
       filled = filled.replace(/{{Summary}}/g, apiData.summary);
@@ -894,7 +1006,7 @@ export class ClientComplianceReportComponent implements OnInit {
       case 'form-overtime':
         return `<tr>
           <td>${row.sno || index + 1}</td>
-          <td class="left-text">${row.name || ''}</td>
+          <td class="left-text">${row.employeeName || row.name || ''}</td>
           <td class="left-text">${row.fathersName || ''}</td>
           <td>${row.sex || ''}</td>
           <td class="left-text">${row.designation || ''}</td>

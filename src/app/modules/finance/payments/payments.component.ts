@@ -56,6 +56,7 @@ export class PaymentsComponent implements AfterViewInit {
   showLoadingSpinner: boolean = false;
   bankList: any = [];
   categoryList: any = [];
+  allCategoryList: any = [];
   supplierList: any = [];
   payToList: any = [];
   paymentID: number = 0
@@ -117,7 +118,10 @@ export class PaymentsComponent implements AfterViewInit {
 
         // ---- master data loaded ----
         this.bankList = d['banks'];
-        this.categoryList = d['categories'];
+        this.allCategoryList = d['categories'];
+        this.categoryList = this.allCategoryList.filter(
+          (category: any) => category.Cat === 'U' || category.Cat === 'O'
+        );
         this.supplierList = d['suppliers'];
         this.otherList = d['other'];
 
@@ -197,6 +201,11 @@ export class PaymentsComponent implements AfterViewInit {
         const branchPayment = results.branchPayment;
         const branchDetails = results.branchDetails;
 
+        const selectedCategory = this.allCategoryList.find(
+          (category: any) => String(category.ID) === String(branchPayment.ItemCategory)
+        );
+        const categoryType = selectedCategory?.Cat === 'P' ? 'P' : 'U';
+
         this.frm.patchValue({
           ID: branchPayment.ID,
           PaymentDate: branchPayment.PaymentDate,
@@ -207,7 +216,7 @@ export class PaymentsComponent implements AfterViewInit {
           ChequeNo: branchPayment.ChequeNo,
           cheque_status: branchPayment.ChequeStatus,
           PaymentToD: branchPayment.PaymentTo,
-          category_type: 'U',
+          category_type: categoryType,
           ItemCategory: branchPayment.ItemCategory,
           PaymentTo: branchPayment.PaymentTo,
           Particulars: branchPayment.Particulars,
@@ -218,6 +227,7 @@ export class PaymentsComponent implements AfterViewInit {
           this.supplierChange(branchPayment.Supplier);
         }
         if (branchPayment.ItemCategory) {
+          this.categoryChange(categoryType, true);
           this.GetPaymentMasterCategoryTypeChangePayTo(branchPayment.ItemCategory);
         }
         if (branchPayment.BankID) {
@@ -550,8 +560,10 @@ export class PaymentsComponent implements AfterViewInit {
     return `${year}-${month}-${day}`;
   }
 
-  categoryChange(value: any) {
-    this.frm.get("pay_to")?.setValue("");
+  categoryChange(value: string, preserveCategory: boolean = false) {
+    if (!preserveCategory) {
+      this.frm.get('ItemCategory')?.reset('');
+    }
     this._financeService.GetPaymentMasterCategoryType(value).subscribe((d: any) => {
       this.categoryList = d;
     })
@@ -847,4 +859,3 @@ export class PaymentsComponent implements AfterViewInit {
     this.showLoadingSpinner = false;
   }
 }
-

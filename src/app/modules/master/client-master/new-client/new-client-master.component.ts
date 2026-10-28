@@ -154,6 +154,9 @@ export class NewClientMasterComponent implements OnInit {
       BillingState: this.fb.control(''),
       BillingPINCode: this.fb.control('', [Validators.pattern(PIN_CODE_PATTERN)]),
 
+      TDSApplicable: this.fb.control(false),
+      TDSPercentage: this.fb.control(0, [Validators.min(0), Validators.max(100)]),
+
       // Simplified Compliance Field
       ClientComplianceStatus: this.fb.control('non_compliance_client')
     });
@@ -353,9 +356,14 @@ export class NewClientMasterComponent implements OnInit {
           BillingState: responseData[0].BillingState || '',
           BillingPINCode: responseData[0].BillingPINCode || '',
 
+          TDSApplicable: responseData[0].TDSApplicable || false,
+          TDSPercentage: responseData[0].TDSPercentage || 0,
+
           // Compliance Status
           ClientComplianceStatus: responseData[0].ClientComplianceStatus || 'non_compliance_client'
         });
+
+        this.onTdsApplicableChange(responseData[0].TDSApplicable === true);
 
         // Call GST status change handler to enable/disable fields appropriately
         this.onGSTRegistrationStatusChange({ value: responseData[0].GSTRegistrationStatus || 'unregistered' });
@@ -576,6 +584,10 @@ export class NewClientMasterComponent implements OnInit {
 
     // Update simplified compliance field
     this.clientModel.ClientComplianceStatus = this.clientForm.get('ClientComplianceStatus')?.value || 'non_compliance_client';
+    this.clientModel.TDSApplicable = this.clientForm.get('TDSApplicable')?.value === true;
+    this.clientModel.TDSPercentage = this.clientModel.TDSApplicable
+      ? Number(this.clientForm.get('TDSPercentage')?.value) || 0
+      : 0;
 
     this._masterService.saveAndUpdateClientMaster(this.clientModel).subscribe((response: any) => {
       if (response.Success == 'Success') {
@@ -601,10 +613,23 @@ export class NewClientMasterComponent implements OnInit {
           confirmButtonText: 'OK'
         });
       }
+
     },
       (error) => this.handleErrors(error)
     );
   }
+
+  onTdsApplicableChange(isApplicable: boolean): void {
+    const percentageControl = this.clientForm.get('TDSPercentage');
+    if (isApplicable) {
+      percentageControl?.setValidators([Validators.required, Validators.min(0), Validators.max(100)]);
+    } else {
+      percentageControl?.clearValidators();
+      percentageControl?.setValue(0);
+    }
+    percentageControl?.updateValueAndValidity();
+  }
+
   clearClientDetails(): void {
     this.clientForm.reset();
   }

@@ -1,109 +1,63 @@
-.s-no-column {
-  width: 50px;
-  text-align: center;
-}
+/* ── Shared table utilities ─────────────────────────────────────────────── */
+.text-right  { text-align: right  !important; }
+.text-center { text-align: center !important; }
 
-.section-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #343a40;
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 2px solid #4CAF50;
-}
-
+/* ── Summary cards ─────────────────────────────────────────────────────── */
 .summary-card {
-  background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 6px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   margin-bottom: 10px;
   text-align: center;
 }
 
 .summary-label {
-  font-size: 12px;
+  font-size: 11px;
   color: #6c757d;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.4px;
   margin-bottom: 4px;
 }
 
 .summary-value {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: #343a40;
 }
 
-.summary-sub {
-  font-size: 11px;
-  color: #6c757d;
-  margin-top: 2px;
-}
+/* card variants */
+.total-card         { background: #f8f9fa; border-color: #adb5bd; }
+.total-card         .summary-value { color: #343a40; }
 
-.rate-card {
-  background: #e8f5e9;
-  border-color: #4CAF50;
-}
+.cgst-card          { background: #d4edda; border-color: #28a745; }
+.cgst-card          .summary-value { color: #155724; }
 
-.total-card {
-  background: #f8f9fa;
-  border-color: #6c757d;
-}
+.sgst-card          { background: #d1ecf1; border-color: #17a2b8; }
+.sgst-card          .summary-value { color: #0c5460; }
 
-.cgst-card {
-  background: #d4edda;
-  border-color: #28a745;
-}
+.igst-card          { background: #fff3cd; border-color: #ffc107; }
+.igst-card          .summary-value { color: #856404; }
 
-.cgst-card .summary-value {
-  color: #155724;
-}
+.gst-total-card     { background: #e2d9f3; border-color: #6f42c1; }
+.gst-total-card     .summary-value { color: #3d1a78; }
 
-.sgst-card {
-  background: #d1ecf1;
-  border-color: #17a2b8;
-}
+.tds-card           { background: #f8d7da; border-color: #dc3545; }
+.tds-card           .summary-value { color: #721c24; }
 
-.sgst-card .summary-value {
-  color: #0c5460;
-}
+.grand-total-card   { background: #cce5ff; border-color: #007bff; }
+.grand-total-card   .summary-value { color: #004085; }
 
-.igst-card {
-  background: #fff3cd;
-  border-color: #ffc107;
-}
+.net-payable-card   { background: #d6d8fb; border-color: #6610f2; }
+.net-payable-card   .summary-value { color: #270f6e; }
 
-.igst-card .summary-value {
-  color: #856404;
-}
+.ptax-card          { background: #ffeeba; border-color: #fd7e14; }
+.ptax-card          .summary-value { color: #7d3c00; }
 
-.gst-total-card {
-  background: #f8d7da;
-  border-color: #dc3545;
-}
+.grosspay-card      { background: #f8f9fa; border-color: #adb5bd; }
+.grosspay-card      .summary-value { color: #343a40; }
 
-.gst-total-card .summary-value {
-  color: #721c24;
-}
-
-.grand-total-card {
-  background: #cce5ff;
-  border-color: #007bff;
-}
-
-.grand-total-card .summary-value {
-  color: #004085;
-}
-
-.text-right {
-  text-align: right !important;
-}
-
-.text-center {
-  text-align: center !important;
-}
-
+/* ── Intra / Inter badges ──────────────────────────────────────────────── */
 .intra-badge {
   background-color: #28a745;
   color: white;
@@ -122,16 +76,24 @@
   font-weight: 600;
 }
 
+/* ── Amount cell with % below ──────────────────────────────────────────── */
+.rate-sub {
+  font-size: 10px;
+  color: #6c757d;
+  display: block;
+  margin-top: 1px;
+}
+
+/* ── Rate-wise summary table ───────────────────────────────────────────── */
+.rate-summary-table th,
+.rate-summary-table td {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+/* ── Print ─────────────────────────────────────────────────────────────── */
 @media print {
-  .print-hide {
-    display: none !important;
-  }
-
-  mat-card {
-    box-shadow: none !important;
-  }
-
-  .btn-group {
-    display: none !important;
-  }
+  .print-hide { display: none !important; }
+  mat-card    { box-shadow: none !important; }
+  .btn-group  { display: none !important; }
 }
