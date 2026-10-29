@@ -234,13 +234,13 @@
             </button>
           </ng-container>
 
-          <!-- All other reports: Excel + Print -->
+          <!-- All other reports: Excel + Print Preview -->
           <ng-template #otherReportActions>
             <button class="btn wlt-c-furg-btn-secondary m-1" (click)="generateExcelFileClick()">
               Export to Excel
             </button>
-            <button class="btn wlt-c-furg-btn-secondary m-1" (click)="printReport()">
-              Print Preview
+            <button class="btn btn-outline-dark m-1" (click)="printReport()">
+              <i class="fa fa-eye mr-1"></i> Print Preview
             </button>
           </ng-template>
 

@@ -458,6 +458,20 @@ export class ClientComplianceReportComponent implements OnInit {
     }
   }
 
+  private getReportPrintStyles(): string {
+    return `
+      body { font-family: Arial, sans-serif; margin: 12px; background: #fff; color: #000; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid #333; padding: 4px 6px; }
+      th { background: #fff !important; color: #000 !important; font-weight: bold; }
+      td { background: #fff !important; color: #000 !important; }
+      @media print {
+        body { margin: 8mm; }
+        th { background: #fff !important; color: #000 !important; font-weight: bold; -webkit-print-color-adjust: exact; }
+      }
+    `;
+  }
+
   printReport() {
     if (!this.currentReportHtmlRaw) {
       this.errorMessage = 'Please generate a report to preview before printing.';
@@ -470,18 +484,71 @@ export class ClientComplianceReportComponent implements OnInit {
       return;
     }
 
+    // Print Preview - opens a new tab with white background, no auto-print
+    // User can use browser's Print button when ready
     printWindow.document.open();
-    printWindow.document.write(`<!DOCTYPE html><html><head><title>Report Preview</title><style>
-      body { font-family: Arial, sans-serif; margin: 12px; }
-      table { width: 100%; border-collapse: collapse; }
-      th, td { border: 1px solid #333; padding: 4px; }
-      th { background: #4CAF50; color: #fff; }
-    </style></head><body>${this.currentReportHtmlRaw}</body></html>`);
+    printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Report Preview</title>
+  <style>
+    ${this.getReportPrintStyles()}
+    /* Preview-specific: toolbar at top */
+    #preview-toolbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: #f0f0f0; border-bottom: 1px solid #ccc;
+      padding: 8px 16px; display: flex; align-items: center; gap: 12px;
+    }
+    #preview-toolbar button {
+      padding: 6px 18px; font-size: 14px; cursor: pointer;
+      border-radius: 4px; border: 1px solid #888;
+    }
+    #print-btn { background: #333; color: #fff; border-color: #333; }
+    #close-btn { background: #fff; color: #333; }
+    #report-body { margin-top: 52px; }
+    @media print { #preview-toolbar { display: none !important; } #report-body { margin-top: 0; } }
+  </style>
+</head>
+<body>
+  <div id="preview-toolbar">
+    <button id="print-btn" onclick="window.print()">&#128424; Print</button>
+    <button id="close-btn" onclick="window.close()">&#x2715; Close</button>
+    <span style="font-size:13px;color:#555;">Print Preview — Use the Print button above or browser print (Ctrl+P)</span>
+  </div>
+  <div id="report-body">${this.currentReportHtmlRaw}</div>
+</body>
+</html>`);
     printWindow.document.close();
     printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
+  }
+
+  printNow() {
+    if (!this.currentReportHtmlRaw) {
+      this.errorMessage = 'Please generate a report before printing.';
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.errorMessage = 'Unable to open print window. Please check your popup settings.';
+      return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Print Report</title>
+  <style>
+    ${this.getReportPrintStyles()}
+    @media print { body { margin: 8mm; } }
+  </style>
+</head>
+<body>${this.currentReportHtmlRaw}</body>
+</html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); }, 500);
   }
 
   showReport(reportType: string) {
