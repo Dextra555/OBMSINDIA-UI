@@ -64,6 +64,13 @@ export class UtilityBillsComponent implements AfterViewInit {
   showLoadingSpinner: boolean = false;
   invoiceID = 0;
 
+  // ── Selected supplier flags (set on supplierChange) ───────────────────────
+  private _supplierIsGST: boolean = false;
+  private _supplierIsTDS: boolean = false;
+
+  get showGST(): boolean { return this._supplierIsGST; }
+  get showTDS(): boolean { return this._supplierIsTDS; }
+
   // ── Convenience getter ─────────────────────────────────────────────────────
   get isInterState(): boolean {
     return this.frm.get('TransactionType')?.value === 'E';
@@ -229,6 +236,13 @@ export class UtilityBillsComponent implements AfterViewInit {
       this.frm.get('Supplier')?.setValue(result.Supplier.toString());
       this.frm.get('ItemCategory')?.setValue(result.ItemCategory.toString());
 
+      // ── Restore supplier flags from the loaded list ──────────────────────
+      const supplier = this.supplierList.find(
+        (s: any) => s.Id?.toString() === result.Supplier?.toString()
+      );
+      this._supplierIsGST = supplier?.IsTax === true;
+      this._supplierIsTDS = supplier?.IsTDS === true;
+
       // ── Restore transaction type ─────────────────────────────────────────
       const txType = result.TransactionType ?? 'I';
       this.frm.get('TransactionType')?.setValue(txType);
@@ -321,6 +335,19 @@ export class UtilityBillsComponent implements AfterViewInit {
               this.branchList   = d['branchList'];
               this.supplierList = d['supplierList'];
               this.categoryList = d['categoryList'];
+
+              // If a record was already loaded (edit mode) before the supplier list
+              // arrived, apply the supplier flags now.
+              if (this.returnResult) {
+                const supplierId = this.frm.get('Supplier')?.value;
+                const s = this.supplierList.find(
+                  (x: any) => x.Id?.toString() === supplierId?.toString()
+                );
+                if (s) {
+                  this._supplierIsGST = s.IsTax === true;
+                  this._supplierIsTDS = s.IsTDS === true;
+                }
+              }
             });
             this.hideLoadingSpinner();
           } else {
@@ -368,6 +395,38 @@ export class UtilityBillsComponent implements AfterViewInit {
     this.dataSource = new MatTableDataSource(this.details);
     this.dataSource.sort      = this.sort;
     this.dataSource.paginator = this.paginator;
+
+    // Recalculate all amounts whenever the detail rows change,
+    // so percentages entered before rows were added stay correct.
+    this.recalculateAmounts();
+  }
+
+  /** Recomputes CGST/SGST/IGST/TDS amounts from the current baseTotal and saved percentages. */
+  private recalculateAmounts(): void {
+    const base = this.baseTotal;
+    if (base <= 0) return;
+
+    const cgstPct = Number(this.frm.get('CGSTPercentage')?.value) || 0;
+    const sgstPct = Number(this.frm.get('SGSTPercentage')?.value) || 0;
+    const igstPct = Number(this.frm.get('IGSTPercentage')?.value) || 0;
+    const tdsPct  = Number(this.frm.get('TDSPercentage')?.value)  || 0;
+
+    if (cgstPct > 0) {
+      this.frm.get('CGSTAmount')?.setValue(
+        parseFloat((base * cgstPct / 100).toFixed(2)), { emitEvent: false });
+    }
+    if (sgstPct > 0) {
+      this.frm.get('SGSTAmount')?.setValue(
+        parseFloat((base * sgstPct / 100).toFixed(2)), { emitEvent: false });
+    }
+    if (igstPct > 0) {
+      this.frm.get('IGSTAmount')?.setValue(
+        parseFloat((base * igstPct / 100).toFixed(2)), { emitEvent: false });
+    }
+    if (tdsPct > 0) {
+      this.frm.get('TDSAmount')?.setValue(
+        parseFloat((base * tdsPct / 100).toFixed(2)), { emitEvent: false });
+    }
   }
 
   addItemDetails(action: string) {
@@ -418,7 +477,44 @@ export class UtilityBillsComponent implements AfterViewInit {
 
   supplierChange(event: any) {
     this.frm.get('RecID')?.setValue(event.value);
+
+    // ── Read supplier flags from the loaded list ───────────────────────────
+    const supplier = this.supplierList.find(
+      (s: any) => s.Id?.toString() === event.value?.toString()
+    );
+
+    this._supplierIsGST = supplier?.IsTax === true;
+    this._supplierIsTDS = supplier?.IsTDS === true;
+
+    // ── Reset all GST & TDS fields first ──────────────────────────────────
+    this.frm.patchValue({
+      CGSTPercentage: 0, CGSTAmount: 0,
+      SGSTPercentage: 0, SGSTAmount: 0,
+      IGSTPercentage: 0, IGSTAmount: 0,
+      TDSPercentage:  0, TDSAmount:  0,
+    }, { emitEvent: false });
+
+    // ── Auto-fill TDS % from supplier master ──────────────────────────────
+    if (this._supplierIsTDS && supplier?.TDSPercentage != null) {
+      this.frm.get('TDSPercentage')?.setValue(supplier.TDSPercentage, { emitEvent: false });
+      this.onTDSPercentageChange();
+    }
+
+    // ── Auto-fill GST % from supplier master (after transaction type is set) ─
     this.detectTransactionType();
+
+    if (this._supplierIsGST && supplier?.GSTPercentage != null) {
+      const halfPct = parseFloat((supplier.GSTPercentage / 2).toFixed(2));
+      if (this.isInterState) {
+        this.frm.get('IGSTPercentage')?.setValue(supplier.GSTPercentage, { emitEvent: false });
+        this.onIGSTPercentageChange();
+      } else {
+        this.frm.get('CGSTPercentage')?.setValue(halfPct, { emitEvent: false });
+        this.frm.get('SGSTPercentage')?.setValue(halfPct, { emitEvent: false });
+        this.onCGSTPercentageChange();
+        this.onSGSTPercentageChange();
+      }
+    }
   }
 
   returnDate(date?: any): string {

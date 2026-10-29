@@ -74,6 +74,8 @@ export interface IInvoiceAmount {
 
   InvoiceAmount: number;
 
+  ServiceAmount: number;
+
   TaxAmount: number;
 
   InvoiceDate: string;
@@ -186,9 +188,9 @@ export class NewReceiptComponent implements OnInit {
 
   taxPercentage: number = 0;
 
-
-
   hqPercentage: number = 0;
+
+  clientGstPercentage: number = 0; // GST % from Client Master — used as fallback when invoice has no tax
 
 
 
@@ -794,7 +796,7 @@ export class NewReceiptComponent implements OnInit {
 
             d['InvoiceDate'] = this.returnDate(d['InvoiceDate']);
 
-            d['Balance'] = Number(d['InvoiceAmount']) - Number(d['PaidAmount'])
+            d['Balance'] = Number(d['ServiceAmount']) - Number(d['PaidAmount'])
 
             this.invoiceList.push(d);
 
@@ -1006,6 +1008,10 @@ export class NewReceiptComponent implements OnInit {
 
 
 
+      ServiceAmount: [d?.ServiceAmount ?? 0],
+
+
+
       InvoiceDate: [d?.InvoiceDate ?? null],
 
 
@@ -1071,6 +1077,10 @@ export class NewReceiptComponent implements OnInit {
 
 
       InvoiceAmount: [d?.InvoiceAmount ?? 0],
+
+
+
+      ServiceAmount: [d?.ServiceAmount ?? 0],
 
 
 
@@ -1461,11 +1471,14 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-            Number(item['InvoiceAmount']) - Number(item['PaidAmount']);
+            Number(item['ServiceAmount']) - Number(item['PaidAmount']);
 
 
 
-
+          // Skip fully paid invoices (Balance = 0)
+          if (Number(item['Balance']) === 0) {
+            return;
+          }
 
 
 
@@ -1523,8 +1536,15 @@ export class NewReceiptComponent implements OnInit {
   private applyClientTds(client: any): void {
     const isTdsApplicable = client?.TDSApplicable === true || client?.TDSApplicable === 1;
     const tdsPercentage = isTdsApplicable ? Number(client.TDSPercentage) || 0 : 0;
+    const isGstApplicable = isTdsApplicable && (client?.GSTApplicable === true || client?.GSTApplicable === 1);
+    const gstPercentage = isGstApplicable ? Number(client.GSTPercentage) || 0 : 0;
+
+    // Store client GST % so calculate() can use it as fallback
+    this.clientGstPercentage = gstPercentage;
 
     this.frm.get('HQPercentage')?.setValue(tdsPercentage);
+    // Always set client's GST % into TaxPercentage field directly
+    this.frm.get('TaxPercentage')?.setValue(gstPercentage);
     this.calculate();
   }
 
@@ -1738,9 +1758,9 @@ export class NewReceiptComponent implements OnInit {
 
       if (this.rowCheckedState[i]) {
 
-        // Edit mode: use InvoiceAmount, New mode: use Balance
+        // Edit mode: use ServiceAmount, New mode: use Balance (both exclude tax)
         if (this.receiptID > 0) {
-          total += Number(this.invoiceList[i]['InvoiceAmount']);
+          total += Number(this.invoiceList[i]['ServiceAmount']);
         } else {
           total += Number(this.invoiceList[i]['Balance']);
         }
@@ -1903,13 +1923,27 @@ export class NewReceiptComponent implements OnInit {
 
     if (this.isAdjustment) {
       const receiptAmount = Number(this.frm.get("ReceiptAmount")?.value) || 0;
-      this.taxAmount = this.calculateSelectedInvoiceTax(receiptAmount);
-      this.taxPercentage = receiptAmount > this.taxAmount
-        ? (this.taxAmount / (receiptAmount - this.taxAmount)) * 100
-        : 0;
-      this.frm.get("TaxPercentage")?.setValue(this.taxPercentage.toFixed(2), { emitEvent: false });
-      this.hqAmount = (receiptAmount - this.taxAmount) * (this.hqPercentage / 100);
-      this.branchAmount = receiptAmount - this.taxAmount - this.hqAmount;
+
+      // Always use Client Master GST % for tax calculation
+      // clientGstPercentage is set when client is selected via applyClientTds()
+      if (this.clientGstPercentage > 0 && receiptAmount > 0) {
+        // Inclusive GST: taxAmount = receiptAmount * gst% / (100 + gst%)
+        this.taxPercentage = this.clientGstPercentage;
+        this.taxAmount = receiptAmount * this.taxPercentage / (100 + this.taxPercentage);
+      } else {
+        // Fallback: try invoice embedded tax
+        this.taxAmount = this.calculateSelectedInvoiceTax(receiptAmount);
+        this.taxPercentage = receiptAmount > 0
+          ? (this.taxAmount / receiptAmount) * 100
+          : 0;
+      }
+      this.frm.get("TaxPercentage")?.setValue(this.taxPercentage > 0 ? this.taxPercentage.toFixed(2) : 0, { emitEvent: false });
+
+      // TDS is on ServiceAmount (receiptAmount), NOT on (receiptAmount - tax)
+      this.hqAmount = receiptAmount * (this.hqPercentage / 100);
+
+      // Branch Collection = ServiceAmount + GST - TDS
+      this.branchAmount = receiptAmount + this.taxAmount - this.hqAmount;
     } else if (receiptTypeID.toString() === "1") {
 
 
@@ -1988,14 +2022,16 @@ export class NewReceiptComponent implements OnInit {
       }
 
       const invoice = this.invoiceList[i];
-      const invoiceAmount = Math.max(0, Number(invoice.InvoiceAmount) || 0);
+      // Use ServiceAmount (without tax) as the base — consistent with Amount/Balance columns
+      const serviceAmount = Math.max(0, Number(invoice.ServiceAmount) || 0);
       const availableAmount = this.receiptID > 0
-        ? invoiceAmount
+        ? serviceAmount
         : Math.max(0, Number(invoice.Balance) || 0);
       const allocatedAmount = Math.min(remainingAmount, availableAmount);
 
-      if (invoiceAmount > 0 && allocatedAmount > 0) {
-        taxAmount += (Math.max(0, Number(invoice.TaxAmount) || 0) * allocatedAmount) / invoiceAmount;
+      // Ratio: how much of the service amount is being paid → apply same ratio to tax
+      if (serviceAmount > 0 && allocatedAmount > 0) {
+        taxAmount += (Math.max(0, Number(invoice.TaxAmount) || 0) * allocatedAmount) / serviceAmount;
         remainingAmount -= allocatedAmount;
       }
     }
@@ -2315,6 +2351,11 @@ export class NewReceiptComponent implements OnInit {
 
     data['ReceiptDate'] = this.returnDate(this.frm.get('ReceiptDate')?.value);
 
+    // ReceiptAmount = ServiceAmount + TaxAmount (gross including GST)
+    const _serviceAmt = Number(this.frm.get('ReceiptAmount')?.value) || 0;
+    const _taxAmt     = Number(this.frm.get('TaxAmount')?.value)     || 0;
+    data['ReceiptAmount'] = parseFloat((_serviceAmt + _taxAmt).toFixed(2));
+
 
 
     data['ChequeNo'] = this.frm.get('ChequeNo')?.value ? this.frm.get('ChequeNo')?.value : this.frm.get('ibgNo')?.value ? this.frm.get('ibgNo')?.value : '';
@@ -2385,11 +2426,11 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-        if (balance >= Number(this.invoiceList[i]['InvoiceAmount'])) {
+        if (balance >= Number(this.invoiceList[i]['ServiceAmount'])) {
 
 
 
-          if (Number(this.invoiceList[i]['InvoiceAmount']) == 0) {
+          if (Number(this.invoiceList[i]['ServiceAmount']) == 0) {
 
 
 
@@ -2525,7 +2566,7 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-              Amount: this.invoiceList[i]['InvoiceAmount'],
+              Amount: this.invoiceList[i]['ServiceAmount'],
 
 
 
@@ -2541,7 +2582,7 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-            balance -= Number(this.invoiceList[i]['InvoiceAmount'])
+            balance -= Number(this.invoiceList[i]['ServiceAmount'])
 
 
 

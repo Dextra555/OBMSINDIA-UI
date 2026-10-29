@@ -119,8 +119,18 @@ export class EmployeeMasterComponent implements OnInit {
           EMPPAY_CATEGORY: e.EMPPAY_CATEGORY || e.EMPPAY_CATEGORY
         };
       });
-      this.branchList = d['branchList'];
-      this.dataSource = new MatTableDataSource(this.employees);      
+      this.branchList = d['branchList'] || [];
+
+      // Auto-select the first allowed branch and filter employees accordingly
+      if (this.branchList.length > 0) {
+        const firstBranch = this.branchList[0].Code;
+        this.branchForm.patchValue({ BRANCH_ID: firstBranch });
+        const filtered = this.employees.filter((e: any) => e.EMP_BRANCH_CODE === firstBranch);
+        this.dataSource = new MatTableDataSource(filtered);
+      } else {
+        this.dataSource = new MatTableDataSource(this.employees);
+      }
+
       this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;
     })
@@ -186,13 +196,11 @@ export class EmployeeMasterComponent implements OnInit {
 
   branchChange(value: any) {
     if (!value) return;
-    
-    this.service.getEmployeesByBranchId(value).subscribe((d: any) => {
-      this.employees = d;
-      this.dataSource = new MatTableDataSource(d);
-      this.dataSource.sort = this.sort;
-      this.dataSource.paginator = this.paginator;
-    })
+    // Filter from already-loaded (allowed) employees instead of re-fetching all
+    const filtered = this.employees.filter((e: any) => e.EMP_BRANCH_CODE === value);
+    this.dataSource = new MatTableDataSource(filtered);
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
   }
 
   // Indian compliance search methods
@@ -231,7 +239,22 @@ export class EmployeeMasterComponent implements OnInit {
           EMPPAY_CATEGORY: e.EMPPAY_CATEGORY
         };
       });
-      this.dataSource = new MatTableDataSource(this.employees);
+      this.branchList = d['branchList'] || [];
+
+      // Keep the currently selected branch, or default to first allowed branch
+      const currentBranch = this.branchForm.get('BRANCH_ID')?.value;
+      const targetBranch = currentBranch
+        ? currentBranch
+        : (this.branchList.length > 0 ? this.branchList[0].Code : null);
+
+      if (targetBranch) {
+        this.branchForm.patchValue({ BRANCH_ID: targetBranch });
+        const filtered = this.employees.filter((e: any) => e.EMP_BRANCH_CODE === targetBranch);
+        this.dataSource = new MatTableDataSource(filtered);
+      } else {
+        this.dataSource = new MatTableDataSource(this.employees);
+      }
+
       this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;
     });

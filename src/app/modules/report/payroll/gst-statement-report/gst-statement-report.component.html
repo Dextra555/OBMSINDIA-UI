@@ -382,6 +382,18 @@
             <td mat-footer-cell *matFooterCellDef></td>
           </ng-container>
 
+          <ng-container matColumnDef="GSTNo">
+            <th mat-header-cell *matHeaderCellDef>GST No</th>
+            <td mat-cell *matCellDef="let element">{{ element.gstNo || '-' }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="PanNo">
+            <th mat-header-cell *matHeaderCellDef>PAN No</th>
+            <td mat-cell *matCellDef="let element">{{ element.panNo || '-' }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
           <ng-container matColumnDef="Branch">
             <th mat-header-cell *matHeaderCellDef>Branch</th>
             <td mat-cell *matCellDef="let element">{{ element.branch }}</td>

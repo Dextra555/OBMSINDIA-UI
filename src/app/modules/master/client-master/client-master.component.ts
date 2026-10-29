@@ -112,9 +112,10 @@ export class ClientMasterComponent implements OnInit {
 
           if (this.userAccessModel.readAccess === true || this.currentUser == 'superadmin') {
             this.warningMessage = '';
-            this.getClientMasterList('null','Active');
+            // Load allowed branches first, then load client list filtered to those branches
             this._masterService.GetBranchListByUserName(this.currentUser).subscribe((d: any) => {
-              this.branchList = d;
+              this.branchList = d || [];
+              this.loadClientListWithBranchFilter('Active');
             });
           } else {
             this.warningMessage = `Dear <B>${this.currentUser}</B>, <br>
@@ -150,17 +151,41 @@ export class ClientMasterComponent implements OnInit {
       }
     );
   }
-  statusSelectionChanged(event: MatRadioChange) {
-    this._masterService.getClientMsterListByStatus(event.value).subscribe(
+
+  // Load all clients for a status, then filter to only allowed branches
+  loadClientListWithBranchFilter(status: string): void {
+    this.showLoadingSpinner = true;
+    this._masterService.getClienthMaster('null', status).subscribe(
       (data) => {
-        this.dataSource =  new MatTableDataSource<ClientModel>(data);        
-        this. ngAfterViewInit();
-        this.showLoadingSpinner = false;
+        if (data && data.length > 0) {
+          let filtered = data;
+          const isSuperAdmin = this.currentUser === 'superadmin';
+
+          // If user has restricted branch access, filter records to allowed branches only
+          if (!isSuperAdmin && this.branchList.length > 0) {
+            const allowedCodes = this.branchList.map((b: any) => b.Code);
+            filtered = data.filter((c: any) => allowedCodes.includes(c.Branch));
+          }
+
+          this.dataSource = new MatTableDataSource<ClientModel>(filtered);
+          setTimeout(() => { this.assignPaginatorAndSort(); });
+
+          if (filtered.length === 0) {
+            this.errorMessage = `No data available for <span style="color: black;">${this.currentUser}</span>. Please try again later.`;
+          }
+        } else {
+          this.errorMessage = `No data available for <span style="color: black;">${this.currentUser}</span>. Please try again later.`;
+        }
+        this.hideSpinner();
       },
       (error) => {
         console.log(error);
+        this.hideSpinner();
       }
     );
+  }
+  statusSelectionChanged(event: MatRadioChange) {
+    this.loadClientListWithBranchFilter(event.value);
   }
   onEditClick(data: any): void {
     this._router.navigate(['/master/client-master/new-client'], { queryParams: { code: data.Code, status: data.Status }, queryParamsHandling: 'merge' });
@@ -178,7 +203,7 @@ export class ClientMasterComponent implements OnInit {
         if (result.confirmDialog) {
           this._masterService.deleteClientMasterByCode(this.clientCode).subscribe((response) => {
             this.clientCode = 'null';
-            this.getClientMasterList('null',status);           
+            this.loadClientListWithBranchFilter(status);           
               Swal.fire({
                 toast: true,
                 position: 'top',

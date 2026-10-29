@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { InventoryService } from "../../../../service/inventory.service";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import { UserAccessModel } from 'src/app/model/userAccesModel';
 import { DatasharingService } from 'src/app/service/datasharing.service';
 import { MastermoduleService } from 'src/app/service/mastermodule.service';
+import { TDSMaster } from 'src/app/model/indian-compliance.model';
 
 @Component({
   selector: 'app-new-supplier',
@@ -25,6 +26,7 @@ export class NewSupplierComponent implements OnInit {
   warningMessage: string = '';
   errorMessage: string = '';
   showLoadingSpinner: boolean = false;
+  tdsMasterList: TDSMaster[] = [];
 
   constructor(private fb: FormBuilder, public dialog: MatDialog, private route: Router, private activatedRoute: ActivatedRoute, private service: InventoryService,
     private _dataService: DatasharingService, private _masterService: MastermoduleService
@@ -52,7 +54,12 @@ export class NewSupplierComponent implements OnInit {
       Category: [''],
       Status: ['A'],
       LastUpdatedBy: [''],
-      LASTUPDATE: [new Date()]
+      LASTUPDATE: [new Date()],
+      IsTax: [false],
+      GSTNo: ['', [Validators.pattern(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]{3}$/)]],
+      PanNo: ['', [Validators.pattern(/^[A-Z]{5}[0-9]{4}[A-Z]$/)]],
+      IsTDS: [false],
+      TDSPercentage: [null]
     });
 
   }
@@ -66,6 +73,11 @@ export class NewSupplierComponent implements OnInit {
       });
     }
     this.getUserAccessRights(this.currentUser, 'Supplier Master');
+
+    // Load TDS Master list for dropdown
+    this._masterService.getTDSMasterList().subscribe((list: TDSMaster[]) => {
+      this.tdsMasterList = list.filter(t => t.IsActive);
+    });
 
     this.service.getSupplierCode().subscribe((d: any) => {
       this.Code = d['Code'];
@@ -81,11 +93,48 @@ export class NewSupplierComponent implements OnInit {
     if (this.ID != 0 && this.ID != undefined) {
       this.isEdit = true;
       this.service.getSupplierByID(this.ID).subscribe((d: any) => {
-        this.frm.patchValue(d);
+        this.frm.patchValue({
+          Id: d.id ?? d.Id,
+          Code: d.code ?? d.Code,
+          Name: d.name ?? d.Name,
+          Address1: d.address1 ?? d.Address1,
+          Address2: d.address2 ?? d.Address2,
+          PostCode: d.postCode ?? d.PostCode,
+          City: d.city ?? d.City,
+          State: d.state ?? d.State,
+          Phone: d.phone ?? d.Phone,
+          Fax: d.fax ?? d.Fax,
+          ContactPerson: d.contactPerson ?? d.ContactPerson,
+          CreditLimit: d.creditLimit ?? d.CreditLimit,
+          Category: d.category ?? d.Category,
+          Status: d.status ?? d.Status,
+          LastUpdatedBy: d.lastUpdatedBy ?? d.LastUpdatedBy,
+          LASTUPDATE: d.lASTUPDATE ?? d.LASTUPDATE,
+          IsTax: d.isTax ?? d.IsTax ?? false,
+          GSTNo: d.gSTNo ?? d.gstNo ?? d.GSTNo ?? '',
+          PanNo: d.panNo ?? d.PanNo ?? '',
+          IsTDS: d.isTDS ?? d.IsTDS ?? false,
+          TDSPercentage: d.tDSPercentage ?? d.tdsPercentage ?? d.TDSPercentage ?? null
+        });
       });
     }
 
     this.frm.get('Code')?.disable({ onlySelf: true })
+
+    // When IsTax toggles, add/remove required validators for GSTNo & PanNo
+    this.frm.get('IsTax')?.valueChanges.subscribe((checked: boolean) => {
+      const gstControl = this.frm.get('GSTNo');
+      const panControl = this.frm.get('PanNo');
+      if (checked) {
+        gstControl?.setValidators([Validators.required, Validators.pattern(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]{3}$/)]);
+        panControl?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{5}[0-9]{4}[A-Z]$/)]);
+      } else {
+        gstControl?.setValidators([Validators.pattern(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]{3}$/)]);
+        panControl?.setValidators([Validators.pattern(/^[A-Z]{5}[0-9]{4}[A-Z]$/)]);
+      }
+      gstControl?.updateValueAndValidity();
+      panControl?.updateValueAndValidity();
+    });
 
   }
   getUserAccessRights(userName: string, screenName: string) {
@@ -105,6 +154,7 @@ export class NewSupplierComponent implements OnInit {
   }
   onSubmit() {
     if (this.frm.invalid) {
+      this.frm.markAllAsTouched();
       return;
     }
     let data = this.frm.getRawValue();
@@ -117,6 +167,14 @@ export class NewSupplierComponent implements OnInit {
         this.route.navigate(['/inventory/supplier-master']);
       });
     });
+  }
+
+  get isTaxChecked(): boolean {
+    return this.frm.get('IsTax')?.value === true;
+  }
+
+  get isTDSChecked(): boolean {
+    return this.frm.get('IsTDS')?.value === true;
   }
 
   onCancelClick() {

@@ -1,0 +1,109 @@
+<div class="wlt-c-furg-content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6">
+        <h1 class="mb-1">Supplier/Client TDS Slab</h1>
+      </div>
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6 my-1">
+        <ol class="breadcrumb float-md-right">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Master</a></li>
+          <li class="breadcrumb-item active">Supplier/Client TDS Slab</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<mat-card>
+  <mat-card-content>
+
+    <div class="row" *ngIf="warningMessage === ''">
+      <div class="col-12 col-sm-12 col-md-4 col-lg-4 order-2 order-md-1">
+        <mat-form-field appearance="outline">
+          <mat-label>Search</mat-label>
+          <input matInput (keyup)="applyFilter($event)" placeholder="" #input>
+        </mat-form-field>
+      </div>
+      <div class="col-12 col-sm-12 col-md-8 col-lg-8 order-1 order-md-2">
+        <div class="text-right pt-2">
+          <button
+            *ngIf="userAccessModel.createAccess || currentUser === 'admin' || currentUser === 'superadmin'"
+            class="btn wlt-c-furg-btn-primary"
+            (click)="addNew()">
+            <mat-icon>add</mat-icon><span>New TDS Category</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive" *ngIf="errorMessage === '' && dataSource && warningMessage === ''">
+      <table mat-table [dataSource]="dataSource" class="wlt-table table-striped" matSort
+        (matSortChange)="announceSortChange($event)">
+
+        <!-- TDS Name -->
+        <ng-container matColumnDef="tDSName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>TDS Category</th>
+          <td mat-cell *matCellDef="let row"><strong>{{ row.TDSName }}</strong></td>
+        </ng-container>
+
+        <!-- TDS Percentage -->
+        <ng-container matColumnDef="tDSPercentage">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Rate (%)</th>
+          <td mat-cell *matCellDef="let row">
+            <code class="text-info">{{ row.TDSPercentage | number:'1.2-2' }}%</code>
+          </td>
+        </ng-container>
+
+        <!-- Active Status -->
+        <ng-container matColumnDef="isActive">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="badge badge-success" *ngIf="row.IsActive">Active</span>
+            <span class="badge badge-secondary" *ngIf="!row.IsActive">Inactive</span>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="action" stickyEnd>
+          <th mat-header-cell *matHeaderCellDef style="text-align:center; width:120px;">Actions</th>
+          <td mat-cell *matCellDef="let row" style="text-align:center;">
+            <a *ngIf="userAccessModel.updateAccess || currentUser === 'superadmin'"
+              style="cursor:pointer;" class="wlt-c-furg-text-warning mr-2"
+              matTooltip="Edit" (click)="editTDSMaster(row)">
+              <mat-icon aria-hidden="false" aria-label="edit icon">edit</mat-icon>
+            </a>
+            <a *ngIf="userAccessModel.deleteAccess || currentUser === 'superadmin'"
+              style="cursor:pointer;" class="wlt-c-furg-text-danger"
+              matTooltip="Delete" (click)="deleteTDSMaster(row.iD)">
+              <mat-icon aria-hidden="false" aria-label="delete icon">delete_outline</mat-icon>
+            </a>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="[10, 20, 30]" [pageSize]="10"
+        showFirstLastButtons showPageSizeOptions
+        aria-label="Select page of TDS master records">
+      </mat-paginator>
+    </div>
+
+    <div *ngIf="warningMessage !== ''">
+      <mat-label style="color:red" [innerHTML]="warningMessage"></mat-label>
+    </div>
+    <div *ngIf="errorMessage !== ''">
+      <mat-label style="color:orange">{{ errorMessage }}</mat-label>
+    </div>
+
+  </mat-card-content>
+</mat-card>
+
+<!-- Loading Spinner -->
+<div [style.display]="showLoadingSpinner ? 'block' : 'none'"
+  style="margin-top: -20.5rem; display: block; margin-left: -6.5rem;">
+  <div class="d-flex justify-content-center">
+    <span class="loader"></span>
+  </div>
+</div>

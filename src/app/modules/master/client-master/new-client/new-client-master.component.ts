@@ -11,7 +11,7 @@ import { MastermoduleService } from 'src/app/service/mastermodule.service';
 import Swal from 'sweetalert2';
 import { IndianComplianceService } from 'src/app/service/indian-compliance.service';
 import { INDIAN_STATES, GSTIN_PATTERN, PAN_PATTERN, PIN_CODE_PATTERN } from 'src/app/model/indian-client.model';
-import { GSTConfiguration } from 'src/app/model/indian-compliance.model';
+import { GSTConfiguration, TDSMaster } from 'src/app/model/indian-compliance.model';
 import { PayrollModuleService } from 'src/app/service/payrollmodule.service';
 import { ClientAttendancePeriodConfig } from 'src/app/model/attendancePeriodModel';
 
@@ -34,6 +34,9 @@ export class NewClientMasterComponent implements OnInit {
   currentUser: string = '';
   userAccessModel!: UserAccessModel;
   indianStates: string[] = INDIAN_STATES;
+
+  // TDS Master dropdown list
+  tdsMasterList: TDSMaster[] = [];
 
   // Dynamic Configuration Data
   gstConfigurations!: GSTConfiguration[];
@@ -155,7 +158,9 @@ export class NewClientMasterComponent implements OnInit {
       BillingPINCode: this.fb.control('', [Validators.pattern(PIN_CODE_PATTERN)]),
 
       TDSApplicable: this.fb.control(false),
-      TDSPercentage: this.fb.control(0, [Validators.min(0), Validators.max(100)]),
+      TDSPercentage: this.fb.control(null),
+      GSTApplicable: this.fb.control(false),
+      GSTPercentage: this.fb.control(null),
 
       // Simplified Compliance Field
       ClientComplianceStatus: this.fb.control('non_compliance_client')
@@ -179,6 +184,11 @@ export class NewClientMasterComponent implements OnInit {
 
     // Load all dynamic configurations
     this.loadAllConfigurations();
+
+    // Load TDS Master list for dropdown
+    this._masterService.getTDSMasterList().subscribe((list: TDSMaster[]) => {
+      this.tdsMasterList = list.filter((t: TDSMaster) => t.IsActive);
+    });
 
     // Load Indian states for GST calculations
     this.loadIndianStates();
@@ -358,12 +368,18 @@ export class NewClientMasterComponent implements OnInit {
 
           TDSApplicable: responseData[0].TDSApplicable || false,
           TDSPercentage: responseData[0].TDSPercentage || 0,
+          GSTApplicable: responseData[0].GSTApplicable ?? false,
+          GSTPercentage: responseData[0].GSTPercentage ?? null,
 
           // Compliance Status
           ClientComplianceStatus: responseData[0].ClientComplianceStatus || 'non_compliance_client'
         });
 
         this.onTdsApplicableChange(responseData[0].TDSApplicable === true);
+        // Restore GST Applicable state after patch — triggers validator setup for GSTPercentage
+        if (responseData[0].TDSApplicable === true) {
+          this.onGstApplicableChange(responseData[0].GSTApplicable === true);
+        }
 
         // Call GST status change handler to enable/disable fields appropriately
         this.onGSTRegistrationStatusChange({ value: responseData[0].GSTRegistrationStatus || 'unregistered' });
@@ -588,6 +604,11 @@ export class NewClientMasterComponent implements OnInit {
     this.clientModel.TDSPercentage = this.clientModel.TDSApplicable
       ? Number(this.clientForm.get('TDSPercentage')?.value) || 0
       : 0;
+    const gstApplicable = this.clientForm.get('GSTApplicable')?.value === true;
+    this.clientModel.GSTApplicable = gstApplicable;
+    this.clientModel.GSTPercentage = (this.clientModel.TDSApplicable && gstApplicable)
+      ? Number(this.clientForm.get('GSTPercentage')?.value) || 0
+      : 0;
 
     this._masterService.saveAndUpdateClientMaster(this.clientModel).subscribe((response: any) => {
       if (response.Success == 'Success') {
@@ -622,14 +643,29 @@ export class NewClientMasterComponent implements OnInit {
   onTdsApplicableChange(isApplicable: boolean): void {
     const percentageControl = this.clientForm.get('TDSPercentage');
     if (isApplicable) {
-      percentageControl?.setValidators([Validators.required, Validators.min(0), Validators.max(100)]);
+      percentageControl?.setValidators([Validators.required]);
     } else {
       percentageControl?.clearValidators();
-      percentageControl?.setValue(0);
+      percentageControl?.setValue(null);
+      // Reset GST fields when TDS unchecked
+      this.clientForm.get('GSTApplicable')?.setValue(false);
+      this.clientForm.get('GSTPercentage')?.clearValidators();
+      this.clientForm.get('GSTPercentage')?.setValue(null);
+      this.clientForm.get('GSTPercentage')?.updateValueAndValidity();
     }
     percentageControl?.updateValueAndValidity();
   }
 
+  onGstApplicableChange(isApplicable: boolean): void {
+    const gstPercentageControl = this.clientForm.get('GSTPercentage');
+    if (isApplicable) {
+      gstPercentageControl?.setValidators([Validators.required, Validators.min(0), Validators.max(100)]);
+    } else {
+      gstPercentageControl?.clearValidators();
+      gstPercentageControl?.setValue(null);
+    }
+    gstPercentageControl?.updateValueAndValidity();
+  }
   clearClientDetails(): void {
     this.clientForm.reset();
   }

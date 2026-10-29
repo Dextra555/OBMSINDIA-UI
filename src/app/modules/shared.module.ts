@@ -66,6 +66,8 @@ import { SalarySlabComponent } from './master/salary-slab/salary-slab.component'
 import { ServiceTypeComponent } from './master/service-type/service-type.component';
 import { NewServiceTypeComponent } from './master/service-type/new-service-type/new-service-type.component';
 import { ViewServiceTypeComponent } from './master/service-type/view-service-type/view-service-type.component';
+import { TdsMasterComponent } from './master/tds-master/tds-master.component';
+import { NewTdsMasterComponent } from './master/tds-master/new-tds-master/new-tds-master.component';
 import { IndianComplianceService } from '../service/indian-compliance.service';
 import { IndianPayrollService } from '../service/indian-payroll.service';
 // import { IndianPayrollDashboardComponent } from './payroll/indian-payroll-dashboard/indian-payroll-dashboard.component';
@@ -395,6 +397,8 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     ServiceTypeComponent,
     NewServiceTypeComponent,
     ViewServiceTypeComponent,
+    TdsMasterComponent,
+    NewTdsMasterComponent,
     CommercialBreakdownDialogComponent,
     CommercialBreakdownEnhancedDialogComponent,
     EmployeeImportDialogComponent,
@@ -487,6 +491,8 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     NewGstSlabComponent,
     ServiceTypeComponent,
     NewServiceTypeComponent,
+    TdsMasterComponent,
+    NewTdsMasterComponent,
     RegistrationComponent,
     NewAgreementComponent
   ],

@@ -691,6 +691,11 @@ export class NewAgreementComponent implements OnInit, AfterViewInit {
 
     data['AgreementDate'] = this.returnDate(this.frm.get('AgreementDate')?.value);
 
+    // Sync ToPeriod → AgreementEndDate (ToPeriod is the "To Period" datepicker in the form)
+    if (this.frm.get('ToPeriod')?.value) {
+      data['AgreementEndDate'] = this.returnDate(this.frm.get('ToPeriod')?.value);
+    }
+
     console.log('isEdit:', this.isEdit, 'ID:', this.ID, 'AgreementDate:', data['AgreementDate']);
 
     // Validation: Check if agreement has invoices and prevent editing in the same month

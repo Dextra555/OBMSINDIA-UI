@@ -32,7 +32,7 @@ export class GstStatementReportComponent implements OnInit {
     'CGST', 'SGST', 'IGST', 'TotalGST', 'TotalAmount'
   ];
   columnsOut: string[] = [
-    'SNo', 'InvoiceDate', 'InvoiceNo', 'SupplierName', 'Branch',
+    'SNo', 'InvoiceDate', 'InvoiceNo', 'SupplierName', 'GSTNo', 'PanNo', 'Branch',
     'InvoiceTotal', 'GSTRate', 'SupplyType',
     'CGST', 'SGST', 'IGST', 'TotalGST', 'TDSAmount', 'NetPayable'
   ];

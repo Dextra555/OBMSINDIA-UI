@@ -47,6 +47,8 @@ export class ClientModel {
 
     TDSApplicable: boolean;
     TDSPercentage: number;
+    GSTApplicable: boolean;
+    GSTPercentage: number | null = null;
     
     // Simplified Compliance Field
     ClientComplianceStatus: string | null = null;
@@ -100,6 +102,8 @@ export class ClientModel {
 
         this.TDSApplicable = data.TDSApplicable || false;
         this.TDSPercentage = data.TDSPercentage || 0;
+        this.GSTApplicable = data.GSTApplicable || false;
+        this.GSTPercentage = data.GSTPercentage ?? null;
         
         // Simplified Compliance Field
         this.ClientComplianceStatus = data.ClientComplianceStatus || 'non_compliance_client';
