@@ -58,7 +58,7 @@ export class SearchUtilityBillsComponent implements AfterViewInit {
         this.currentUser = username;
       });
     }
-    service.getUtilityMaster("U", "", this.currentUser).subscribe((d: any) => {
+    service.getUtilityMaster("U,O", "", this.currentUser).subscribe((d: any) => {
       this.branchList = d['branchList'];
       this.supplierList = d['supplierList'];
     });

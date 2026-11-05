@@ -44,6 +44,9 @@ export class ClientModel {
     BillingCity: string | null = null;
     BillingState: string | null = null;
     BillingPINCode: string | null = null;
+
+    TDSApplicable: boolean;
+    TDSPercentage: number;
     
     // Simplified Compliance Field
     ClientComplianceStatus: string | null = null;
@@ -94,6 +97,9 @@ export class ClientModel {
         this.BillingCity = data.BillingCity || null;
         this.BillingState = data.BillingState || null;
         this.BillingPINCode = data.BillingPINCode || null;
+
+        this.TDSApplicable = data.TDSApplicable || false;
+        this.TDSPercentage = data.TDSPercentage || 0;
         
         // Simplified Compliance Field
         this.ClientComplianceStatus = data.ClientComplianceStatus || 'non_compliance_client';

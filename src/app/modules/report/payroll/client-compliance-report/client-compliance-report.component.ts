@@ -158,6 +158,10 @@ export class ClientComplianceReportComponent implements OnInit {
 
   onBranchSelectionChange(event: any) {
     const branchCode = this.complianceForm.get('BranchCode')?.value;
+    this.complianceForm.get('ClientCode')?.reset('');
+    this.complianceClientModel = [];
+    this.currentReportHtml = null;
+    this.currentReportHtmlRaw = '';
     if (branchCode) {
       this.getClientListByBranch(branchCode);
     }
@@ -410,7 +414,19 @@ export class ClientComplianceReportComponent implements OnInit {
 
     const baseTemplate = this.reportTemplates[reportType];
     if (!baseTemplate) {
-      this.errorMessage = `Template '${reportType}' not loaded yet. Please wait and try again.`;
+      this.showLoadingSpinner = true;
+      this.http.get(`assets/report-templates/client-compliance/${reportType}.html`, { responseType: 'text' }).subscribe(
+        (htmlTemplate: string) => {
+          this.reportTemplates[reportType] = htmlTemplate;
+          this.showLoadingSpinner = false;
+          this.showReport(reportType);
+        },
+        (error: any) => {
+          this.showLoadingSpinner = false;
+          this.errorMessage = `Could not load the '${this.formatReportType(reportType)}' report template. Please try again.`;
+          console.error(`Could not load template for ${reportType}`, error);
+        }
+      );
       return;
     }
 

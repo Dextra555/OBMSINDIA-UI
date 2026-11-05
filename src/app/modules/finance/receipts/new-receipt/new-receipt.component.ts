@@ -72,11 +72,9 @@ export interface IInvoiceAmount {
 
   InvoiceNo: string;
 
-
-
   InvoiceAmount: number;
 
-
+  TaxAmount: number;
 
   InvoiceDate: string;
 
@@ -1178,20 +1176,13 @@ export class NewReceiptComponent implements OnInit {
 
         const client = this.clientList.find(
 
-
-
           (x: any) => x.Name === this.frm.get('PaymentFrom')?.value
 
-
-
         );
-
-
-
         code = client ? client.Code : '';
-
-
-
+        if (client) {
+          this.applyClientTds(client);
+        }
       }
 
 
@@ -1294,9 +1285,9 @@ export class NewReceiptComponent implements OnInit {
 
   clientChange(value: any) {
 
-
-
-
+    const client = this.clientList.find((x: any) => x.Code === value);
+    this.applyClientTds(client);
+    this.frm.patchValue({ PaymentFrom: client ? client.Name : '' });
 
 
 
@@ -1347,8 +1338,6 @@ export class NewReceiptComponent implements OnInit {
     // In edit mode, don't fetch all invoices - just use the existing invoiceList
 
     if (this.receiptID > 0 && this.invoiceList.length > 0) {
-
-      const client = this.clientList.find((x: any) => x.Code === value);
 
       this.frm.patchValue({
 
@@ -1429,10 +1418,6 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-
-
-
-        const client = this.clientList.find((x: any) => x.Code === value);
 
 
 
@@ -1533,9 +1518,14 @@ export class NewReceiptComponent implements OnInit {
 
 
       });
+  }
 
+  private applyClientTds(client: any): void {
+    const isTdsApplicable = client?.TDSApplicable === true || client?.TDSApplicable === 1;
+    const tdsPercentage = isTdsApplicable ? Number(client.TDSPercentage) || 0 : 0;
 
-
+    this.frm.get('HQPercentage')?.setValue(tdsPercentage);
+    this.calculate();
   }
 
 
@@ -1911,7 +1901,16 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-    if (receiptTypeID.toString() === "1") {
+    if (this.isAdjustment) {
+      const receiptAmount = Number(this.frm.get("ReceiptAmount")?.value) || 0;
+      this.taxAmount = this.calculateSelectedInvoiceTax(receiptAmount);
+      this.taxPercentage = receiptAmount > this.taxAmount
+        ? (this.taxAmount / (receiptAmount - this.taxAmount)) * 100
+        : 0;
+      this.frm.get("TaxPercentage")?.setValue(this.taxPercentage.toFixed(2), { emitEvent: false });
+      this.hqAmount = (receiptAmount - this.taxAmount) * (this.hqPercentage / 100);
+      this.branchAmount = receiptAmount - this.taxAmount - this.hqAmount;
+    } else if (receiptTypeID.toString() === "1") {
 
 
 
@@ -1977,8 +1976,31 @@ export class NewReceiptComponent implements OnInit {
 
     this.frm.get("BranchCollection")?.setValue(this.branchAmount.toFixed(2));
 
+  }
 
+  private calculateSelectedInvoiceTax(receiptAmount: number): number {
+    let remainingAmount = Math.max(0, receiptAmount);
+    let taxAmount = 0;
 
+    for (let i = 0; i < this.invoiceList.length && remainingAmount > 0; i++) {
+      if (!this.rowCheckedState[i]) {
+        continue;
+      }
+
+      const invoice = this.invoiceList[i];
+      const invoiceAmount = Math.max(0, Number(invoice.InvoiceAmount) || 0);
+      const availableAmount = this.receiptID > 0
+        ? invoiceAmount
+        : Math.max(0, Number(invoice.Balance) || 0);
+      const allocatedAmount = Math.min(remainingAmount, availableAmount);
+
+      if (invoiceAmount > 0 && allocatedAmount > 0) {
+        taxAmount += (Math.max(0, Number(invoice.TaxAmount) || 0) * allocatedAmount) / invoiceAmount;
+        remainingAmount -= allocatedAmount;
+      }
+    }
+
+    return taxAmount;
   }
 
 
@@ -2816,13 +2838,8 @@ export class NewReceiptComponent implements OnInit {
 
 
   changeAdjustment(value: string) {
-
-
-
     this.isAdjustment = this.frm.get("IsInvoiceAdjustment")?.value;
-
-
-
+    this.calculation();
   }
 
 
@@ -2988,6 +3005,3 @@ export class NewReceiptComponent implements OnInit {
 
 
 }
-
-
-

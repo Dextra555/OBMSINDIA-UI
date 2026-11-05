@@ -20,7 +20,7 @@
         <div class="col-12 col-sm-12 col-md-6 col-lg-3">
           <mat-form-field appearance="outline">
             <mat-label>Branch</mat-label>
-            <mat-select formControlName="Branch">
+            <mat-select formControlName="Branch" (selectionChange)="onBranchChange()">
               <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}}</mat-option>
             </mat-select>
           </mat-form-field>
@@ -194,37 +194,70 @@
           </div>
         </div>
       </div>
-      <!-- ── GST / TDS Section ────────────────────────────────────────────── -->
+      <!-- ── GST & TDS Section ─────────────────────────────────────────────── -->
       <div class="row mt-3">
         <div class="col-12 col-sm-12 col-md-12 col-lg-12 wlt-c-furg-profile">
           <h2><span>GST &amp; TDS</span></h2>
         </div>
       </div>
-      <div class="row">
 
-        <!-- GST % -->
+      <!-- Transaction type — auto-detected from Branch & Supplier state (read-only) -->
+      <div class="row mb-2">
+        <div class="col-12 col-sm-12 col-md-12 col-lg-12" style="display:flex; align-items:center; gap:16px;">
+          <strong style="font-size:13px;">Transaction Type:</strong>
+          <span *ngIf="!isInterState"
+                style="background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7;
+                       border-radius:16px; padding:3px 14px; font-size:13px; font-weight:600;">
+            ● Intra-State &nbsp;<span style="font-weight:400;">(CGST + SGST)</span>
+          </span>
+          <span *ngIf="isInterState"
+                style="background:#fff3e0; color:#e65100; border:1px solid #ffcc80;
+                       border-radius:16px; padding:3px 14px; font-size:13px; font-weight:600;">
+            ● Inter-State &nbsp;<span style="font-weight:400;">(IGST)</span>
+          </span>
+          <small class="text-muted" style="font-size:11px;">
+            Auto-detected from Branch &amp; Supplier state.
+          </small>
+        </div>
+      </div>
+
+      <!-- INTRA-STATE: CGST + SGST + TDS in one row -->
+      <div class="row" *ngIf="!isInterState">
+
         <div class="col-12 col-sm-12 col-md-6 col-lg-2">
           <mat-form-field appearance="outline">
-            <mat-label>GST %</mat-label>
-            <input type="number" formControlName="GSTPercentage" matInput
+            <mat-label>CGST %</mat-label>
+            <input type="number" formControlName="CGSTPercentage" matInput
                    placeholder="0.00" autocomplete="off" min="0" max="100"
-                   (change)="onGSTPercentageChange()">
+                   (change)="onCGSTPercentageChange()">
           </mat-form-field>
         </div>
 
-        <!-- GST Amount (auto-calculated, manually editable) -->
         <div class="col-12 col-sm-12 col-md-6 col-lg-2">
           <mat-form-field appearance="outline">
-            <mat-label>GST Amount (₹)</mat-label>
-            <input type="number" formControlName="GSTAmount" matInput
+            <mat-label>CGST Amount (₹)</mat-label>
+            <input type="number" formControlName="CGSTAmount" matInput
                    placeholder="0.00" autocomplete="off" min="0">
           </mat-form-field>
         </div>
 
-        <!-- spacer -->
-        <div class="col-12 col-sm-12 col-md-12 col-lg-1"></div>
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>SGST %</mat-label>
+            <input type="number" formControlName="SGSTPercentage" matInput
+                   placeholder="0.00" autocomplete="off" min="0" max="100"
+                   (change)="onSGSTPercentageChange()">
+          </mat-form-field>
+        </div>
 
-        <!-- TDS % -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>SGST Amount (₹)</mat-label>
+            <input type="number" formControlName="SGSTAmount" matInput
+                   placeholder="0.00" autocomplete="off" min="0">
+          </mat-form-field>
+        </div>
+
         <div class="col-12 col-sm-12 col-md-6 col-lg-2">
           <mat-form-field appearance="outline">
             <mat-label>TDS %</mat-label>
@@ -234,7 +267,45 @@
           </mat-form-field>
         </div>
 
-        <!-- TDS Amount (auto-calculated, manually editable) -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>TDS Amount (₹)</mat-label>
+            <input type="number" formControlName="TDSAmount" matInput
+                   placeholder="0.00" autocomplete="off" min="0">
+          </mat-form-field>
+        </div>
+
+      </div>
+
+      <!-- INTER-STATE: IGST + TDS in one row -->
+      <div class="row" *ngIf="isInterState">
+
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>IGST %</mat-label>
+            <input type="number" formControlName="IGSTPercentage" matInput
+                   placeholder="0.00" autocomplete="off" min="0" max="100"
+                   (change)="onIGSTPercentageChange()">
+          </mat-form-field>
+        </div>
+
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>IGST Amount (₹)</mat-label>
+            <input type="number" formControlName="IGSTAmount" matInput
+                   placeholder="0.00" autocomplete="off" min="0">
+          </mat-form-field>
+        </div>
+
+        <div class="col-12 col-sm-12 col-md-6 col-lg-2">
+          <mat-form-field appearance="outline">
+            <mat-label>TDS %</mat-label>
+            <input type="number" formControlName="TDSPercentage" matInput
+                   placeholder="0.00" autocomplete="off" min="0" max="100"
+                   (change)="onTDSPercentageChange()">
+          </mat-form-field>
+        </div>
+
         <div class="col-12 col-sm-12 col-md-6 col-lg-2">
           <mat-form-field appearance="outline">
             <mat-label>TDS Amount (₹)</mat-label>
@@ -246,22 +317,48 @@
       </div>
 
       <!-- Net Payable summary card -->
-      <div class="row mb-2"
-           *ngIf="details.length > 0">
-        <div class="col-12 col-sm-12 col-md-6 col-lg-4">
+      <div class="row mb-2" *ngIf="details.length > 0">
+        <div class="col-12 col-sm-12 col-md-6 col-lg-5">
           <div style="background:#f5f5f5; border:1px solid #ddd; border-radius:6px; padding:10px 16px;">
 
             <div class="d-flex justify-content-between">
               <span class="text-muted" style="font-size:13px;">Base Amount (Total)</span>
               <span>₹ {{ baseTotal | number:'1.2-2' }}</span>
             </div>
+
+            <!-- Intra-state rows -->
+            <ng-container *ngIf="!isInterState">
+              <div class="d-flex justify-content-between"
+                   *ngIf="(frm.get('CGSTAmount')?.value || 0) > 0">
+                <span class="text-muted" style="font-size:13px;">
+                  + CGST ({{ frm.get('CGSTPercentage')?.value || 0 }}%)
+                </span>
+                <span>₹ {{ (frm.get('CGSTAmount')?.value || 0) | number:'1.2-2' }}</span>
+              </div>
+              <div class="d-flex justify-content-between"
+                   *ngIf="(frm.get('SGSTAmount')?.value || 0) > 0">
+                <span class="text-muted" style="font-size:13px;">
+                  + SGST ({{ frm.get('SGSTPercentage')?.value || 0 }}%)
+                </span>
+                <span>₹ {{ (frm.get('SGSTAmount')?.value || 0) | number:'1.2-2' }}</span>
+              </div>
+              <div class="d-flex justify-content-between"
+                   *ngIf="(frm.get('CGSTAmount')?.value || 0) > 0 && (frm.get('SGSTAmount')?.value || 0) > 0">
+                <span class="text-muted" style="font-size:12px; font-style:italic;">&nbsp;&nbsp;Total GST</span>
+                <span style="font-size:12px; font-style:italic;">₹ {{ totalGSTAmount | number:'1.2-2' }}</span>
+              </div>
+            </ng-container>
+
+            <!-- Inter-state row -->
             <div class="d-flex justify-content-between"
-                 *ngIf="(frm.get('GSTAmount')?.value || 0) > 0">
+                 *ngIf="isInterState && (frm.get('IGSTAmount')?.value || 0) > 0">
               <span class="text-muted" style="font-size:13px;">
-                + GST ({{ frm.get('GSTPercentage')?.value || 0 }}%)
+                + IGST ({{ frm.get('IGSTPercentage')?.value || 0 }}%)
               </span>
-              <span>₹ {{ (frm.get('GSTAmount')?.value || 0) | number:'1.2-2' }}</span>
+              <span>₹ {{ (frm.get('IGSTAmount')?.value || 0) | number:'1.2-2' }}</span>
             </div>
+
+            <!-- TDS row -->
             <div class="d-flex justify-content-between"
                  *ngIf="(frm.get('TDSAmount')?.value || 0) > 0">
               <span class="text-muted" style="font-size:13px;">
@@ -269,6 +366,7 @@
               </span>
               <span>₹ {{ (frm.get('TDSAmount')?.value || 0) | number:'1.2-2' }}</span>
             </div>
+
             <hr style="margin:6px 0;">
             <div class="d-flex justify-content-between">
               <strong style="font-size:14px;">Net Payable</strong>
