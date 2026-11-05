@@ -56,7 +56,7 @@
             <mat-label>Branch</mat-label>
             <mat-select formControlName="Branch" (selectionChange)="branchChange($event.value)">
               <mat-option value="">All Branches</mat-option>
-              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}} - {{d.Name}}</mat-option>
+              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Name}}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
@@ -379,6 +379,18 @@
           <ng-container matColumnDef="SupplierName">
             <th mat-header-cell *matHeaderCellDef>Supplier Name</th>
             <td mat-cell *matCellDef="let element">{{ element.supplierName }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="GSTNo">
+            <th mat-header-cell *matHeaderCellDef>GST No</th>
+            <td mat-cell *matCellDef="let element">{{ element.gstNo || '-' }}</td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+
+          <ng-container matColumnDef="PanNo">
+            <th mat-header-cell *matHeaderCellDef>PAN No</th>
+            <td mat-cell *matCellDef="let element">{{ element.panNo || '-' }}</td>
             <td mat-footer-cell *matFooterCellDef></td>
           </ng-container>
 

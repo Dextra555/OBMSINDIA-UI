@@ -34,6 +34,7 @@ export class NewEsiSlabComponent implements OnInit {
       employerContributionRate: ['', Validators.required],
       effectiveDate: ['', Validators.required],
       isActive: [true],
+      calculationBasis: ['Gross', Validators.required],
       createdBy: [''],
       lastUpdatedBy: ['']
     });
@@ -106,6 +107,7 @@ export class NewEsiSlabComponent implements OnInit {
               ? (record.EffectiveDate ?? record.effectiveDate).substring(0, 10)
               : '',
             isActive: record.IsActive ?? record.isActive,
+            calculationBasis: record.CalculationBasis ?? record.calculationBasis ?? 'Gross',
             createdBy: record.CreatedBy ?? record.createdBy ?? '',
             lastUpdatedBy: record.LastUpdatedBy ?? record.lastUpdatedBy ?? ''
           });
@@ -138,6 +140,7 @@ export class NewEsiSlabComponent implements OnInit {
       EmployerContributionRate: formValue.employerContributionRate,
       EffectiveDate: formValue.effectiveDate,
       IsActive: formValue.isActive,
+      CalculationBasis: formValue.calculationBasis || 'Gross',
       CreatedDate: new Date().toISOString(),
       CreatedBy: this.currentUser,
       LastUpdatedDate: new Date().toISOString(),

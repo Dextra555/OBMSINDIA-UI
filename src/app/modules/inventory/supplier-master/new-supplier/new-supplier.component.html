@@ -119,6 +119,58 @@
                         <mat-radio-button value="H">Hold</mat-radio-button>
                     </mat-radio-group>
                 </div>
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4 d-flex align-items-center mt-2">
+                    <mat-checkbox formControlName="IsTax"><strong>Is GST</strong></mat-checkbox>
+                </div>
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4 d-flex align-items-center mt-2">
+                    <mat-checkbox formControlName="IsTDS"><strong>Is TDS</strong></mat-checkbox>
+                </div>
+            </div>
+            <div class="row" *ngIf="isTaxChecked">
+                <div class="col-12 col-sm-12 col-md-12 col-lg-12 wlt-c-furg-profile">
+                    <h2><span>Tax Details</span></h2>
+                </div>
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+                    <mat-form-field appearance="outline">
+                        <mat-label>GST No</mat-label>
+                        <input type="text" formControlName="GSTNo" matInput placeholder="Ex: 33ABCDE1234F1Z5"
+                            autocomplete="off" style="text-transform: uppercase;">
+                        <mat-error *ngIf="frm.get('GSTNo')?.hasError('required')">
+                            GST No required
+                        </mat-error>
+                        <mat-error *ngIf="frm.get('GSTNo')?.hasError('pattern')">
+                            Invalid GST No &nbsp;<strong>Format: 33ABCDE1234F1Z5</strong>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+                    <mat-form-field appearance="outline">
+                        <mat-label>PAN No</mat-label>
+                        <input type="text" formControlName="PanNo" matInput placeholder="Ex: ABCDE1234F"
+                            autocomplete="off" style="text-transform: uppercase;">
+                        <mat-error *ngIf="frm.get('PanNo')?.hasError('required')">
+                            PAN No required
+                        </mat-error>
+                        <mat-error *ngIf="frm.get('PanNo')?.hasError('pattern')">
+                            Invalid PAN No &nbsp;<strong>Format: ABCDE1234F</strong>
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div class="row" *ngIf="isTDSChecked">
+                <div class="col-12 col-sm-12 col-md-12 col-lg-12 wlt-c-furg-profile">
+                    <h2><span>TDS Details</span></h2>
+                </div>
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Percentage</mat-label>
+                        <mat-select formControlName="TDSPercentage">
+                            <mat-option *ngFor="let t of tdsMasterList" [value]="t.TDSPercentage">
+                                {{ t.TDSName }} — {{ t.TDSPercentage }}%
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
             </div>
             <div class="row">
                 <div class="col-12">

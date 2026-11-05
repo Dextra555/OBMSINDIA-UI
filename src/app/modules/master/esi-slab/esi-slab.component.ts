@@ -20,7 +20,7 @@ import { ESIConfiguration } from 'src/app/model/indian-compliance.model';
 export class EsiSlabComponent implements AfterViewInit {
   esiConfigurations: ESIConfiguration[] = [];
   showLoadingSpinner: boolean = false;
-  displayedColumns: string[] = ['grossSalaryLimit', 'employeeContributionRate', 'employerContributionRate', 'effectiveDate', 'isActive', 'action'];
+  displayedColumns: string[] = ['grossSalaryLimit', 'employeeContributionRate', 'employerContributionRate', 'calculationBasis', 'effectiveDate', 'isActive', 'action'];
   dataSource: any;
   errorMessage: string = '';
   currentUser: string = '';

@@ -75,8 +75,13 @@ export class EmployeeHistoryComponent implements OnInit {
               next: ({ branchResult }) => {
                 this.branchList = branchResult['branchList'];
 
-                // Example: use the first branch's code if needed
-                const selectedBranch = this.branchList[0]?.branchCode;
+                // Use the first branch's Code (correct property name from API)
+                const selectedBranch = this.branchList[0]?.Code;
+
+                // Pre-populate the dropdown with the first allowed branch
+                if (selectedBranch) {
+                  this.frm.patchValue({ BranchCode: selectedBranch });
+                }
 
                 this._employeeTransfer.getEmployeeHistoryDetails(selectedBranch).subscribe({
                   next: employeeResult => {

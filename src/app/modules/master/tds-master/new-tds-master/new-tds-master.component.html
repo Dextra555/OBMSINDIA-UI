@@ -1,0 +1,85 @@
+<div class="wlt-c-furg-content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6">
+        <h1 class="mb-1">{{ isEdit ? 'Edit TDS Category' : 'Create TDS Category' }}</h1>
+      </div>
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6 my-1">
+        <ol class="breadcrumb float-md-right">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Master</a></li>
+          <li class="breadcrumb-item"><a routerLink="/master/tds-master">Supplier/Client TDS Slab</a></li>
+          <li class="breadcrumb-item active">{{ isEdit ? 'Edit' : 'Create' }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<mat-card>
+  <mat-card-content>
+    <form [formGroup]="tdsMasterForm" (ngSubmit)="onSubmit()">
+
+      <div class="row">
+        <div class="col-12 col-sm-12 col-md-8 col-lg-8">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>TDS Category Name</mat-label>
+            <input matInput formControlName="tDSName"
+              placeholder="e.g. Contractor - Individual / HUF (Sec 194C)">
+            <mat-error *ngIf="tdsMasterForm.get('tDSName')?.hasError('required')">
+              TDS Category Name is required
+            </mat-error>
+            <mat-error *ngIf="tdsMasterForm.get('tDSName')?.hasError('maxlength')">
+              Maximum 100 characters allowed
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>TDS Percentage (%)</mat-label>
+            <input matInput type="number" formControlName="tDSPercentage"
+              placeholder="e.g. 10.00" step="0.01" min="0" max="100">
+            <mat-error *ngIf="tdsMasterForm.get('tDSPercentage')?.hasError('required')">
+              TDS Percentage is required
+            </mat-error>
+            <mat-error *ngIf="tdsMasterForm.get('tDSPercentage')?.hasError('min') ||
+                              tdsMasterForm.get('tDSPercentage')?.hasError('max')">
+              Percentage must be between 0 and 100
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4 d-flex align-items-center">
+          <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+          <mat-hint class="ml-2">Uncheck to deactivate this TDS category</mat-hint>
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col-12">
+          <div class="text-right">
+            <button type="button" mat-raised-button color="accent" class="mr-2" (click)="cancel()">
+              <mat-icon>cancel</mat-icon> Cancel
+            </button>
+            <button type="submit" mat-raised-button color="primary"
+              [disabled]="tdsMasterForm.invalid || showLoadingSpinner">
+              <mat-icon>save</mat-icon>
+              {{ isEdit ? 'Update' : 'Save' }} TDS Category
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </mat-card-content>
+</mat-card>
+
+<!-- Loading Spinner -->
+<div [style.display]="showLoadingSpinner ? 'block' : 'none'"
+  style="margin-top: -20.5rem; display: block; margin-left: -6.5rem;">
+  <div class="d-flex justify-content-center">
+    <span class="loader"></span>
+  </div>
+</div>

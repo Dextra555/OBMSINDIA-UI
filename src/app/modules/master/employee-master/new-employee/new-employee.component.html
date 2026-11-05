@@ -1610,9 +1610,15 @@
 
 
 
-                        <input type="number" formControlName="CB_Basic" class="form-control form-control-sm text-right"
+                        <input type="number" formControlName="CB_Basic"
+                          [class.is-invalid]="frm.get('CB_Basic')?.invalid && (frm.get('CB_Basic')?.touched || submitted)"
+                          class="form-control form-control-sm text-right"
 
                           placeholder="0.00" (input)="calculateCommercialBreakdownTotal()">
+                        <div class="text-danger small mt-1"
+                          *ngIf="frm.get('CB_Basic')?.invalid && (frm.get('CB_Basic')?.touched || submitted)">
+                          Basic Salary is mandatory. Please enter an amount greater than 0.
+                        </div>
 
 
 
@@ -1636,9 +1642,15 @@
 
 
 
-                        <input type="number" formControlName="CB_DA" class="form-control form-control-sm text-right"
+                        <input type="number" formControlName="CB_DA"
+                          [class.is-invalid]="frm.get('CB_DA')?.invalid && (frm.get('CB_DA')?.touched || submitted)"
+                          class="form-control form-control-sm text-right"
 
                           placeholder="0.00" (input)="calculateCommercialBreakdownTotal()">
+                        <div class="text-danger small mt-1"
+                          *ngIf="frm.get('CB_DA')?.invalid && (frm.get('CB_DA')?.touched || submitted)">
+                          Dearness Allowance (DA) is mandatory. Please enter an amount greater than 0.
+                        </div>
 
 
 

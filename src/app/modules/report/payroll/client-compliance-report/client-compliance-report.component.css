@@ -27,9 +27,38 @@
   font-size: 20px !important;
 }
 
+/* Report table header: bold, white background, dark border */
+.compliance-report-display table th {
+  font-weight: bold !important;
+  background-color: #fff !important;
+  color: #000 !important;
+  border: 1px solid #333 !important;
+}
+
+/* Report table body cells: white background */
+.compliance-report-display table td {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+
+/* S.No / Index column (first column) */
+.compliance-report-display table td:first-child,
+.compliance-report-display table th:first-child {
+  text-align: center;
+  font-weight: bold;
+  min-width: 36px;
+}
+
 @media print {
   .compliance-report-display * {
     font-size: 16px !important;
+  }
+  .compliance-report-display table th {
+    font-weight: bold !important;
+    background-color: #fff !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 

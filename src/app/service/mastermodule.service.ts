@@ -21,6 +21,7 @@ import { ContractorTDSSlab } from '../model/indian-compliance.model';
 import { StateMaster } from '../model/indian-compliance.model';
 import { BillingCycle } from '../model/indian-compliance.model';
 import { InvoiceFormat } from '../model/indian-compliance.model';
+import { TDSMaster } from '../model/indian-compliance.model';
 
 @Injectable({
   providedIn: 'root'
@@ -697,6 +698,26 @@ export class MastermoduleService {
       .set('fromYear', fromYear.toString())
       .set('toYear',   toYear.toString());
     return this.httpClient.get<any>(`${this.apiUrl}Finance/GetYearlyProfitLoss`, { params })
+      .pipe(catchError(this.errorHandle));
+  }
+
+  // TDS Master – vendor/contractor TDS rate lookup
+  getTDSMasterList(): Observable<TDSMaster[]> {
+    return this.httpClient.get<TDSMaster[]>(`${this.apiUrl}master/GetTDSMasterList`)
+      .pipe(catchError(this.errorHandle));
+  }
+
+  saveAndUpdateTDSMaster(tdsMaster: TDSMaster): Observable<any> {
+    return this.httpClient.post<any>(
+      `${this.apiUrl}master/SaveAndUpdateTDSMaster`,
+      JSON.stringify(tdsMaster),
+      { headers: new HttpHeaders({ 'Content-type': 'application/json; charset=UTF-8' }) }
+    ).pipe(catchError(this.errorHandle));
+  }
+
+  deleteTDSMasterById(id: number): Observable<any> {
+    const params = { params: new HttpParams({ fromString: '?Id=' + id }) };
+    return this.httpClient.delete(`${this.apiUrl}master/DeleteTDSMasterById`, params)
       .pipe(catchError(this.errorHandle));
   }
 }

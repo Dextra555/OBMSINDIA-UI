@@ -83,6 +83,8 @@ export interface ESIConfiguration {
   createdBy: string;
   lastUpdatedDate: string;
   lastUpdatedBy: string;
+  /** "Gross" = Gross salary based (default/legacy) | "BasicDA" = Basic + DA based */
+  calculationBasis: string;
 }
 
 export interface ProfessionalTaxConfiguration {
@@ -218,4 +220,13 @@ export interface InvoiceFormat {
   createdBy: string;
   lastUpdatedDate: string;
   lastUpdatedBy: string;
+}
+
+// TDS Master – vendor/contractor TDS rate lookup (Sec 194C, 194H, 194I, 194J, 194A, 194B)
+// Distinct from TDSSlabConfiguration which covers employee payroll TDS (Sec 192).
+export interface TDSMaster {
+  ID: number;
+  TDSName: string;
+  TDSPercentage: number;
+  IsActive: boolean;
 }

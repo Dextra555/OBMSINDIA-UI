@@ -4,6 +4,7 @@ import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { BranchModel } from 'src/app/model/branchModel';
+import { ClientModel } from 'src/app/model/clientModel';
 import { UserAccessModel } from 'src/app/model/userAccesModel';
 import { CommonService } from 'src/app/service/common.service';
 import { DatasharingService } from 'src/app/service/datasharing.service';
@@ -24,6 +25,7 @@ export class RbiBankSalaryProcessComponent implements OnInit {
 
   rbiBankSalaryForm!: FormGroup;
   branchList: any = [];
+  clientList: ClientModel[] = [];
   currentUser: string = "";
   errorMessage: string = '';
   warningMessage: string = '';
@@ -53,6 +55,7 @@ export class RbiBankSalaryProcessComponent implements OnInit {
       Branch: ["", Validators.required],
       Period: ["", Validators.required],
       EmployeeType: ["ALL", Validators.required],
+      Client: [""],
       exportOption: ['0'],
     });
 
@@ -121,6 +124,14 @@ export class RbiBankSalaryProcessComponent implements OnInit {
     this.dtPeriod = this.formatDate(
       new Date(dtPeriodDate.getFullYear(), dtPeriodDate.getMonth() + 1, 0)
     );
+    // Load clients for the selected branch and reset the Client control
+    const branch = this.rbiBankSalaryForm.get('Branch')?.value;
+    if (branch) {
+      this._masterService.getClientMsterListByBranch(branch).subscribe((data: ClientModel[]) => {
+        this.clientList = data;
+        this.rbiBankSalaryForm.get('Client')?.setValue('');
+      });
+    }
   }
 
   applyFilter(event: Event) {
@@ -135,15 +146,16 @@ export class RbiBankSalaryProcessComponent implements OnInit {
     );
     const branch = this.rbiBankSalaryForm.get('Branch')?.value;
     const employeeType = this.rbiBankSalaryForm.get('EmployeeType')?.value;
+    const client = this.rbiBankSalaryForm.get('Client')?.value || '';
 
     if (this.dtPeriod !== '' && this.dtPeriod !== null) {
-      this.getRbiBankSalaryExportData(this.dtPeriod, branch, employeeType);
+      this.getRbiBankSalaryExportData(this.dtPeriod, branch, employeeType, client);
     }
   }
 
-  getRbiBankSalaryExportData(dtSalaryPeriod: string, branch: string, employeeType: string): void {
+  getRbiBankSalaryExportData(dtSalaryPeriod: string, branch: string, employeeType: string, client: string = ''): void {
     this.showLoadingSpinner = true;
-    this._payrollService.getRbiBankSalaryExport(dtSalaryPeriod, branch, employeeType).subscribe({
+    this._payrollService.getRbiBankSalaryExport(dtSalaryPeriod, branch, employeeType, client).subscribe({
       next: (data: any) => {
         this.handleDataBinding(data);
       },
@@ -205,8 +217,9 @@ export class RbiBankSalaryProcessComponent implements OnInit {
   onExportCsvClick(): void {
     const branch = this.rbiBankSalaryForm.get('Branch')?.value || 'ALL';
     const employeeType = this.rbiBankSalaryForm.get('EmployeeType')?.value || 'ALL';
+    const client = this.rbiBankSalaryForm.get('Client')?.value || '';
     
-    this._payrollService.getRbiBankSalaryExportCsv(this.dtPeriod, branch, employeeType).subscribe({
+    this._payrollService.getRbiBankSalaryExportCsv(this.dtPeriod, branch, employeeType, client).subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -228,8 +241,9 @@ export class RbiBankSalaryProcessComponent implements OnInit {
   onExportTxtClick(): void {
     const branch = this.rbiBankSalaryForm.get('Branch')?.value || 'ALL';
     const employeeType = this.rbiBankSalaryForm.get('EmployeeType')?.value || 'ALL';
+    const client = this.rbiBankSalaryForm.get('Client')?.value || '';
 
-    this._payrollService.getRbiBankSalaryExportTxt(this.dtPeriod, branch, employeeType).subscribe({
+    this._payrollService.getRbiBankSalaryExportTxt(this.dtPeriod, branch, employeeType, client).subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

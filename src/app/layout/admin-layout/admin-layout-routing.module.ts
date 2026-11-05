@@ -336,6 +336,9 @@ import { NewServiceTypeComponent } from "../../modules/master/service-type/new-s
 
 import { ViewServiceTypeComponent } from "../../modules/master/service-type/view-service-type/view-service-type.component";
 
+import { TdsMasterComponent } from "../../modules/master/tds-master/tds-master.component";
+import { NewTdsMasterComponent } from "../../modules/master/tds-master/new-tds-master/new-tds-master.component";
+
 import { ProfessionalTaxSlabComponent } from "../../modules/master/professional-tax-slab/professional-tax-slab.component";
 
 import { DepartmentMasterComponent } from 'src/app/modules/master/department-master/department-master.component';
@@ -429,6 +432,10 @@ const routes: Routes = [
   { path: 'master/service-type/edit/:id', component: NewServiceTypeComponent, canActivate: [AuthGuard] },
 
   { path: 'master/service-type/details/:id', component: ViewServiceTypeComponent, canActivate: [AuthGuard] },
+
+  { path: 'master/tds-master', component: TdsMasterComponent, canActivate: [AuthGuard] },
+  { path: 'master/tds-master/new', component: NewTdsMasterComponent, canActivate: [AuthGuard] },
+  { path: 'master/tds-master/edit/:id', component: NewTdsMasterComponent, canActivate: [AuthGuard] },
 
   { path: 'master/department-master', component: DepartmentMasterComponent, canActivate: [AuthGuard] },
 

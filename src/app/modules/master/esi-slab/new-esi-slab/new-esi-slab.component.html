@@ -68,6 +68,25 @@
 
       <div class="row">
         <div class="col-12 col-sm-12 col-md-6 col-lg-6">
+          <mat-form-field appearance="outline">
+            <mat-label>Calculation Basis</mat-label>
+            <mat-select formControlName="calculationBasis">
+              <mat-option value="Gross">Gross Salary</mat-option>
+              <mat-option value="BasicDA">Basic + DA (ESI Act)</mat-option>
+            </mat-select>
+            <mat-hint *ngIf="esiForm.get('calculationBasis')?.value === 'BasicDA'">
+              ESI = (Basic + DA) × 0.75 / 100
+            </mat-hint>
+            <mat-hint *ngIf="esiForm.get('calculationBasis')?.value !== 'BasicDA'">
+              ESI = Gross Salary × 0.75 / 100
+            </mat-hint>
+            <mat-error *ngIf="esiForm.get('calculationBasis')?.hasError('required')">
+              Calculation Basis is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="col-12 col-sm-12 col-md-6 col-lg-6">
           <mat-checkbox formControlName="isActive" color="primary">Active</mat-checkbox>
         </div>
       </div>

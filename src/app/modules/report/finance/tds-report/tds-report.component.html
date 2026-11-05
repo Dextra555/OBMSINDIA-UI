@@ -60,7 +60,7 @@
             <mat-select formControlName="Branch" [panelClass]="'custom-dropdown-panel'"
                         (selectionChange)="branchChange($event.value)">
               <mat-option value="">All Branches</mat-option>
-              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Code}} - {{d.Name}}</mat-option>
+              <mat-option *ngFor="let d of branchList" value="{{d.Code}}">{{d.Name}}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>

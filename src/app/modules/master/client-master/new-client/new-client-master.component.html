@@ -121,10 +121,33 @@
                     *ngIf="clientForm.get('TDSApplicable')?.value">
                     <mat-form-field appearance="outline" class="w-100">
                         <mat-label>TDS Percentage</mat-label>
-                        <input type="number" formControlName="TDSPercentage" matInput min="0" max="100" step="0.01">
-                        <span matSuffix>%</span>
+                        <mat-select formControlName="TDSPercentage">
+                            <mat-option *ngFor="let t of tdsMasterList" [value]="t.TDSPercentage">
+                                {{ t.TDSName }} — {{ t.TDSPercentage }}%
+                            </mat-option>
+                        </mat-select>
                         <mat-error *ngIf="clientForm.get('TDSPercentage')?.invalid">
-                            Enter a percentage between 0 and 100.
+                            Please select a TDS percentage.
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <!-- GST Applicable checkbox — shown only when TDS Applicable is checked -->
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4 d-flex align-items-center"
+                    *ngIf="clientForm.get('TDSApplicable')?.value">
+                    <mat-checkbox formControlName="GSTApplicable"
+                        (change)="onGstApplicableChange($event.checked)">
+                        GST Applicable
+                    </mat-checkbox>
+                </div>
+                <!-- GST Percentage text box — shown only when both TDS & GST Applicable are checked -->
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4"
+                    *ngIf="clientForm.get('TDSApplicable')?.value && clientForm.get('GSTApplicable')?.value">
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>GST Percentage</mat-label>
+                        <input type="number" formControlName="GSTPercentage" matInput
+                            placeholder="e.g. 18" autocomplete="off" min="0" max="100">
+                        <mat-error *ngIf="clientForm.get('GSTPercentage')?.invalid">
+                            Please enter a valid GST percentage.
                         </mat-error>
                     </mat-form-field>
                 </div>
