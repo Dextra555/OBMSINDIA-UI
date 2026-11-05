@@ -253,7 +253,6 @@ export class BranchMasterComponent implements AfterViewInit {
   }
 
   getStateDisplayName(state: string): string {
-    const count = this.originalBranchData.filter((branch: any) => branch.State === state).length;
-    return `${state} (${count})`;
+    return state;
   }
 }

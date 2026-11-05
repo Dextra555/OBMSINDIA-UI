@@ -4,6 +4,8 @@ import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTable } from '@angular/material/table';
 import { PayrollModuleService } from 'src/app/service/payrollmodule.service';
+import { MastermoduleService } from 'src/app/service/mastermodule.service';
+import { DatasharingService } from 'src/app/service/datasharing.service';
 import { DatePipe } from '@angular/common';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
@@ -70,7 +72,7 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
   successDisplayedColumns: string[] = ['rowNumber', 'employeeCode', 'employeeName', 'attendanceID', 'message'];
   expandedErrorRow: BulkUploadError | null = null;
   
-  currentUser: string = 'admin'; // TODO: Get from auth service
+  currentUser: string = ''; // Loaded from sessionStorage on init
   attendanceCodes = ['P', 'W/O', 'H', 'L', 'NH'];
   attendanceCodeDescriptions = {
     'P': 'Present - Regular working day',
@@ -91,14 +93,25 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
   constructor(
     private fb: FormBuilder,
     private payrollService: PayrollModuleService,
+    private _masterService: MastermoduleService,
+    private _dataService: DatasharingService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private datePipe: DatePipe
   ) { }
 
   ngOnInit(): void {
+    // Load current user from sessionStorage
+    this.currentUser = sessionStorage.getItem('username') || '';
+    if (!this.currentUser) {
+      this._dataService.getUsername().subscribe((username) => {
+        this.currentUser = username;
+        this.loadBranches();
+      });
+    } else {
+      this.loadBranches();
+    }
     this.initializeForm();
-    this.loadBranches();
 
     // Resolve period label immediately when period changes
     this.uploadForm.get('period')?.valueChanges.subscribe(() => {
@@ -187,7 +200,7 @@ export class BulkAttendanceUploadComponent implements OnInit, AfterViewInit {
   }
 
   private loadBranches(): void {
-    this.payrollService.getBranchList().subscribe({
+    this._masterService.GetBranchListByUserName(this.currentUser).subscribe({
       next: (branches: any[]) => {
         this.branches = branches;
       },

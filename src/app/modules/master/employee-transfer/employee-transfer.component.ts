@@ -47,10 +47,6 @@ export class EmployeeTransferComponent implements OnInit {
     this.frm.get('emp_no')?.disable({onlySelf: true});
     this.frm.get('TO_EMP_CODE')?.disable({onlySelf: true});
 
-    service.getEmployees().subscribe((d: any) => {
-      this.branchList = d;
-      this.branchTOList = d;
-    })
     this.userAccessModel = {
       readAccess: false,
       updateAccess:false,
@@ -65,7 +61,12 @@ export class EmployeeTransferComponent implements OnInit {
       this._dataService.getUsername().subscribe((username) => {
         this.currentUser = username;
       });
-    }  
+    }
+    // Load branches filtered by user's branch access
+    this._masterService.GetBranchListByUserName(this.currentUser).subscribe((d: any) => {
+      this.branchList = d;
+      this.branchTOList = d;
+    });
     this.getUserAccessRights(this.currentUser, 'Employee Transfer');
   }
   getUserAccessRights(userName: string, screenName: string) {   

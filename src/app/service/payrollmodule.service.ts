@@ -712,21 +712,23 @@ export class PayrollModuleService {
 
   }
 
-  getRbiBankSalaryExport(dtSalaryPeriod: string, branch: string, employeeType: string): Observable<any[]> {
+  getRbiBankSalaryExport(dtSalaryPeriod: string, branch: string, employeeType: string, client: string = ''): Observable<any[]> {
     const params = new HttpParams()
       .set('dtSalaryPeriod', encodeURIComponent(dtSalaryPeriod))
       .set('branch', encodeURIComponent(branch))
-      .set('employeeType', encodeURIComponent(employeeType));
+      .set('employeeType', encodeURIComponent(employeeType))
+      .set('client', encodeURIComponent(client ?? ''));
 
     return this.httpClient.get<any[]>(`${this.apiUrl}payroll/GetRbiBankSalaryExport`, { params })
       .pipe(catchError(this.errorHandle));
   }
 
-  getRbiBankSalaryExportCsv(dtSalaryPeriod: string, branch: string, employeeType: string): Observable<Blob> {
+  getRbiBankSalaryExportCsv(dtSalaryPeriod: string, branch: string, employeeType: string, client: string = ''): Observable<Blob> {
     const params = new HttpParams()
       .set('dtSalaryPeriod', encodeURIComponent(dtSalaryPeriod))
       .set('branch', encodeURIComponent(branch))
-      .set('employeeType', encodeURIComponent(employeeType));
+      .set('employeeType', encodeURIComponent(employeeType))
+      .set('client', encodeURIComponent(client ?? ''));
 
     return this.httpClient.get(`${this.apiUrl}payroll/GetRbiBankSalaryExportCsv`, {
       params,
@@ -734,11 +736,12 @@ export class PayrollModuleService {
     }).pipe(catchError(this.errorHandle));
   }
 
-  getRbiBankSalaryExportTxt(dtSalaryPeriod: string, branch: string, employeeType: string): Observable<Blob> {
+  getRbiBankSalaryExportTxt(dtSalaryPeriod: string, branch: string, employeeType: string, client: string = ''): Observable<Blob> {
     const params = new HttpParams()
       .set('dtSalaryPeriod', encodeURIComponent(dtSalaryPeriod))
       .set('branch', encodeURIComponent(branch))
-      .set('employeeType', encodeURIComponent(employeeType));
+      .set('employeeType', encodeURIComponent(employeeType))
+      .set('client', encodeURIComponent(client ?? ''));
 
     return this.httpClient.get(`${this.apiUrl}payroll/GetRbiBankSalaryExportTxt`, {
       params,

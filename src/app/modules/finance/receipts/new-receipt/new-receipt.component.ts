@@ -188,9 +188,9 @@ export class NewReceiptComponent implements OnInit {
 
   taxPercentage: number = 0;
 
-  hqPercentage: number = 0;
 
-  clientGstPercentage: number = 0; // GST % from Client Master — used as fallback when invoice has no tax
+
+  hqPercentage: number = 0;
 
 
 
@@ -216,6 +216,7 @@ export class NewReceiptComponent implements OnInit {
 
   branchAmount: number = 0;
 
+  amountWithGST: string = '0.00';
 
 
 
@@ -748,7 +749,8 @@ export class NewReceiptComponent implements OnInit {
 
         this.changeAdjustment(data.receipt.IsInvoiceAdjustment);
 
-
+        // Set ReceiptAmount BEFORE changeReceiptType so the amount copies to Cheque/Cash/IBG correctly
+        this.frm.patchValue({ ReceiptAmount: data.receipt.ReceiptAmount });
 
         this.changeReceiptType(data.receipt.ReceiptType);
 
@@ -762,9 +764,8 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-        // In edit mode, set showInvoiceTable to true if adjustment is enabled and details exist
-
-        if (data.receipt.IsInvoiceAdjustment && Array.isArray(data.receipt.details) && data.receipt.details.length > 0) {
+        // Show invoice table whenever there are invoice details (regardless of adjustment mode)
+        if (Array.isArray(data.receipt.details) && data.receipt.details.length > 0) {
 
           this.showInvoiceTable = true;
 
@@ -1475,10 +1476,7 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-          // Skip fully paid invoices (Balance = 0)
-          if (Number(item['Balance']) === 0) {
-            return;
-          }
+
 
 
 
@@ -1534,16 +1532,15 @@ export class NewReceiptComponent implements OnInit {
   }
 
   private applyClientTds(client: any): void {
+    // TDS: apply only when TDSApplicable is true
     const isTdsApplicable = client?.TDSApplicable === true || client?.TDSApplicable === 1;
     const tdsPercentage = isTdsApplicable ? Number(client.TDSPercentage) || 0 : 0;
-    const isGstApplicable = isTdsApplicable && (client?.GSTApplicable === true || client?.GSTApplicable === 1);
+
+    // GST: independent of TDS — apply whenever GSTApplicable is true on the client
+    const isGstApplicable = client?.GSTApplicable === true || client?.GSTApplicable === 1;
     const gstPercentage = isGstApplicable ? Number(client.GSTPercentage) || 0 : 0;
 
-    // Store client GST % so calculate() can use it as fallback
-    this.clientGstPercentage = gstPercentage;
-
     this.frm.get('HQPercentage')?.setValue(tdsPercentage);
-    // Always set client's GST % into TaxPercentage field directly
     this.frm.get('TaxPercentage')?.setValue(gstPercentage);
     this.calculate();
   }
@@ -1924,73 +1921,41 @@ export class NewReceiptComponent implements OnInit {
     if (this.isAdjustment) {
       const receiptAmount = Number(this.frm.get("ReceiptAmount")?.value) || 0;
 
-      // Always use Client Master GST % for tax calculation
-      // clientGstPercentage is set when client is selected via applyClientTds()
-      if (this.clientGstPercentage > 0 && receiptAmount > 0) {
-        // Inclusive GST: taxAmount = receiptAmount * gst% / (100 + gst%)
-        this.taxPercentage = this.clientGstPercentage;
-        this.taxAmount = receiptAmount * this.taxPercentage / (100 + this.taxPercentage);
-      } else {
-        // Fallback: try invoice embedded tax
-        this.taxAmount = this.calculateSelectedInvoiceTax(receiptAmount);
-        this.taxPercentage = receiptAmount > 0
-          ? (this.taxAmount / receiptAmount) * 100
-          : 0;
-      }
-      this.frm.get("TaxPercentage")?.setValue(this.taxPercentage > 0 ? this.taxPercentage.toFixed(2) : 0, { emitEvent: false });
+      // GST: use Client Master GST% (set by applyClientTds on client selection)
+      // taxPercentage is already set from Client Master via TaxPercentage form control
+      this.taxAmount = receiptAmount * this.taxPercentage / 100;
 
-      // TDS is on ServiceAmount (receiptAmount), NOT on (receiptAmount - tax)
+      // TDS is on ServiceAmount (receiptAmount)
       this.hqAmount = receiptAmount * (this.hqPercentage / 100);
 
-      // Branch Collection = ServiceAmount + GST - TDS
+      // Branch Collection = Amount + GST - TDS
       this.branchAmount = receiptAmount + this.taxAmount - this.hqAmount;
     } else if (receiptTypeID.toString() === "1") {
 
+      // Forward GST: GST Amount = Amount × GST% / 100  (amount is GST-exclusive)
+      this.taxAmount = this.chequeAmount * this.taxPercentage / 100;
 
-
-      this.taxAmount = this.taxPercentage * this.chequeAmount / (100 + this.taxPercentage);
-
-
-
-      this.hqAmount = (this.chequeAmount - this.taxAmount) * (this.hqPercentage / 100);
-
-
+      this.hqAmount = this.chequeAmount * (this.hqPercentage / 100);
 
       this.branchAmount = this.chequeAmount - this.taxAmount - this.hqAmount;
 
-
-
     } else if (receiptTypeID.toString() === "2") {
 
+      // Forward GST: GST Amount = Amount × GST% / 100
+      this.taxAmount = this.cashAmount * this.taxPercentage / 100;
 
-
-      this.taxAmount = this.taxPercentage * this.cashAmount / (100 + this.taxPercentage);
-
-
-
-      this.hqAmount = (this.cashAmount - this.taxAmount) * (this.hqPercentage / 100);
-
-
+      this.hqAmount = this.cashAmount * (this.hqPercentage / 100);
 
       this.branchAmount = this.cashAmount - this.taxAmount - this.hqAmount;
 
-
-
     } else if (receiptTypeID.toString() === "5") {
 
+      // Forward GST: GST Amount = Amount × GST% / 100
+      this.taxAmount = this.ibgAmount * this.taxPercentage / 100;
 
-
-      this.taxAmount = this.taxPercentage * this.ibgAmount / (100 + this.taxPercentage);
-
-
-
-      this.hqAmount = (this.ibgAmount - this.taxAmount) * (this.hqPercentage / 100);
-
-
+      this.hqAmount = this.ibgAmount * (this.hqPercentage / 100);
 
       this.branchAmount = this.ibgAmount - this.taxAmount - this.hqAmount;
-
-
 
     }
 
@@ -2008,7 +1973,20 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-    this.frm.get("BranchCollection")?.setValue(this.branchAmount.toFixed(2));
+    this.frm.get("BranchCollection")?.setValue(Math.round(this.branchAmount).toString());
+
+    // Amount + GST Total = base receipt amount + GST Amount (forward: Amount + Amount×GST%/100)
+    let baseAmt = 0;
+    if (receiptTypeID.toString() === "1") {
+      baseAmt = this.chequeAmount;
+    } else if (receiptTypeID.toString() === "2") {
+      baseAmt = this.cashAmount;
+    } else if (receiptTypeID.toString() === "5") {
+      baseAmt = this.ibgAmount;
+    } else if (this.isAdjustment) {
+      baseAmt = Number(this.frm.get("ReceiptAmount")?.value) || 0;
+    }
+    this.amountWithGST = (baseAmt + this.taxAmount).toFixed(2);
 
   }
 
@@ -2129,7 +2107,7 @@ export class NewReceiptComponent implements OnInit {
 
 
 
-      this.frm.get('BranchCollection')?.setValue(this.formatCurrency(branchAmount));
+      this.frm.get('BranchCollection')?.setValue(Math.round(branchAmount).toString());
 
 
 

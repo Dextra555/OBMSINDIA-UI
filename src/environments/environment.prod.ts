@@ -128,13 +128,13 @@ export const environment = {
 
   // baseReportUrl:'http://175.139.216.185:8449/'
 
-<<<<<<< HEAD
+// <<<<<<< HEAD
   //  baseUrl: 'http://124.217.236.37:64400/api/',
   // baseReportUrl: 'http://124.217.236.37:5333/'
-=======
+// =======
   baseUrl: 'http://124.217.236.37:64400/api/',
   baseReportUrl: 'http://124.217.236.37:5333/'
->>>>>>> d301ddc (Updated changes)
+// >>>>>>> d301ddc (Updated changes)
 
 
   //EastWest Server configuration 
@@ -145,8 +145,8 @@ export const environment = {
 
 
   //Local DEV Production Server configuration
-  baseUrl: 'http://124.217.236.37:64889/api/',
-  baseReportUrl: 'http://124.217.236.37:5222/'
+  // baseUrl: 'http://124.217.236.37:64889/api/',
+  // baseReportUrl: 'http://124.217.236.37:5222/'
 
 
 

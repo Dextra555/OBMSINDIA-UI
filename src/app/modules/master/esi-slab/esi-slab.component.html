@@ -63,6 +63,19 @@
           </td>
         </ng-container>
 
+        <!-- Calculation Basis Column -->
+        <ng-container matColumnDef="calculationBasis">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Calculation Basis</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="badge badge-warning" *ngIf="(row.CalculationBasis || row.calculationBasis) === 'BasicDA'">
+              Basic + DA
+            </span>
+            <span class="badge badge-secondary" *ngIf="(row.CalculationBasis || row.calculationBasis) !== 'BasicDA'">
+              Gross
+            </span>
+          </td>
+        </ng-container>
+
         <!-- Effective Date Column -->
         <ng-container matColumnDef="effectiveDate">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Effective Date</th>

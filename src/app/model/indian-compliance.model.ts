@@ -83,6 +83,8 @@ export interface ESIConfiguration {
   createdBy: string;
   lastUpdatedDate: string;
   lastUpdatedBy: string;
+  /** "Gross" = Gross salary based (default/legacy) | "BasicDA" = Basic + DA based */
+  calculationBasis: string;
 }
 
 export interface ProfessionalTaxConfiguration {

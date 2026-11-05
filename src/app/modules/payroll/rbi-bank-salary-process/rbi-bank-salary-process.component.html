@@ -36,6 +36,15 @@
                         </mat-select>
                     </mat-form-field>
                 </div>
+                <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Client</mat-label>
+                        <mat-select formControlName="Client">
+                            <mat-option value="">All Clients</mat-option>
+                            <mat-option *ngFor="let c of clientList" [value]="c.Code">{{c.Name}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
             </div>
             <div class="row" *ngIf="warningMessage === ''">
                 <div class="col-12 col-sm-12 col-md-4 col-lg-3">

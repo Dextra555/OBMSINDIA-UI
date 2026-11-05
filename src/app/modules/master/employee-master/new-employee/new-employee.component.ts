@@ -728,11 +728,11 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
-      CB_Basic: [0],
+      CB_Basic: [0, [Validators.required, Validators.min(0.01)]],
 
 
 
-      CB_DA: [0],
+      CB_DA: [0, [Validators.required, Validators.min(0.01)]],
 
 
 
@@ -2272,6 +2272,25 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
+
+
+
+    // Mark CB_Basic and CB_DA as touched so error messages render
+    this.frm.get('CB_Basic')?.markAsTouched();
+    this.frm.get('CB_DA')?.markAsTouched();
+
+    const cbBasic = parseFloat(this.frm.get('CB_Basic')?.value) || 0;
+    const cbDA = parseFloat(this.frm.get('CB_DA')?.value) || 0;
+
+    if (cbBasic <= 0) {
+      this.showMessage('Basic Salary is mandatory. Please enter an amount greater than 0.', 'warning', 'Warning Message');
+      return;
+    }
+
+    if (cbDA <= 0) {
+      this.showMessage('Dearness Allowance (DA) is mandatory. Please enter an amount greater than 0.', 'warning', 'Warning Message');
+      return;
+    }
 
 
 
