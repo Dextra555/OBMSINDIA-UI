@@ -732,7 +732,7 @@ export class NewEmployeeComponent implements OnInit {
 
 
 
-      CB_DA: [0, [Validators.required, Validators.min(0.01)]],
+      CB_DA: [0, [Validators.min(0)]],
 
 
 
@@ -2287,8 +2287,8 @@ export class NewEmployeeComponent implements OnInit {
       return;
     }
 
-    if (cbDA <= 0) {
-      this.showMessage('Dearness Allowance (DA) is mandatory. Please enter an amount greater than 0.', 'warning', 'Warning Message');
+    if (cbDA < 0) {
+      this.showMessage('Dearness Allowance (DA) cannot be negative.', 'warning', 'Warning Message');
       return;
     }
 
