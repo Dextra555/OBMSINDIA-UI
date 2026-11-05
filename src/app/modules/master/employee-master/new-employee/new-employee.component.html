@@ -1649,7 +1649,7 @@
                           placeholder="0.00" (input)="calculateCommercialBreakdownTotal()">
                         <div class="text-danger small mt-1"
                           *ngIf="frm.get('CB_DA')?.invalid && (frm.get('CB_DA')?.touched || submitted)">
-                          Dearness Allowance (DA) is mandatory. Please enter an amount greater than 0.
+                          Dearness Allowance (DA) must be 0 or greater.
                         </div>
 
 
