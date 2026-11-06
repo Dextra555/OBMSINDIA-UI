@@ -24,6 +24,8 @@ import { AttendanceDetails } from "../model/AttendanceDetails";
 
 import { BankStatement } from "../model/BankStatement";
 
+import { TDSComputationResult } from "../model/indian-compliance.model";
+
 
 
 @Injectable({
@@ -1080,6 +1082,17 @@ export class PayrollModuleService {
       .set('Lang', lang);
 
     return this.httpClient.get<any>(`${this.apiUrl}payroll/GetRBAPayslipData`, { params })
+      .pipe(catchError(this.errorHandle));
+  }
+
+  // Phase 2: standalone TDS computation (same engine as the payslip).
+  // Returns the full slab-by-slab result for the computation screen / auditor statement.
+  getEmployeeTDSComputation(employeeId: number, monthlyGross: number, period: string): Observable<TDSComputationResult> {
+    const params = new HttpParams()
+      .set('employeeId', employeeId.toString())
+      .set('monthlyGross', monthlyGross.toString())
+      .set('period', period);
+    return this.httpClient.get<TDSComputationResult>(`${this.apiUrl}payroll/GetEmployeeTDSComputation`, { params })
       .pipe(catchError(this.errorHandle));
   }
 

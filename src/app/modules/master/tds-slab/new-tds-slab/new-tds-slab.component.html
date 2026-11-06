@@ -1,0 +1,111 @@
+<div class="wlt-c-furg-content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6">
+        <h1 class="mb-1">{{ isEdit ? 'Edit' : 'Add' }} Employee TDS Slab</h1>
+      </div>
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6 my-1">
+        <ol class="breadcrumb float-md-right">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Master</a></li>
+          <li class="breadcrumb-item"><a routerLink="/master/tds-slab">TDS Slab</a></li>
+          <li class="breadcrumb-item active">{{ isEdit ? 'Edit' : 'Add' }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<mat-card>
+  <mat-card-content>
+    <form [formGroup]="tdsSlabForm" (ngSubmit)="onSubmit()">
+      <div class="row">
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+          <mat-form-field appearance="outline">
+            <mat-label>Financial Year</mat-label>
+            <input matInput formControlName="financialYear" placeholder="2026-2027" maxlength="9">
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+          <mat-form-field appearance="outline">
+            <mat-label>Tax Regime</mat-label>
+            <mat-select formControlName="regime">
+              <mat-option value="New">New Regime</mat-option>
+              <mat-option value="Old">Old Regime</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+          <mat-form-field appearance="outline">
+            <mat-label>Effective Date</mat-label>
+            <input matInput [matDatepicker]="eff" formControlName="effectiveDate">
+            <mat-datepicker-toggle matSuffix [for]="eff"></mat-datepicker-toggle>
+            <mat-datepicker #eff></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Min Income (₹)</mat-label>
+            <input type="number" matInput formControlName="minIncome" min="0">
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Max Income (₹)</mat-label>
+            <input type="number" matInput formControlName="maxIncome" placeholder="Leave blank for top slab">
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Tax Rate (%)</mat-label>
+            <input type="number" matInput formControlName="taxRate" min="0" max="100">
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Education Cess (%)</mat-label>
+            <input type="number" matInput formControlName="educationCessRate" min="0">
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+          <mat-form-field appearance="outline">
+            <mat-label>Standard Deduction (₹)</mat-label>
+            <input type="number" matInput formControlName="standardDeduction" min="0">
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+          <mat-form-field appearance="outline">
+            <mat-label>87A Rebate Threshold (₹)</mat-label>
+            <input type="number" matInput formControlName="rebateThreshold" min="0">
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+          <mat-form-field appearance="outline">
+            <mat-label>87A Rebate Amount (₹)</mat-label>
+            <input type="number" matInput formControlName="rebateAmount" min="0">
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-sm-12 col-md-4 col-lg-4">
+          <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col-12 text-right">
+          <button type="button" class="btn wlt-c-furg-btn-secondary mr-2" (click)="cancel()">Cancel</button>
+          <button type="submit" class="btn wlt-c-furg-btn-primary" [disabled]="showLoadingSpinner">
+            {{ isEdit ? 'Update' : 'Save' }} TDS Slab
+          </button>
+        </div>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

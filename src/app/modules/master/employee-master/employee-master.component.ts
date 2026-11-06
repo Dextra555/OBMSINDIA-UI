@@ -121,15 +121,9 @@ export class EmployeeMasterComponent implements OnInit {
       });
       this.branchList = d['branchList'] || [];
 
-      // Auto-select the first allowed branch and filter employees accordingly
-      if (this.branchList.length > 0) {
-        const firstBranch = this.branchList[0].Code;
-        this.branchForm.patchValue({ BRANCH_ID: firstBranch });
-        const filtered = this.employees.filter((e: any) => e.EMP_BRANCH_CODE === firstBranch);
-        this.dataSource = new MatTableDataSource(filtered);
-      } else {
-        this.dataSource = new MatTableDataSource(this.employees);
-      }
+      // Default to All branches - no filtering applied
+      this.branchForm.patchValue({ BRANCH_ID: '' });
+      this.dataSource = new MatTableDataSource(this.employees);
 
       this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;
@@ -195,7 +189,13 @@ export class EmployeeMasterComponent implements OnInit {
   }
 
   branchChange(value: any) {
-    if (!value) return;
+    // If no branch selected (All), show all employees
+    if (!value) {
+      this.dataSource = new MatTableDataSource(this.employees);
+      this.dataSource.sort = this.sort;
+      this.dataSource.paginator = this.paginator;
+      return;
+    }
     // Filter from already-loaded (allowed) employees instead of re-fetching all
     const filtered = this.employees.filter((e: any) => e.EMP_BRANCH_CODE === value);
     this.dataSource = new MatTableDataSource(filtered);

@@ -21,7 +21,7 @@ import { TDSSlabConfiguration } from 'src/app/model/indian-compliance.model';
 export class TdsSlabComponent implements AfterViewInit {
   tdsConfigurations: TDSSlabConfiguration[] = [];
   showLoadingSpinner: boolean = false;
-  displayedColumns: string[] = ['minIncome', 'maxIncome', 'taxRate', 'isActive', 'action'];
+  displayedColumns: string[] = ['financialYear', 'regime', 'minIncome', 'maxIncome', 'taxRate', 'isActive', 'action'];
   dataSource: any;
   errorMessage: string = '';
   currentUser: string = '';
@@ -189,18 +189,16 @@ export class TdsSlabComponent implements AfterViewInit {
   }
 
   editTDSSlab(tdsConfig: TDSSlabConfiguration): void {
-    // Navigate to edit page or open dialog
+    // API returns PascalCase (Id) — handle both
     const id = (tdsConfig as any).Id ?? (tdsConfig as any).id ?? tdsConfig.id;
     this._router.navigate(['/master/tds-slab/edit', id]);
   }
 
   addNewTDSSlab(): void {
-    // Navigate to add page or open dialog
     this._router.navigate(['/master/tds-slab/add']);
   }
 
   viewTDSSlabDetails(tdsConfig: TDSSlabConfiguration): void {
-    // Navigate to details page or open dialog
     const id = (tdsConfig as any).Id ?? (tdsConfig as any).id ?? tdsConfig.id;
     this._router.navigate(['/master/tds-slab/details', id]);
   }

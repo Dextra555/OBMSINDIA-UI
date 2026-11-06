@@ -1,0 +1,139 @@
+<div class="wlt-c-furg-content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6">
+        <h1 class="mb-1">Employee TDS Computation</h1>
+      </div>
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6 my-1">
+        <ol class="breadcrumb float-md-right">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Master</a></li>
+          <li class="breadcrumb-item active">Employee TDS Computation</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<mat-card>
+  <mat-card-content>
+    <form [formGroup]="form">
+    <div class="row">
+      <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+        <mat-form-field appearance="outline">
+          <mat-label>Employee ID</mat-label>
+          <input type="number" matInput formControlName="employeeId" (change)="loadConfig()">
+        </mat-form-field>
+      </div>
+      <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+        <mat-form-field appearance="outline">
+          <mat-label>Monthly Gross (₹)</mat-label>
+          <input type="number" matInput formControlName="monthlyGross" min="0">
+        </mat-form-field>
+      </div>
+      <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+        <mat-form-field appearance="outline">
+          <mat-label>Pay Period</mat-label>
+          <input matInput [matDatepicker]="pd" formControlName="period">
+          <mat-datepicker-toggle matSuffix [for]="pd"></mat-datepicker-toggle>
+          <mat-datepicker #pd></mat-datepicker>
+        </mat-form-field>
+      </div>
+      <div class="col-12 col-sm-12 col-md-3 col-lg-3 d-flex align-items-center">
+        <button type="button" class="btn wlt-c-furg-btn-primary" (click)="compute()" [disabled]="showLoadingSpinner">Compute TDS</button>
+      </div>
+    </div>
+    </form>
+
+    <p class="text-muted mb-0">Financial Year: <strong>{{ financialYear }}</strong></p>
+  </mat-card-content>
+</mat-card>
+
+<mat-card class="mt-3">
+  <mat-card-content>
+    <h2 class="mb-3"><span>Per-FY Configuration</span></h2>
+    <form [formGroup]="configForm">
+      <div class="row">
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Tax Regime</mat-label>
+            <mat-select formControlName="taxRegime">
+              <mat-option value="New">New Regime</mat-option>
+              <mat-option value="Old">Old Regime</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Previous Employer Income (₹)</mat-label>
+            <input type="number" matInput formControlName="previousEmployerIncome" min="0">
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Previous Employer TDS (₹)</mat-label>
+            <input type="number" matInput formControlName="previousEmployerTDS" min="0">
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-sm-12 col-md-3 col-lg-3 d-flex align-items-center">
+          <button type="button" class="btn wlt-c-furg-btn-success" (click)="saveConfig()">Save Configuration</button>
+        </div>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>
+
+<mat-card class="mt-3" *ngIf="result">
+  <mat-card-content>
+    <h2 class="mb-3"><span>Computation Result</span></h2>
+    <div class="row">
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Regime</p><h4>{{ result.Regime }}</h4></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Eligible Salary Months</p><h4>{{ result.EligibleSalaryMonths }}</h4></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Remaining Deduction Months</p><h4>{{ result.RemainingDeductionMonths }}</h4></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Applicable</p><h4>{{ result.IsApplicable ? 'Yes' : 'No' }}</h4></div>
+    </div>
+
+    <hr>
+    <div class="row">
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Projected Annual Income</p><h5>₹ {{ result.AnnualIncome | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Standard Deduction</p><h5>₹ {{ result.StandardDeduction | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Taxable Income</p><h5>₹ {{ result.TaxableIncome | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Slab Tax</p><h5>₹ {{ result.TaxAmount | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">87A Rebate</p><h5>₹ {{ result.RebateAmount | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Cess (4%)</p><h5>₹ {{ result.EducationCess | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Total Tax Liability</p><h5>₹ {{ result.TotalTax | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">YTD TDS (this employer)</p><h5>₹ {{ result.YtdTDS | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Previous Employer TDS</p><h5>₹ {{ result.PreviousEmployerTDS | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0">Balance Tax</p><h5>₹ {{ result.BalanceTax | number:'1.2-2' }}</h5></div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3"><p class="text-muted mb-0"><strong>Monthly TDS</strong></p><h3 class="text-success">₹ {{ result.MonthlyTDS | number:'1.2-2' }}</h3></div>
+    </div>
+
+    <hr>
+    <h4 class="mb-2">Slab-wise Breakdown</h4>
+    <div class="table-responsive">
+      <table mat-table [dataSource]="result.SlabDetails" class="wlt-table table-striped">
+        <ng-container matColumnDef="minIncome">
+          <th mat-header-cell *matHeaderCellDef>From (₹)</th>
+          <td mat-cell *matCellDef="let row">{{ row.MinIncome | number:'1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="maxIncome">
+          <th mat-header-cell *matHeaderCellDef>To (₹)</th>
+          <td mat-cell *matCellDef="let row">{{ row.MaxIncome ? (row.MaxIncome | number:'1.2-2') : 'No Limit' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="taxRate">
+          <th mat-header-cell *matHeaderCellDef>Rate (%)</th>
+          <td mat-cell *matCellDef="let row">{{ row.TaxRate }}%</td>
+        </ng-container>
+        <ng-container matColumnDef="taxableAmount">
+          <th mat-header-cell *matHeaderCellDef>Taxable Amount (₹)</th>
+          <td mat-cell *matCellDef="let row">{{ row.TaxableAmount | number:'1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="taxAmount">
+          <th mat-header-cell *matHeaderCellDef>Tax (₹)</th>
+          <td mat-cell *matCellDef="let row">{{ row.TaxAmount | number:'1.2-2' }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+  </mat-card-content>
+</mat-card>

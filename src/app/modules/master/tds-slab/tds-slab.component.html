@@ -38,6 +38,22 @@
     <div class="table-responsive" *ngIf="errorMessage =='' && dataSource !='' && warningMessage ===''">
       <table mat-table [dataSource]="dataSource" class="wlt-table table-striped" matSort
         (matSortChange)="announceSortChange($event)">
+        <!-- Financial Year Column -->
+        <ng-container matColumnDef="financialYear">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Financial Year</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="badge badge-light">{{ row.FinancialYear }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Regime Column -->
+        <ng-container matColumnDef="regime">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Regime</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="badge" [class.badge-primary]="row.Regime === 'New'" [class.badge-secondary]="row.Regime !== 'New'">{{ row.Regime || 'New' }}</span>
+          </td>
+        </ng-container>
+
         <!-- Min Income Column -->
         <ng-container matColumnDef="minIncome">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Min Income (₹)</th>

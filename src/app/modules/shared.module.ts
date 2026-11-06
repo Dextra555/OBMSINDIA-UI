@@ -60,6 +60,8 @@ import { NewPfSlabComponent } from './master/pf-slab/new-pf-slab/new-pf-slab.com
 import { EsiSlabComponent } from './master/esi-slab/esi-slab.component';
 import { NewEsiSlabComponent } from './master/esi-slab/new-esi-slab/new-esi-slab.component';
 import { TdsSlabComponent } from './master/tds-slab/tds-slab.component';
+import { NewTdsSlabComponent } from './master/tds-slab/new-tds-slab/new-tds-slab.component';
+import { EmployeeTdsComputationComponent } from './master/employee-tds-computation/employee-tds-computation.component';
 import { GstSlabComponent } from './master/gst-slab/gst-slab.component';
 import { NewGstSlabComponent } from './master/gst-slab/new-gst-slab/new-gst-slab.component';
 import { SalarySlabComponent } from './master/salary-slab/salary-slab.component';
@@ -392,6 +394,8 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     EsiSlabComponent,
     NewEsiSlabComponent,
     TdsSlabComponent,
+    NewTdsSlabComponent,
+    EmployeeTdsComputationComponent,
     GstSlabComponent,
     NewGstSlabComponent,
     ServiceTypeComponent,
@@ -487,6 +491,8 @@ import { TdsReportComponent } from './report/finance/tds-report/tds-report.compo
     EsiSlabComponent,
     NewEsiSlabComponent,
     TdsSlabComponent,
+    NewTdsSlabComponent,
+    EmployeeTdsComputationComponent,
     GstSlabComponent,
     NewGstSlabComponent,
     ServiceTypeComponent,

@@ -15,6 +15,7 @@ import { PFConfiguration } from '../model/indian-compliance.model';
 import { ESIConfiguration } from '../model/indian-compliance.model';
 import { ProfessionalTaxConfiguration } from '../model/indian-compliance.model';
 import { TDSSlabConfiguration } from '../model/indian-compliance.model';
+import { EmployeeTDSConfiguration } from '../model/indian-compliance.model';
 import { GSTConfiguration } from '../model/indian-compliance.model';
 import { ServiceCategory } from '../model/indian-compliance.model';
 import { ContractorTDSSlab } from '../model/indian-compliance.model';
@@ -464,8 +465,13 @@ export class MastermoduleService {
   }
 
   // TDS Configuration
-  getTDSConfigurationList(): Observable<TDSSlabConfiguration[]> {
-    return this.httpClient.get<TDSSlabConfiguration[]>(`${this.apiUrl}statutory/tds-configuration`).pipe(catchError(this.errorHandle));
+  getTDSConfigurationList(financialYear?: string, regime?: string): Observable<TDSSlabConfiguration[]> {
+    let params = new HttpParams();
+    if (financialYear) params = params.set('financialYear', financialYear);
+    if (regime) params = params.set('regime', regime);
+    return this.httpClient
+      .get<TDSSlabConfiguration[]>(`${this.apiUrl}statutory/tds-configuration`, { params })
+      .pipe(catchError(this.errorHandle));
   }
 
   saveAndUpdateTDSSConfiguration(tdsDetails: TDSSlabConfiguration): Observable<any> {
@@ -481,6 +487,26 @@ export class MastermoduleService {
   deleteTDSSlabById(id: number): Observable<any> {
     const params = { params: new HttpParams({ fromString: "?Id=" + id }) };
     return this.httpClient.delete(`${this.apiUrl}statutory/DeleteTDSSlabById`, params).pipe(catchError(this.errorHandle));
+  }
+
+  // Phase 2: Employee TDS Configuration (per employee / per FY)
+  getEmployeeTDSConfiguration(employeeId: number, financialYear?: string): Observable<EmployeeTDSConfiguration[]> {
+    let params = new HttpParams().set('employeeId', employeeId.toString());
+    if (financialYear) params = params.set('financialYear', financialYear);
+    return this.httpClient
+      .get<EmployeeTDSConfiguration[]>(`${this.apiUrl}statutory/employee-tds-configuration`, { params })
+      .pipe(catchError(this.errorHandle));
+  }
+
+  saveEmployeeTDSConfiguration(model: EmployeeTDSConfiguration): Observable<any> {
+    return this.httpClient.post(`${this.apiUrl}statutory/employee-tds-configuration`,
+      JSON.stringify(model),
+      { headers: new HttpHeaders({ 'Content-type': 'application/json; charset=UTF-8' }) }
+    ).pipe(catchError(this.errorHandle));
+  }
+
+  deleteEmployeeTDSConfiguration(id: number): Observable<any> {
+    return this.httpClient.delete(`${this.apiUrl}statutory/employee-tds-configuration/${id}`).pipe(catchError(this.errorHandle));
   }
 
   // GST Configuration

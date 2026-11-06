@@ -114,6 +114,59 @@ export interface TDSSlabConfiguration {
   createdBy: string;
   lastUpdatedDate: string;
   lastUpdatedBy: string;
+  // Phase 2 additions
+  regime: string;            // 'New' | 'Old'
+  standardDeduction: number | null;
+  rebateThreshold: number | null;
+  rebateAmount: number | null;
+  effectiveDate: string | null;
+}
+
+/** Per-employee / per-FY TDS configuration (regime choice + previous employer). */
+export interface EmployeeTDSConfiguration {
+  id?: number;
+  employeeID: number;
+  financialYear: string;
+  taxRegime: string;             // 'New' | 'Old'
+  previousEmployerIncome: number;
+  previousEmployerTDS: number;
+  isActive?: boolean;
+  createdDate?: string;
+  lastUpdatedDate?: string | null;
+  lastUpdatedBy?: string | null;
+}
+
+/** Full slab-wise TDS computation result (from api/payroll/GetEmployeeTDSComputation). */
+export interface TDSComputationResult {
+  // API returns PascalCase (PropertyNamingPolicy = null in Program.cs)
+  AnnualIncome: number;
+  AgeGroup: number;
+  TaxableIncome: number;
+  TaxAmount: number;
+  Surcharge: number;
+  EducationCess: number;
+  TotalTax: number;
+  MonthlyTDS: number;
+  IsApplicable: boolean;
+  SlabDetails: TDSSlabDetail[];
+  FinancialYear: string;
+  Regime: string;
+  StandardDeduction: number;
+  RebateAmount: number;
+  BalanceTax: number;
+  EligibleSalaryMonths: number;
+  RemainingDeductionMonths: number;
+  PreviousEmployerIncome: number;
+  PreviousEmployerTDS: number;
+  YtdTDS: number;
+}
+
+export interface TDSSlabDetail {
+  MinIncome: number;
+  MaxIncome: number | null;
+  TaxRate: number;
+  TaxAmount: number;
+  TaxableAmount: number;
 }
 
 export interface GSTConfiguration {

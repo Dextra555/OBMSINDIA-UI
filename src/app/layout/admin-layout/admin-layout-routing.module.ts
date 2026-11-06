@@ -326,6 +326,8 @@ import { EsiSlabComponent } from '../../modules/master/esi-slab/esi-slab.compone
 import { NewEsiSlabComponent } from '../../modules/master/esi-slab/new-esi-slab/new-esi-slab.component';
 
 import { TdsSlabComponent } from '../../modules/master/tds-slab/tds-slab.component';
+import { NewTdsSlabComponent } from '../../modules/master/tds-slab/new-tds-slab/new-tds-slab.component';
+import { EmployeeTdsComputationComponent } from '../../modules/master/employee-tds-computation/employee-tds-computation.component';
 
 import { GstSlabComponent } from "../../modules/master/gst-slab/gst-slab.component";
 import { NewGstSlabComponent } from "../../modules/master/gst-slab/new-gst-slab/new-gst-slab.component";
@@ -416,6 +418,10 @@ const routes: Routes = [
   { path: 'master/esi-slab/edit-esi-slab/:id', component: NewEsiSlabComponent, canActivate: [AuthGuard] },
 
   { path: 'master/tds-slab', component: TdsSlabComponent, canActivate: [AuthGuard] },
+  { path: 'master/tds-slab/add', component: NewTdsSlabComponent, canActivate: [AuthGuard] },
+  { path: 'master/tds-slab/edit/:id', component: NewTdsSlabComponent, canActivate: [AuthGuard] },
+  { path: 'master/tds-slab/details/:id', component: NewTdsSlabComponent, canActivate: [AuthGuard] },
+  { path: 'master/employee-tds-computation', component: EmployeeTdsComputationComponent, canActivate: [AuthGuard] },
 
   { path: 'master/gst-slab', component: GstSlabComponent, canActivate: [AuthGuard] },
 
